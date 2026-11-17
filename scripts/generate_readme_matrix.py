@@ -16,7 +16,7 @@ MODULE_CONFIG = {
         "title": "01. Core SQL Fundamentals",
         "anchor": "module-01-core-sql-fundamentals",
         "range": "001 – 010",
-        "level": "🟢 `Beginner`",
+        "level": "🟢<br>Beginner",
         "desc": "Execution order, Three-Valued Logic, SARGability, type casting, idempotent DDL"
     },
     "02_joins_and_set_operations": {
@@ -24,7 +24,7 @@ MODULE_CONFIG = {
         "title": "02. Joins & Set Operations",
         "anchor": "module-02-joins-and-set-operations",
         "range": "011 – 020",
-        "level": "🟡 `Intermediate`",
+        "level": "🟡<br>Intermediate",
         "desc": "Semi-joins (EXISTS), anti-joins, full outer reconciliations, non-equi joins, set ops"
     },
     "03_aggregations_and_grouping": {
@@ -32,7 +32,7 @@ MODULE_CONFIG = {
         "title": "03. Aggregations & Grouping",
         "anchor": "module-03-aggregations-and-grouping",
         "range": "021 – 030",
-        "level": "🟡 `Intermediate`",
+        "level": "🟡<br>Intermediate",
         "desc": "COUNT semantics, conditional sums, multidimensional ROLLUP/CUBE, dynamic pivoting"
     },
     "04_window_functions_mastery": {
@@ -40,7 +40,7 @@ MODULE_CONFIG = {
         "title": "04. Window Functions Mastery",
         "anchor": "module-04-window-functions-mastery",
         "range": "031 – 045",
-        "level": "🔴 `Advanced`",
+        "level": "🔴<br>Advanced",
         "desc": "Ranking ties, value offsets (LAG/LEAD), sliding frames, Gaps & Islands, retention"
     },
     "05_subqueries_and_recursive_ctes": {
@@ -48,7 +48,7 @@ MODULE_CONFIG = {
         "title": "05. Subqueries & Recursive CTEs",
         "anchor": "module-05-subqueries-and-recursive-ctes",
         "range": "046 – 055",
-        "level": "🔴 `Advanced`",
+        "level": "🔴<br>Advanced",
         "desc": "Recursive hierarchies, Bill of Materials (BOM), flight paths, calendar spines, deduplication"
     },
     "06_data_modeling_and_scd": {
@@ -56,7 +56,7 @@ MODULE_CONFIG = {
         "title": "06. Data Modeling & SCD",
         "anchor": "module-06-data-modeling-and-scd",
         "range": "056 – 065",
-        "level": "🔴 `Advanced`",
+        "level": "🔴<br>Advanced",
         "desc": "Kimball star schemas, SCD Types 1-6, Data Vault 2.0, bridge tables, surrogate hashing"
     },
     "07_indexing_and_query_optimization": {
@@ -64,7 +64,7 @@ MODULE_CONFIG = {
         "title": "07. Indexing & Query Optimization",
         "anchor": "module-07-indexing-and-query-optimization",
         "range": "066 – 075",
-        "level": "🔴 `Advanced`",
+        "level": "🔴<br>Advanced",
         "desc": "B-Tree seek vs scan, composite prefix rule, covering indexes, join algorithms, stats"
     },
     "08_transactions_concurrency_and_locks": {
@@ -72,7 +72,7 @@ MODULE_CONFIG = {
         "title": "08. Transactions, Concurrency & Locks",
         "anchor": "module-08-transactions-concurrency-and-locks",
         "range": "076 – 085",
-        "level": "🔴 `Advanced`",
+        "level": "🔴<br>Advanced",
         "desc": "ACID savepoints, isolation anomalies, write skew, MVCC internals, deadlock ordering"
     },
     "09_mpp_and_cloud_warehouses": {
@@ -80,7 +80,7 @@ MODULE_CONFIG = {
         "title": "09. MPP & Cloud Warehouses",
         "anchor": "module-09-mpp-and-cloud-warehouses",
         "range": "086 – 095",
-        "level": "🟣 `Architect`",
+        "level": "🟣<br>Architect",
         "desc": "Snowflake micro-partitions, hash distributions, Liquid Clustering, key salting, MERGE"
     },
     "10_production_incidents_and_triage": {
@@ -88,18 +88,18 @@ MODULE_CONFIG = {
         "title": "10. Production Incidents & Triage",
         "anchor": "module-10-production-incidents-and-triage",
         "range": "096 – 105",
-        "level": "🟣 `Architect`",
+        "level": "🟣<br>Architect",
         "desc": "99% straggler skew, deadlock storms, out-of-order CDC recovery, data quality suites"
     },
 }
 
 LEVEL_BADGES = {
-    "Beginner": "🟢 `Beginner`",
-    "Beginner / Foundation": "🟢 `Beginner`",
-    "Intermediate": "🟡 `Intermediate`",
-    "Advanced": "🔴 `Advanced`",
-    "Principal / Architect": "🟣 `Architect`",
-    "Architect": "🟣 `Architect`",
+    "Beginner": "🟢<br>Beginner",
+    "Beginner / Foundation": "🟢<br>Beginner",
+    "Intermediate": "🟡<br>Intermediate",
+    "Advanced": "🔴<br>Advanced",
+    "Principal / Architect": "🟣<br>Architect",
+    "Architect": "🟣<br>Architect",
 }
 
 TITLE_REPLACEMENTS = [
