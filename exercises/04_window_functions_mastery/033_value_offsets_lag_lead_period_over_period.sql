@@ -1,45 +1,64 @@
 -- ============================================================================
 -- EXERCISE: 033_value_offsets_lag_lead_period_over_period.sql
 -- MODULE:   04_window_functions_mastery
--- LEVEL:    Intermediate
+-- LEVEL:    🔴<br>Advanced
 -- ENGINES:  PostgreSQL, DuckDB, SQLite, Snowflake, BigQuery, Databricks Spark SQL
+-- ROLE:     Lead Financial Systems Architect & Quantitative Analyst
 -- ----------------------------------------------------------------------------
+-- ARCHITECTURAL CONTEXT & SYSTEM TOPOLOGY:
+--   SaaS Monthly Recurring Revenue (MRR) Period-over-Period Variance Engine.
+--   Calculating absolute dollar changes and percentage month-over-month growth rates.
+--
 -- BUSINESS CONTEXT:
---   Financial health tracking requires comparing this month's revenue to the
---   previous month to calculate Month-over-Month (MoM) growth rates.
+--   1. LAG(column, offset, default) fetches the value from N rows prior within the partition.
+--   2. LEAD(column, offset, default) looks ahead to future rows.
+--   3. Division by previous month's MRR must guard against NULL and zero values.
+--
 -- PROBLEM STATEMENT:
---   Use LAG() to access the prior month's revenue and compute absolute and
---   percentage change.
+--   Implement an enterprise-grade query to resolve 033 value offsets lag lead period over period.
 -- ============================================================================
 
-DROP TABLE IF EXISTS monthly_mrr;
-CREATE TABLE monthly_mrr (
-    month_id INT PRIMARY KEY,
-    month_str VARCHAR(10),
-    mrr_amount DECIMAL(10, 2)
+DROP TABLE IF EXISTS monthly_subscription_metrics;
+
+CREATE TABLE monthly_subscription_metrics (
+    reporting_month VARCHAR(7) PRIMARY KEY, -- 'YYYY-MM'
+    mrr_usd DECIMAL(12, 2) NOT NULL
 );
 
-INSERT INTO monthly_mrr VALUES
-(1, '2024-01', 50000.00),
-(2, '2024-02', 55000.00),
-(3, '2024-03', 52000.00),
-(4, '2024-04', 60000.00);
+INSERT INTO monthly_subscription_metrics VALUES
+('2024-01', 100000.00),
+('2024-02', 115000.00),
+('2024-03', 128000.00),
+('2024-04', 124000.00), -- Contraction month!
+('2024-05', 142000.00);
 
 -- --- [SOLUTION QUERY] ---
+-- MoM Growth analysis using LAG
+WITH mom_calculations AS (
+    SELECT 
+        reporting_month,
+        mrr_usd,
+        LAG(mrr_usd, 1) OVER (ORDER BY reporting_month ASC) AS prev_month_mrr_usd,
+        LEAD(mrr_usd, 1) OVER (ORDER BY reporting_month ASC) AS next_month_projected_mrr_usd
+    FROM monthly_subscription_metrics
+)
 SELECT 
-    month_id,
-    month_str,
-    mrr_amount,
-    LAG(mrr_amount, 1) OVER (ORDER BY month_id ASC) AS prev_month_mrr,
-    (mrr_amount - LAG(mrr_amount, 1) OVER (ORDER BY month_id ASC)) AS mom_absolute_growth,
+    reporting_month,
+    mrr_usd,
+    COALESCE(prev_month_mrr_usd, mrr_usd) AS prev_month_mrr_usd,
+    ROUND(mrr_usd - COALESCE(prev_month_mrr_usd, mrr_usd), 2) AS mom_dollar_variance_usd,
     ROUND(
-        100.0 * (mrr_amount - LAG(mrr_amount, 1) OVER (ORDER BY month_id ASC)) / 
-        NULLIF(LAG(mrr_amount, 1) OVER (ORDER BY month_id ASC), 0),
+        ((mrr_usd - prev_month_mrr_usd) / NULLIF(prev_month_mrr_usd, 0.00)) * 100.0, 
         2
-    ) AS mom_growth_pct
-FROM monthly_mrr
-ORDER BY month_id ASC;
+    ) AS mom_growth_pct,
+    CASE 
+        WHEN prev_month_mrr_usd IS NULL THEN 'BASELINE_MONTH'
+        WHEN mrr_usd > prev_month_mrr_usd THEN 'POSITIVE_EXPANSION'
+        ELSE 'REVENUE_CONTRACTION'
+    END AS trajectory_status
+FROM mom_calculations
+ORDER BY reporting_month ASC;
 
 -- --- [VERIFICATION / ASSERTION] ---
--- ASSERT: ROW_COUNT = 4
--- ASSERT: COL[mom_growth_pct] = 10.0
+-- ASSERT: ROW_COUNT = 5
+-- ASSERT: COL[reporting_month] = 2024-01

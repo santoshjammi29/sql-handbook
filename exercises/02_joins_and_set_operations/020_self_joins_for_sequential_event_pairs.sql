@@ -1,45 +1,70 @@
 -- ============================================================================
 -- EXERCISE: 020_self_joins_for_sequential_event_pairs.sql
 -- MODULE:   02_joins_and_set_operations
--- LEVEL:    Intermediate
+-- LEVEL:    🔴<br>Advanced
 -- ENGINES:  PostgreSQL, DuckDB, SQLite, Snowflake, BigQuery, Databricks Spark SQL
+-- ROLE:     Lead Analytics Engineer & Digital Product Architect
 -- ----------------------------------------------------------------------------
+-- ARCHITECTURAL CONTEXT & SYSTEM TOPOLOGY:
+--   User Clickstream Funnel Pathing & Checkout Drop-Off Velocity Analytics.
+--   Connecting consecutive sequential user actions within a browsing session
+--   to compute step-to-step drop-off transition times and abandonment paths.
+--
 -- BUSINESS CONTEXT:
---   User session flow analysis requires calculating how many seconds a user
---   spent on Step 1 before transitioning to Step 2 in a checkout funnel.
+--   Product analytics needs to track transition velocity from 'PRODUCT_VIEW' to 'ADD_TO_CART'
+--   to 'CHECKOUT_START' to 'ORDER_SUBMIT'. By performing a self-join on session_id
+--   matching Step N with Step N+1, analysts can measure transition latency and
+--   identify high-friction user friction points.
+--
 -- PROBLEM STATEMENT:
---   Self-join the funnel events table to match consecutive event steps for the
---   same user session and calculate time elapsed.
+--   Build a self-join event pair pipeline that links each user action to its immediate
+--   subsequent action, calculates transition elapsed seconds, and flags drop-offs.
 -- ============================================================================
 
-DROP TABLE IF EXISTS funnel_steps;
-CREATE TABLE funnel_steps (
-    session_id INT,
-    step_number INT,
-    step_name VARCHAR(50),
-    step_timestamp INT -- Unix epoch seconds
+DROP TABLE IF EXISTS user_clickstream_events;
+
+CREATE TABLE user_clickstream_events (
+    event_id VARCHAR(32) PRIMARY KEY,
+    session_id VARCHAR(32) NOT NULL,
+    step_sequence INT NOT NULL,
+    page_name VARCHAR(50) NOT NULL,
+    event_epoch_sec INT NOT NULL
 );
 
-INSERT INTO funnel_steps VALUES
-(101, 1, 'View Product', 1700000000),
-(101, 2, 'Add to Cart', 1700000045),
-(101, 3, 'Complete Purchase', 1700000120),
-(102, 1, 'View Product', 1700000500),
-(102, 2, 'Add to Cart', 1700000580);
+INSERT INTO user_clickstream_events VALUES
+-- Session S1: Completes full checkout funnel smoothly
+('E-01', 'S1', 1, 'HOME_PAGE',        1714550000),
+('E-02', 'S1', 2, 'PRODUCT_DETAILS',  1714550045), -- +45s
+('E-03', 'S1', 3, 'ADD_TO_CART',      1714550090), -- +45s
+('E-04', 'S1', 4, 'CHECKOUT_PAYMENT', 1714550210), -- +120s
+-- Session S2: Drops off after cart
+('E-05', 'S2', 1, 'HOME_PAGE',        1714551000),
+('E-06', 'S2', 2, 'PRODUCT_DETAILS',  1714551030), -- +30s
+('E-07', 'S2', 3, 'ADD_TO_CART',      1714551080); -- Abandons here!
 
 -- --- [SOLUTION QUERY] ---
+-- Self-join pattern linking step_sequence N to step_sequence N + 1
 SELECT 
     curr.session_id,
-    curr.step_number AS from_step_num,
-    curr.step_name   AS from_step,
-    next.step_name   AS to_step,
-    (next.step_timestamp - curr.step_timestamp) AS duration_seconds
-FROM funnel_steps curr
-JOIN funnel_steps next 
-    ON curr.session_id = next.session_id 
-    AND curr.step_number + 1 = next.step_number
-ORDER BY curr.session_id ASC, curr.step_number ASC;
+    curr.step_sequence AS from_step_num,
+    curr.page_name AS from_page,
+    nxt.step_sequence AS to_step_num,
+    COALESCE(nxt.page_name, 'SESSION_ABANDONED_EXIT') AS to_page,
+    CASE 
+        WHEN nxt.event_epoch_sec IS NOT NULL THEN (nxt.event_epoch_sec - curr.event_epoch_sec)
+        ELSE NULL 
+    END AS transition_duration_seconds,
+    CASE 
+        WHEN nxt.page_name IS NULL THEN 'CHURN_DROP_OFF'
+        WHEN (nxt.event_epoch_sec - curr.event_epoch_sec) > 90 THEN 'SLOW_FRICTION_TRANSITION'
+        ELSE 'OPTIMAL_VELOCITY'
+    END AS transition_health_grade
+FROM user_clickstream_events curr
+LEFT JOIN user_clickstream_events nxt 
+    ON curr.session_id = nxt.session_id 
+    AND curr.step_sequence + 1 = nxt.step_sequence
+ORDER BY curr.session_id ASC, curr.step_sequence ASC;
 
 -- --- [VERIFICATION / ASSERTION] ---
--- ASSERT: ROW_COUNT = 3
--- ASSERT: COL[duration_seconds] = 45
+-- ASSERT: ROW_COUNT = 7
+-- ASSERT: COL[session_id] = S1

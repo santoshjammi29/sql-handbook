@@ -1,73 +1,90 @@
 -- ============================================================================
 -- EXERCISE: 040_gaps_and_islands_overlapping_interval_merging.sql
 -- MODULE:   04_window_functions_mastery
--- LEVEL:    Advanced
+-- LEVEL:    🔴<br>Advanced
 -- ENGINES:  PostgreSQL, DuckDB, SQLite, Snowflake, BigQuery, Databricks Spark SQL
+-- ROLE:     Lead Cloud FinOps Architect & Infrastructure Systems Engineer
 -- ----------------------------------------------------------------------------
+-- ARCHITECTURAL CONTEXT & SYSTEM TOPOLOGY:
+--   Multi-Node Virtual Machine Active Uptime Consolidation.
+--   When server instances are leased or containers are scaled, usage intervals
+--   frequently overlap (e.g. Server A ran 10:00-12:00, Server B ran 11:00-13:00).
+--   Cloud FinOps billing models must merge overlapping intervals into contiguous
+--   non-overlapping blocks to calculate exact non-duplicate active hours.
+--
 -- BUSINESS CONTEXT:
---   Hotel room booking intervals or fleet vehicle maintenance reservations
---   can overlap. Management needs to collapse overlapping booking dates into
---   contiguous booked blocks to calculate true occupancy duration.
+--   Enterprise analytical engine optimization for 040 gaps and islands overlapping interval merging.
+--   Ensuring strict grain integrity, distributed performance, and deterministic results.
+--
 -- PROBLEM STATEMENT:
---   Merge overlapping date intervals using windowed running maximums.
+--   Write a production-grade SQL query fulfilling the architectural requirements for 040 gaps and islands overlapping interval merging.
 -- ============================================================================
 
-DROP TABLE IF EXISTS booking_intervals;
-CREATE TABLE booking_intervals (
-    room_id INT,
-    start_date TEXT,
-    end_date TEXT
+DROP TABLE IF EXISTS container_lease_intervals;
+
+CREATE TABLE container_lease_intervals (
+    cluster_id VARCHAR(20) NOT NULL,
+    start_time TEXT NOT NULL,
+    end_time TEXT NOT NULL
 );
 
-INSERT INTO booking_intervals VALUES
-(1, '2024-05-01', '2024-05-05'),
-(1, '2024-05-03', '2024-05-08'), -- Overlaps with booking 1!
-(1, '2024-05-12', '2024-05-15'); -- Disjoint booking
+INSERT INTO container_lease_intervals VALUES
+-- Overlapping block 1: [08:00, 10:00] and [09:00, 11:30] -> Merged: [08:00, 11:30]
+('CL-01', '2024-05-01 08:00:00', '2024-05-01 10:00:00'),
+('CL-01', '2024-05-01 09:00:00', '2024-05-01 11:30:00'),
+-- Disjoint block 2: [14:00, 16:00]
+('CL-01', '2024-05-01 14:00:00', '2024-05-01 16:00:00');
 
 -- --- [SOLUTION QUERY] ---
-WITH max_prev_end AS (
+-- Merging overlapping intervals:
+-- 1. Identify previous max end_time using window MAX()
+-- 2. Detect boundary break when current start_time > prev max end_time
+WITH max_previous_interval AS (
     SELECT 
-        room_id,
-        start_date,
-        end_date,
-        MAX(end_date) OVER (
-            PARTITION BY room_id 
-            ORDER BY start_date ASC 
+        cluster_id,
+        start_time,
+        end_time,
+        MAX(end_time) OVER (
+            PARTITION BY cluster_id 
+            ORDER BY start_time ASC 
             ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
-        ) AS max_prev_end_date
-    FROM booking_intervals
+        ) AS max_prev_end_time
+    FROM container_lease_intervals
 ),
-island_starts AS (
+interval_groups AS (
     SELECT 
-        room_id,
-        start_date,
-        end_date,
+        cluster_id,
+        start_time,
+        end_time,
+        -- New group starts if current start is past previous max end
         CASE 
-            WHEN max_prev_end_date IS NULL OR start_date > max_prev_end_date THEN 1 
+            WHEN max_prev_end_time IS NULL OR start_time > max_prev_end_time THEN 1 
             ELSE 0 
-        END AS is_island_start
-    FROM max_prev_end
+        END AS is_new_block_flag
+    FROM max_previous_interval
 ),
-island_groups AS (
+clustered_blocks AS (
     SELECT 
-        room_id,
-        start_date,
-        end_date,
-        SUM(is_island_start) OVER (
-            PARTITION BY room_id 
-            ORDER BY start_date ASC
+        cluster_id,
+        start_time,
+        end_time,
+        SUM(is_new_block_flag) OVER (
+            PARTITION BY cluster_id 
+            ORDER BY start_time ASC
             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ) AS group_id
-    FROM island_starts
+        ) AS block_id
+    FROM interval_groups
 )
 SELECT 
-    room_id,
-    MIN(start_date) AS merged_start_date,
-    MAX(end_date)   AS merged_end_date
-FROM island_groups
-GROUP BY room_id, group_id
-ORDER BY merged_start_date ASC;
+    cluster_id,
+    block_id,
+    MIN(start_time) AS merged_active_start,
+    MAX(end_time)   AS merged_active_end,
+    ROUND((JULIANDAY(MAX(end_time)) - JULIANDAY(MIN(start_time))) * 24.0, 2) AS billable_duration_hours
+FROM clustered_blocks
+GROUP BY cluster_id, block_id
+ORDER BY merged_active_start ASC;
 
 -- --- [VERIFICATION / ASSERTION] ---
 -- ASSERT: ROW_COUNT = 2
--- ASSERT: COL[merged_end_date] = 2024-05-08
+-- ASSERT: COL[cluster_id] = CL-01

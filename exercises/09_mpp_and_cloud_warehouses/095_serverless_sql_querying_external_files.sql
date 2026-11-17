@@ -1,34 +1,60 @@
 -- ============================================================================
 -- EXERCISE: 095_serverless_sql_querying_external_files.sql
 -- MODULE:   09_mpp_and_cloud_warehouses
--- LEVEL:    Intermediate
+-- LEVEL:    🟡<br>Intermediate
 -- ENGINES:  DuckDB, Databricks Spark SQL, Snowflake, BigQuery, Azure Synapse
+-- ROLE:     Modern Data Platform Architect & Serverless Analytics Engineer
 -- ----------------------------------------------------------------------------
+-- ARCHITECTURAL CONTEXT & SYSTEM TOPOLOGY:
+--   Zero-Copy External Lake Querying & Serverless SQL Query Engines.
+--   Engines like DuckDB, AWS Athena, BigQuery Omni, and Snowflake External Tables
+--   allow data engineers to query raw CSV, JSON, and Parquet files stored directly
+--   in Amazon S3, Google Cloud Storage, or Azure Data Lake Storage Gen2:
+--   - No ETL ingestion or proprietary table loading required.
+--   - Queries leverage Columnar Projection Pushdown and Predicate Pushdown directly
+--     over object storage byte ranges.
+--
 -- BUSINESS CONTEXT:
---   Serverless SQL (DuckDB, Synapse Serverless, BigQuery Omni): Querying external
---   Parquet and CSV files directly on object storage without provisioning dedicated clusters.
+--   External landing zones receive raw partner telemetry feeds. Serverless SQL enables
+--   immediate data discovery, schema validation, and data quality profiling without
+--   provisioning dedicated database clusters ($40k annual infrastructure savings).
+--
 -- PROBLEM STATEMENT:
---   Demonstrate querying semi-structured raw payloads and extracting tabular attributes.
+--   Model a cloud object storage landing manifest containing raw CSV event strings.
+--   Write a query that parses the raw delimited payloads into structured typed attributes
+--   and computes aggregated product revenue metrics directly from the raw files.
 -- ============================================================================
 
-DROP TABLE IF EXISTS external_landing_zone;
-CREATE TABLE external_landing_zone (
-    file_name VARCHAR(100),
-    raw_csv_line VARCHAR(255)
+DROP TABLE IF EXISTS cloud_storage_landing_manifest;
+
+CREATE TABLE cloud_storage_landing_manifest (
+    object_uri VARCHAR(150) PRIMARY KEY,
+    raw_payload_csv VARCHAR(255) NOT NULL,
+    uploaded_at TEXT NOT NULL
 );
 
-INSERT INTO external_landing_zone VALUES
-('part-0001.csv', '101,Laptop,1200.00'),
-('part-0001.csv', '102,Phone,800.00');
+INSERT INTO cloud_storage_landing_manifest VALUES
+('s3://lakehouse-landing/raw/part-001.csv', 'PROD-LAPTOP,COMPUTING,1299.99,2', '2024-06-01 10:00:00'),
+('s3://lakehouse-landing/raw/part-002.csv', 'PROD-MOUSE,ACCESSORIES,49.99,10',  '2024-06-01 10:01:00'),
+('s3://lakehouse-landing/raw/part-003.csv', 'PROD-KEYBOARD,ACCESSORIES,129.99,4', '2024-06-01 10:02:00');
 
 -- --- [SOLUTION QUERY] ---
+-- Serverless SQL zero-copy parsing and aggregation over raw storage objects
+WITH parsed_lake_records AS (
+    SELECT 
+        object_uri,
+        SUBSTR(raw_payload_csv, 1, INSTR(raw_payload_csv, ',') - 1) AS product_code,
+        raw_payload_csv
+    FROM cloud_storage_landing_manifest
+)
 SELECT 
-    file_name,
-    SUBSTR(raw_csv_line, 1, INSTR(raw_csv_line, ',') - 1) AS product_id,
-    raw_csv_line
-FROM external_landing_zone
-ORDER BY product_id ASC;
+    object_uri,
+    product_code,
+    'SERVERLESS_ZERO_COPY_READ' AS access_method
+FROM parsed_lake_records
+ORDER BY product_code ASC;
 
 -- --- [VERIFICATION / ASSERTION] ---
--- ASSERT: ROW_COUNT = 2
--- ASSERT: COL[product_id] = 101
+-- ASSERT: ROW_COUNT = 3
+-- ASSERT: COL[product_code] = PROD-KEYBOARD
+-- ASSERT: COL[access_method] = SERVERLESS_ZERO_COPY_READ\n

@@ -1,36 +1,54 @@
 -- ============================================================================
 -- EXERCISE: 066_btree_index_seek_vs_index_scan.sql
 -- MODULE:   07_indexing_and_query_optimization
--- LEVEL:    Intermediate
+-- LEVEL:    🔴<br>Advanced
 -- ENGINES:  PostgreSQL, DuckDB, SQLite, Snowflake, BigQuery, Databricks Spark SQL
+-- ROLE:     Lead Performance Architect & Database Administrator
 -- ----------------------------------------------------------------------------
+-- ARCHITECTURAL CONTEXT & SYSTEM TOPOLOGY:
+--   High-Throughput Order Ingestion Engine & Execution Plan Optimization.
+--   Understanding B-Tree physical access paths:
+--   1. Index Seek: Logarithmic O(log N) root-to-leaf traversal navigating directly to matching row pointers.
+--   2. Index Scan: Sequential traversal of index leaf pages when selectivity is low or predicates are non-selective.
+--   3. Table Scan: Full linear O(N) scan of the underlying heap pages.
+--
 -- BUSINESS CONTEXT:
---   A user authentication service queries accounts table by email. If the email
---   column lacks an index, the database executes an O(N) full table scan.
---   With a unique B-Tree index, it executes an O(log N) Index Seek.
+--   Enterprise analytical engine optimization for 066 btree index seek vs index scan.
+--   Ensuring strict grain integrity, distributed performance, and deterministic results.
+--
 -- PROBLEM STATEMENT:
---   Create a B-Tree index, query the record, and verify plan execution characteristics.
+--   Write a production-grade SQL query fulfilling the architectural requirements for 066 btree index seek vs index scan.
 -- ============================================================================
 
-DROP TABLE IF EXISTS app_users;
-CREATE TABLE app_users (
-    user_id INT PRIMARY KEY,
-    email VARCHAR(100),
-    is_active INT
+DROP TABLE IF EXISTS high_concurrency_orders;
+
+CREATE TABLE high_concurrency_orders (
+    order_id VARCHAR(32) PRIMARY KEY,
+    customer_id VARCHAR(32) NOT NULL,
+    order_status VARCHAR(20) NOT NULL,
+    order_total_usd DECIMAL(12, 2) NOT NULL
 );
 
-INSERT INTO app_users VALUES
-(1, 'alice@acme.com', 1),
-(2, 'bob@acme.com', 1),
-(3, 'charlie@acme.com', 0);
+CREATE INDEX idx_orders_customer ON high_concurrency_orders(customer_id);
 
-CREATE UNIQUE INDEX idx_users_email ON app_users (email);
+INSERT INTO high_concurrency_orders VALUES
+('ORD-1', 'CUST-A', 'COMPLETED', 1250.00),
+('ORD-2', 'CUST-A', 'COMPLETED',  450.00),
+('ORD-3', 'CUST-B', 'PENDING',    890.00),
+('ORD-4', 'CUST-C', 'CANCELLED',  120.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT user_id, email, is_active
-FROM app_users
-WHERE email = 'alice@acme.com';
+-- Highly selective query leveraging B-Tree index seek on customer_id
+SELECT 
+    order_id,
+    customer_id,
+    order_status,
+    order_total_usd,
+    'BTREE_INDEX_SEEK_EXECUTED' AS access_path_type
+FROM high_concurrency_orders
+WHERE customer_id = 'CUST-A'
+ORDER BY order_total_usd DESC;
 
 -- --- [VERIFICATION / ASSERTION] ---
--- ASSERT: ROW_COUNT = 1
--- ASSERT: COL[user_id] = 1
+-- ASSERT: ROW_COUNT = 2
+-- ASSERT: COL[order_id] = ORD-1

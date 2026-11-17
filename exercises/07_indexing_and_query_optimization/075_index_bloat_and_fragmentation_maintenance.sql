@@ -1,30 +1,51 @@
 -- ============================================================================
 -- EXERCISE: 075_index_bloat_and_fragmentation_maintenance.sql
 -- MODULE:   07_indexing_and_query_optimization
--- LEVEL:    Advanced
+-- LEVEL:    🔴<br>Advanced
 -- ENGINES:  PostgreSQL, DuckDB, SQLite, Snowflake, BigQuery, Databricks Spark SQL
+-- ROLE:     Lead Database SRE & Storage Systems Specialist
 -- ----------------------------------------------------------------------------
+-- ARCHITECTURAL CONTEXT & SYSTEM TOPOLOGY:
+--   B-Tree Index Page Fragmentation & Bloat Maintenance.
+--   Heavy random UPDATE and DELETE workloads create hollow leaf pages (page splits).
+--   Measuring table page fill factors and executing maintenance reindexing.
+--
 -- BUSINESS CONTEXT:
---   High-frequency random inserts and deletes cause B-Tree page splits and
---   table bloat. In production PostgreSQL/SQLite, periodic VACUUM or REINDEX
---   reclaims dead storage space and defragments index leaf pages.
+--   Enterprise analytical engine optimization for 075 index bloat and fragmentation maintenance.
+--   Ensuring strict grain integrity, distributed performance, and deterministic results.
+--
 -- PROBLEM STATEMENT:
---   Simulate table mutations and demonstrate index maintenance.
+--   Write a production-grade SQL query fulfilling the architectural requirements for 075 index bloat and fragmentation maintenance.
 -- ============================================================================
 
-DROP TABLE IF EXISTS volatile_table;
-CREATE TABLE volatile_table (
-    id INT PRIMARY KEY,
-    payload VARCHAR(255)
+DROP TABLE IF EXISTS write_heavy_telemetry;
+
+CREATE TABLE write_heavy_telemetry (
+    reading_id INT PRIMARY KEY,
+    metric_value DECIMAL(10, 2) NOT NULL,
+    status_flag VARCHAR(10) NOT NULL
 );
 
-INSERT INTO volatile_table VALUES (1, 'initial data 1'), (2, 'initial data 2');
-DELETE FROM volatile_table WHERE id = 1;
-INSERT INTO volatile_table VALUES (3, 'new data 3');
+CREATE INDEX idx_telemetry_status ON write_heavy_telemetry(status_flag);
+
+INSERT INTO write_heavy_telemetry VALUES
+(1, 100.50, 'ACTIVE'),
+(2, 200.75, 'INACTIVE'),
+(3, 300.25, 'ACTIVE');
+
+-- Reindex maintenance simulation
+REINDEX idx_telemetry_status;
 
 -- --- [SOLUTION QUERY] ---
-SELECT id, payload FROM volatile_table ORDER BY id ASC;
+SELECT 
+    status_flag,
+    COUNT(*) AS total_readings,
+    AVG(metric_value) AS avg_value,
+    'REINDEX_OPTIMIZED' AS maintenance_state
+FROM write_heavy_telemetry
+GROUP BY status_flag
+ORDER BY total_readings DESC;
 
 -- --- [VERIFICATION / ASSERTION] ---
 -- ASSERT: ROW_COUNT = 2
--- ASSERT: COL[id] = 2
+-- ASSERT: COL[status_flag] = ACTIVE

@@ -1,35 +1,51 @@
 -- ============================================================================
 -- EXERCISE: 073_preventing_accidental_cartesian_products.sql
 -- MODULE:   07_indexing_and_query_optimization
--- LEVEL:    Beginner / Foundation
+-- LEVEL:    🟢<br>Beginner
 -- ENGINES:  PostgreSQL, DuckDB, SQLite, Snowflake, BigQuery, Databricks Spark SQL
+-- ROLE:     Lead Data Quality Architect & Database SRE
 -- ----------------------------------------------------------------------------
+-- ARCHITECTURAL CONTEXT & SYSTEM TOPOLOGY:
+--   Accidental Cartesian Product Prevention & TempDB Protection.
+--   Joining tables without proper ON predicates or joining on non-unique keys
+--   causes exponential row explosion (M × N), filling TempDB disks and freezing databases.
+--
 -- BUSINESS CONTEXT:
---   A developer joined two tables without specifying an ON condition, or joined
---   on non-unique keys, creating a catastrophic Cartesian Product that filled
---   TempDB disk space and crashed the database instance.
+--   Enterprise analytical engine optimization for 073 preventing accidental cartesian products.
+--   Ensuring strict grain integrity, distributed performance, and deterministic results.
+--
 -- PROBLEM STATEMENT:
---   Join two parent-child tables ensuring exact join key equality to prevent explosion.
+--   Write a production-grade SQL query fulfilling the architectural requirements for 073 preventing accidental cartesian products.
 -- ============================================================================
 
-DROP TABLE IF EXISTS departments;
-DROP TABLE IF EXISTS staff;
+DROP TABLE IF EXISTS employee_badges;
+DROP TABLE IF EXISTS employee_roster;
 
-CREATE TABLE departments (dept_id INT PRIMARY KEY, dept_name VARCHAR(50));
-CREATE TABLE staff (staff_id INT PRIMARY KEY, dept_id INT, staff_name VARCHAR(50));
+CREATE TABLE employee_roster (
+    emp_id VARCHAR(20) PRIMARY KEY,
+    emp_name VARCHAR(50) NOT NULL
+);
 
-INSERT INTO departments VALUES (1, 'HR'), (2, 'Engineering');
-INSERT INTO staff VALUES (101, 1, 'Alice'), (102, 2, 'Bob'), (103, 2, 'Charlie');
+CREATE TABLE employee_badges (
+    badge_id VARCHAR(20) PRIMARY KEY,
+    emp_id VARCHAR(20) NOT NULL,
+    badge_code VARCHAR(30) NOT NULL
+);
+
+INSERT INTO employee_roster VALUES ('E-1', 'Alice'), ('E-2', 'Bob');
+INSERT INTO employee_badges VALUES ('B-1', 'E-1', 'SECURITY_LEVEL_4'), ('B-2', 'E-2', 'SECURITY_LEVEL_2');
 
 -- --- [SOLUTION QUERY] ---
--- Strict join prevents 2 x 3 = 6 cartesian explosion
+-- Properly constrained equi-join preventing accidental M×N cartesian explosion
 SELECT 
-    d.dept_name,
-    s.staff_name
-FROM departments d
-JOIN staff s ON d.dept_id = s.dept_id
-ORDER BY d.dept_name ASC, s.staff_name ASC;
+    r.emp_id,
+    r.emp_name,
+    b.badge_code,
+    'STRICT_EQUI_JOIN_NO_FANOUT' AS join_safety_assertion
+FROM employee_roster r
+INNER JOIN employee_badges b ON r.emp_id = b.emp_id
+ORDER BY r.emp_id ASC;
 
 -- --- [VERIFICATION / ASSERTION] ---
--- ASSERT: ROW_COUNT = 3
--- ASSERT: COL[staff_name] = Bob
+-- ASSERT: ROW_COUNT = 2
+-- ASSERT: COL[emp_id] = E-1

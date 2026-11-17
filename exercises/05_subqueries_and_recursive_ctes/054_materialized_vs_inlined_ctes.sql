@@ -1,43 +1,52 @@
 -- ============================================================================
 -- EXERCISE: 054_materialized_vs_inlined_ctes.sql
 -- MODULE:   05_subqueries_and_recursive_ctes
--- LEVEL:    Advanced
+-- LEVEL:    🔴<br>Advanced
 -- ENGINES:  PostgreSQL, DuckDB, SQLite, Snowflake, BigQuery, Databricks Spark SQL
+-- ROLE:     Lead Performance Architect & Database Engine Internals Specialist
 -- ----------------------------------------------------------------------------
+-- ARCHITECTURAL CONTEXT & SYSTEM TOPOLOGY:
+--   CTE Materialization vs Inlining Optimization.
+--   PostgreSQL 12+ and modern query optimizers choose whether to materialize
+--   a CTE into a temporary memory buffer or inline it into the outer query.
+--
 -- BUSINESS CONTEXT:
---   Query optimizer fences: In PostgreSQL and SQLite, an un-materialized CTE is
---   inlined into the main query, allowing predicate pushdown. A MATERIALIZED CTE
---   forces evaluation into a temporary buffer, acting as an optimization fence.
+--   Enterprise analytical engine optimization for 054 materialized vs inlined ctes.
+--   Ensuring strict grain integrity, distributed performance, and deterministic results.
+--
 -- PROBLEM STATEMENT:
---   Demonstrate filtering inside CTE versus filtering downstream.
+--   Write a production-grade SQL query fulfilling the architectural requirements for 054 materialized vs inlined ctes.
 -- ============================================================================
 
-DROP TABLE IF EXISTS raw_logs;
-CREATE TABLE raw_logs (
-    log_id INT PRIMARY KEY,
-    severity VARCHAR(10),
-    message TEXT
+DROP TABLE IF EXISTS financial_ledger_feed;
+
+CREATE TABLE financial_ledger_feed (
+    txn_id VARCHAR(32) PRIMARY KEY,
+    amount_usd DECIMAL(12, 2) NOT NULL,
+    status VARCHAR(20) NOT NULL
 );
 
-INSERT INTO raw_logs VALUES
-(1, 'INFO',  'System started'),
-(2, 'ERROR', 'Disk full'),
-(3, 'WARN',  'High memory'),
-(4, 'ERROR', 'Connection timeout');
+INSERT INTO financial_ledger_feed VALUES
+('T-01', 50000.00, 'SETTLED'),
+('T-02', 25000.00, 'SETTLED'),
+('T-03',  8000.00, 'PENDING'),
+('T-04', 12000.00, 'SETTLED');
 
 -- --- [SOLUTION QUERY] ---
-WITH error_logs AS (
-    SELECT log_id, severity, message
-    FROM raw_logs
-    WHERE severity = 'ERROR'
+-- Multi-reference CTE that benefits from single materialization rather than dual scans
+WITH settled_high_value_txns AS (
+    SELECT txn_id, amount_usd
+    FROM financial_ledger_feed
+    WHERE status = 'SETTLED' AND amount_usd >= 10000.00
 )
 SELECT 
-    log_id,
-    message
-FROM error_logs
-WHERE log_id > 1
-ORDER BY log_id ASC;
+    t.txn_id,
+    t.amount_usd,
+    (SELECT SUM(amount_usd) FROM settled_high_value_txns) AS total_settled_pool_usd,
+    ROUND((t.amount_usd / (SELECT SUM(amount_usd) FROM settled_high_value_txns)) * 100.0, 2) AS pool_share_pct
+FROM settled_high_value_txns t
+ORDER BY t.amount_usd DESC;
 
 -- --- [VERIFICATION / ASSERTION] ---
--- ASSERT: ROW_COUNT = 2
--- ASSERT: COL[message] = Disk full
+-- ASSERT: ROW_COUNT = 3
+-- ASSERT: COL[txn_id] = T-01

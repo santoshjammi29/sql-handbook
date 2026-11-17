@@ -1,51 +1,69 @@
 -- ============================================================================
 -- EXERCISE: 048_ctes_vs_temp_tables_vs_subqueries.sql
 -- MODULE:   05_subqueries_and_recursive_ctes
--- LEVEL:    Intermediate
+-- LEVEL:    🟡<br>Intermediate
 -- ENGINES:  PostgreSQL, DuckDB, SQLite, Snowflake, BigQuery, Databricks Spark SQL
+-- ROLE:     Lead Data Architect & Warehouse Optimization Specialist
 -- ----------------------------------------------------------------------------
+-- ARCHITECTURAL CONTEXT & SYSTEM TOPOLOGY:
+--   Multi-Stage ETL Data Pipeline Architecture.
+--   Evaluating structural paradigms: Common Table Expressions (CTEs), Subqueries, and Temp Tables.
+--   - CTEs: High readability, declarative syntax, optimized inline by modern CBOs.
+--   - Subqueries: High verbosity, difficult to read beyond 2 nested levels.
+--   - Temp Tables: Physically written to TempDB/RAM, allows manual secondary indexing.
+--
 -- BUSINESS CONTEXT:
---   ETL pipeline clean-up: Transform raw event streams into parsed JSON attributes,
---   filter invalid records, and aggregate summary metrics in a clean multi-CTE pipeline.
+--   Enterprise analytical engine optimization for 048 ctes vs temp tables vs subqueries.
+--   Ensuring strict grain integrity, distributed performance, and deterministic results.
+--
 -- PROBLEM STATEMENT:
---   Demonstrate staging transformations through sequential modular CTEs.
+--   Write a production-grade SQL query fulfilling the architectural requirements for 048 ctes vs temp tables vs subqueries.
 -- ============================================================================
 
-DROP TABLE IF EXISTS raw_inbound_stream;
-CREATE TABLE raw_inbound_stream (
-    event_id INT PRIMARY KEY,
-    event_type VARCHAR(20),
-    amount DECIMAL(10, 2),
-    is_test INT
+DROP TABLE IF EXISTS raw_meter_telemetry;
+
+CREATE TABLE raw_meter_telemetry (
+    meter_id VARCHAR(20) NOT NULL,
+    kwh_consumed DECIMAL(10, 2) NOT NULL,
+    reading_timestamp TEXT NOT NULL
 );
 
-INSERT INTO raw_inbound_stream VALUES
-(1, 'PURCHASE', 150.00, 0),
-(2, 'PURCHASE', 200.00, 1), -- Filter out test
-(3, 'REFUND',    50.00, 0),
-(4, 'PURCHASE', 400.00, 0);
+INSERT INTO raw_meter_telemetry VALUES
+('MTR-01', 120.50, '2024-05-01 08:00:00'),
+('MTR-01', 145.00, '2024-05-01 12:00:00'),
+('MTR-02',  80.00, '2024-05-01 08:00:00'),
+('MTR-02',  95.50, '2024-05-01 12:00:00');
 
 -- --- [SOLUTION QUERY] ---
-WITH cleaned_events AS (
-    SELECT event_id, event_type, amount 
-    FROM raw_inbound_stream 
-    WHERE is_test = 0
-),
-aggregated_metrics AS (
+-- Clean modular multi-stage CTE pipeline
+WITH stg_daily_consumption AS (
     SELECT 
-        event_type,
-        COUNT(*) AS event_count,
-        SUM(amount) AS total_volume
-    FROM cleaned_events
-    GROUP BY event_type
+        meter_id,
+        SUM(kwh_consumed) AS total_kwh,
+        AVG(kwh_consumed) AS avg_reading_kwh
+    FROM raw_meter_telemetry
+    GROUP BY meter_id
+),
+meter_tiered_billing AS (
+    SELECT 
+        meter_id,
+        total_kwh,
+        avg_reading_kwh,
+        ROUND(total_kwh * 0.15, 2) AS estimated_cost_usd
+    FROM stg_daily_consumption
 )
 SELECT 
-    event_type,
-    event_count,
-    total_volume
-FROM aggregated_metrics
-ORDER BY total_volume DESC;
+    meter_id,
+    total_kwh,
+    avg_reading_kwh,
+    estimated_cost_usd,
+    CASE 
+        WHEN total_kwh > 200 THEN 'HIGH_CONSUMPTION_INDUSTRIAL'
+        ELSE 'STANDARD_COMMERCIAL'
+    END AS tariff_tier
+FROM meter_tiered_billing
+ORDER BY total_kwh DESC;
 
 -- --- [VERIFICATION / ASSERTION] ---
 -- ASSERT: ROW_COUNT = 2
--- ASSERT: COL[total_volume] = 550.00
+-- ASSERT: COL[meter_id] = MTR-01

@@ -1,37 +1,62 @@
 -- ============================================================================
 -- EXERCISE: 029_relational_unpivoting_columns_to_rows.sql
 -- MODULE:   03_aggregations_and_grouping
--- LEVEL:    Intermediate
+-- LEVEL:    🟡<br>Intermediate
 -- ENGINES:  PostgreSQL, DuckDB, SQLite, Snowflake, BigQuery, Databricks Spark SQL
+-- ROLE:     Lead Data Architect & Data Warehouse Modeler
 -- ----------------------------------------------------------------------------
+-- ARCHITECTURAL CONTEXT & SYSTEM TOPOLOGY:
+--   Enterprise Financial Planning & Analysis (FP&A) Ingestion Mart.
+--   FP&A analysts export wide Excel spreadsheets where months or metrics are
+--   spread across separate columns (e.g., [Dept, Jan_Spend, Feb_Spend, Mar_Spend]).
+--   Dimensional star schemas require unpivoting wide columns into normalized rows:
+--   [Dept, Month_Date, Spend_Amount].
+--
 -- BUSINESS CONTEXT:
---   A legacy spreadsheet ingest landed data with quarters as columns
---   (q1_sales, q2_sales, q3_sales). The Lakehouse Kimball schema requires
---   normalizing this into a tall Fact table.
+--   Unpivoting transforms wide columns into normalized relational rows.
+--   Standard ANSI SQL uses CROSS JOIN with a value generator table (VALUES) or UNION ALL,
+--   ensuring complete portability without proprietary UNPIVOT keywords.
+--
 -- PROBLEM STATEMENT:
---   Unpivot wide columns into relational rows using CROSS JOIN / UNION.
+--   Unpivot wide quarterly budget projections into a normalized Kimball fact table format.
 -- ============================================================================
 
-DROP TABLE IF EXISTS wide_sales_report;
-CREATE TABLE wide_sales_report (
-    region VARCHAR(50) PRIMARY KEY,
-    q1_sales DECIMAL(10, 2),
-    q2_sales DECIMAL(10, 2),
-    q3_sales DECIMAL(10, 2)
+DROP TABLE IF EXISTS wide_quarterly_budget;
+
+CREATE TABLE wide_quarterly_budget (
+    department_id VARCHAR(20) PRIMARY KEY,
+    department_name VARCHAR(50) NOT NULL,
+    q1_budget_usd DECIMAL(12, 2) NOT NULL,
+    q2_budget_usd DECIMAL(12, 2) NOT NULL,
+    q3_budget_usd DECIMAL(12, 2) NOT NULL,
+    q4_budget_usd DECIMAL(12, 2) NOT NULL
 );
 
-INSERT INTO wide_sales_report VALUES
-('North America', 50000.00, 65000.00, 70000.00),
-('Europe',        30000.00, 35000.00, 42000.00);
+INSERT INTO wide_quarterly_budget VALUES
+('D-01', 'Cloud Infrastructure', 500000.00, 520000.00, 550000.00, 600000.00),
+('D-02', 'Data Science & AI',     300000.00, 350000.00, 420000.00, 480000.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT region, 'Q1' AS quarter, q1_sales AS sales_amount FROM wide_sales_report
+-- Portable ANSI SQL unpivoting using UNION ALL to normalize columns into rows
+SELECT department_id, department_name, '2024-Q1' AS fiscal_quarter, q1_budget_usd AS allocated_budget_usd
+FROM wide_quarterly_budget
+
 UNION ALL
-SELECT region, 'Q2' AS quarter, q2_sales AS sales_amount FROM wide_sales_report
+
+SELECT department_id, department_name, '2024-Q2' AS fiscal_quarter, q2_budget_usd AS allocated_budget_usd
+FROM wide_quarterly_budget
+
 UNION ALL
-SELECT region, 'Q3' AS quarter, q3_sales AS sales_amount FROM wide_sales_report
-ORDER BY region ASC, quarter ASC;
+
+SELECT department_id, department_name, '2024-Q3' AS fiscal_quarter, q3_budget_usd AS allocated_budget_usd
+FROM wide_quarterly_budget
+
+UNION ALL
+
+SELECT department_id, department_name, '2024-Q4' AS fiscal_quarter, q4_budget_usd AS allocated_budget_usd
+FROM wide_quarterly_budget
+ORDER BY department_id ASC, fiscal_quarter ASC;
 
 -- --- [VERIFICATION / ASSERTION] ---
--- ASSERT: ROW_COUNT = 6
--- ASSERT: COL[sales_amount] = 30000.00
+-- ASSERT: ROW_COUNT = 8
+-- ASSERT: COL[department_id] = D-01

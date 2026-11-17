@@ -100,6 +100,10 @@ LEVEL_BADGES = {
     "Advanced": "🔴<br>Advanced",
     "Principal / Architect": "🟣<br>Architect",
     "Architect": "🟣<br>Architect",
+    "🟢<br>Beginner": "🟢<br>Beginner",
+    "🟡<br>Intermediate": "🟡<br>Intermediate",
+    "🔴<br>Advanced": "🔴<br>Advanced",
+    "🟣<br>Architect": "🟣<br>Architect",
 }
 
 TITLE_REPLACEMENTS = [
@@ -172,10 +176,24 @@ def extract_meta(file_path: Path):
     badge = LEVEL_BADGES.get(level_raw, f"`{level_raw}`")
 
     scenario = ""
-    m_ctx = re.search(r"BUSINESS CONTEXT:\s*--\s*(.*?)(?:\.|\n--\s*PROBLEM|\n--\s*SURGICAL)", content, re.DOTALL)
-    if m_ctx:
-        clean_text = " ".join([l.replace("--", "").strip() for l in m_ctx.group(1).splitlines()])
-        scenario = clean_text.split(".")[0].strip() + "."
+    # Extract rich scenario context from ARCHITECTURAL CONTEXT or BUSINESS CONTEXT
+    m_arch = re.search(r"ARCHITECTURAL CONTEXT & SYSTEM TOPOLOGY:\s*--\s*(.*?)(?:\n--\s*BUSINESS|\n--\s*PROBLEM|\n--\s*={5,})", content, re.DOTALL)
+    m_ctx = re.search(r"BUSINESS CONTEXT:\s*--\s*(.*?)(?:\n--\s*PROBLEM|\n--\s*SURGICAL|\n--\s*={5,})", content, re.DOTALL)
+
+    raw_text = ""
+    if m_arch:
+        raw_text = " ".join([l.replace("--", "").strip() for l in m_arch.group(1).splitlines() if l.strip()])
+    elif m_ctx:
+        raw_text = " ".join([l.replace("--", "").strip() for l in m_ctx.group(1).splitlines() if l.strip()])
+
+    if raw_text:
+        # Strip leading numbering like '1. ' or '2. '
+        cleaned = re.sub(r"^\d+\.\s*", "", raw_text)
+        sentences = re.split(r"\.\s+", cleaned)
+        first_sentence = sentences[0].strip()
+        if not first_sentence.endswith("."):
+            first_sentence += "."
+        scenario = first_sentence
     else:
         scenario = clean_title(file_path.name)
 

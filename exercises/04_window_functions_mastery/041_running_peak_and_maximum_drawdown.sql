@@ -1,48 +1,78 @@
 -- ============================================================================
 -- EXERCISE: 041_running_peak_and_maximum_drawdown.sql
 -- MODULE:   04_window_functions_mastery
--- LEVEL:    Advanced
+-- LEVEL:    🔴<br>Advanced
 -- ENGINES:  PostgreSQL, DuckDB, SQLite, Snowflake, BigQuery, Databricks Spark SQL
+-- ROLE:     Lead Quantitative Portfolio Risk Architect
 -- ----------------------------------------------------------------------------
+-- ARCHITECTURAL CONTEXT & SYSTEM TOPOLOGY:
+--   Quantitative Hedge Fund Portfolio Risk & Peak Drawdown Engine.
+--   Measuring Maximum Drawdown (MDD): the maximum observed loss from a historical
+--   peak to a trough of a portfolio Net Asset Value (NAV).
+--
 -- BUSINESS CONTEXT:
---   Hedge fund risk systems calculate Maximum Drawdown (MDD) — the maximum peak-to-trough
---   percentage drop in asset portfolio value before a new peak is reached.
+--   Enterprise analytical engine optimization for 041 running peak and maximum drawdown.
+--   Ensuring strict grain integrity, distributed performance, and deterministic results.
+--
 -- PROBLEM STATEMENT:
---   Calculate running peak and drawdown percentage using MAX() OVER (...) and arithmetic.
+--   Write a production-grade SQL query fulfilling the architectural requirements for 041 running peak and maximum drawdown.
 -- ============================================================================
 
-DROP TABLE IF EXISTS portfolio_nav;
-CREATE TABLE portfolio_nav (
-    nav_date TEXT PRIMARY KEY,
-    portfolio_value DECIMAL(10, 2)
+DROP TABLE IF EXISTS fund_nav_daily;
+
+CREATE TABLE fund_nav_daily (
+    trade_date TEXT PRIMARY KEY,
+    fund_ticker VARCHAR(10) NOT NULL,
+    nav_per_share DECIMAL(12, 4) NOT NULL
 );
 
-INSERT INTO portfolio_nav VALUES
-('2024-01-01', 10000.00),
-('2024-01-02', 12000.00), -- Peak 1
-('2024-01-03', 9000.00),  -- Drop 25% from 12k
-('2024-01-04', 15000.00), -- New Peak 2
-('2024-01-05', 13500.00); -- Drop 10% from 15k
+INSERT INTO fund_nav_daily VALUES
+('2024-05-01', 'ALPHA_FUND', 100.0000),
+('2024-05-02', 'ALPHA_FUND', 105.0000), -- Peak 1 (105.00)
+('2024-05-03', 'ALPHA_FUND',  98.0000), -- Drawdown -7.00 (-6.67%)
+('2024-05-04', 'ALPHA_FUND',  92.0000), -- Drawdown -13.00 (-12.38%)
+('2024-05-05', 'ALPHA_FUND', 108.0000), -- New Peak 2 (108.00)
+('2024-05-06', 'ALPHA_FUND', 104.0000); -- Drawdown -4.00
 
 -- --- [SOLUTION QUERY] ---
-WITH peaks AS (
+WITH running_peaks AS (
     SELECT 
-        nav_date,
-        portfolio_value,
-        MAX(portfolio_value) OVER (
-            ORDER BY nav_date ASC
+        trade_date,
+        fund_ticker,
+        nav_per_share,
+        -- Running high watermark peak
+        MAX(nav_per_share) OVER (
+            PARTITION BY fund_ticker 
+            ORDER BY trade_date ASC
             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ) AS running_peak
-    FROM portfolio_nav
+        ) AS historical_peak_nav
+    FROM fund_nav_daily
+),
+drawdown_calculations AS (
+    SELECT 
+        trade_date,
+        fund_ticker,
+        nav_per_share,
+        historical_peak_nav,
+        ROUND(nav_per_share - historical_peak_nav, 4) AS dollar_drawdown,
+        ROUND(((nav_per_share - historical_peak_nav) / historical_peak_nav) * 100.0, 2) AS drawdown_pct
+    FROM running_peaks
 )
 SELECT 
-    nav_date,
-    portfolio_value,
-    running_peak,
-    ROUND(100.0 * (portfolio_value - running_peak) / running_peak, 2) AS drawdown_pct
-FROM peaks
-ORDER BY nav_date ASC;
+    trade_date,
+    fund_ticker,
+    nav_per_share,
+    historical_peak_nav,
+    dollar_drawdown,
+    drawdown_pct,
+    CASE 
+        WHEN nav_per_share >= historical_peak_nav THEN 'ALL_TIME_HIGH_PEAK'
+        WHEN drawdown_pct <= -10.0 THEN 'SEVERE_CORRECTION_DRAWDOWN'
+        ELSE 'MINOR_PULLBACK'
+    END AS risk_condition
+FROM drawdown_calculations
+ORDER BY trade_date ASC;
 
 -- --- [VERIFICATION / ASSERTION] ---
--- ASSERT: ROW_COUNT = 5
--- ASSERT: COL[drawdown_pct] = 0.0
+-- ASSERT: ROW_COUNT = 6
+-- ASSERT: COL[trade_date] = 2024-05-01
