@@ -34,7 +34,7 @@ The 5 S's isolate every major failure mode in distributed query processing:
 | Dimension Property | SCD Type 1 | SCD Type 2 | SCD Type 6 (1 + 2 + 3) |
 | :--- | :--- | :--- | :--- |
 | **Historical Preservation** | None (Overwrites in-place) | Full Unlimited History | Full History + Fast Current Lookup |
-| **Row Multiplicity** | Exactly 1 row per entity | $N$ rows per entity ($N-1$ expired, 1 active) | $N$ rows per entity |
+| **Row Multiplicity** | Exactly 1 row per entity | N rows per entity (N-1 expired, 1 active) | N rows per entity |
 | **Metadata Columns** | `last_updated_at` | `valid_from`, `valid_to`, `is_current` | `valid_from`, `valid_to`, `is_current`, `current_attribute` |
 | **Fact Table Joins** | Simple join on natural/surrogate key | Must join on surrogate key OR timestamp interval range (`txn_date BETWEEN valid_from AND valid_to`) | Join on current attribute directly without filtering |
 | **Use Case** | Correcting typo in customer phone number | Tracking customer address history across moves | Sales attribution needing historical territory + current territory |

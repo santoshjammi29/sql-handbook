@@ -16,7 +16,7 @@
 | **Date Arithmetic**| `d + INTERVAL '7 days'` | `d + INTERVAL 7 DAYS` | `date_add(d, 7)` | `DATEADD(day, 7, d)` | `DATE_ADD(d, INTERVAL 7 DAY)` | `DATEADD(day, 7, d)` |
 | **Date Difference**| `d2 - d1` (returns days) | `DATE_DIFF('day', d1, d2)` | `datediff(d2, d1)` | `DATEDIFF(day, d1, d2)` | `DATE_DIFF(d2, d1, DAY)` | `DATEDIFF(day, d1, d2)` |
 | **Current UTC Time**| `CURRENT_TIMESTAMP` | `CURRENT_TIMESTAMP` | `current_timestamp()` | `CURRENT_TIMESTAMP()` | `CURRENT_TIMESTAMP()` | `SYSUTCDATETIME()` |
-| **JSON Extraction**| `data->>'key'` | `data->>'key'` | `data:key` or `get_json_object()` | `data:key::string` | `JSON_VALUE(data, '$.key')` | `JSON_VALUE(data, '$.key')` |
+| **JSON Extraction**| `data->>'key'` | `data->>'key'` | `data:key` or `get_json_object()` | `data:key::string` | `JSON_VALUE(data, '\$.key')` | `JSON_VALUE(data, '\$.key')` |
 | **Regex Match** | `col ~ '^[A-Z]'` | `regexp_matches(col, '...')` | `col RLIKE '^[A-Z]'` | `REGEXP_LIKE(col, '...')` | `REGEXP_CONTAINS(col, r'...')` | `col LIKE '[A-Z]%'` (Native basic) |
 | **Regex Extract** | `substring(col from 'pattern')`| `regexp_extract(col, 'pattern')` | `regexp_extract(col, 'pattern', 1)` | `REGEXP_SUBSTR(col, 'pattern')` | `REGEXP_EXTRACT(col, r'pattern')` | Requires CLR / Ole Automation |
 | **Surrogate Hash** | `md5(col)` | `md5(col)` | `md5(col)` or `sha2(col, 256)` | `MD5(col)` or `SHA2(col, 256)` | `TO_HEX(MD5(col))` | `HASHBYTES('MD5', col)` |

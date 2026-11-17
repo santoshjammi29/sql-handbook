@@ -81,7 +81,7 @@ Open table formats solve this by introducing an **ACID Transaction Log** on top 
 
 | Feature | Delta Lake | Apache Iceberg | Apache Hudi |
 | :--- | :--- | :--- | :--- |
-| **Transaction Log** | `_delta_log/*.json` + checkpoint `.checkpoint.parquet` files (Single-writer commit protocol) | Hierarchical JSON snapshot metadata $\rightarrow$ Manifest Lists $\rightarrow$ Manifest Files | Timeline metadata (`.hoodie/`) with instantaneous commits and compaction records |
+| **Transaction Log** | `_delta_log/*.json` + checkpoint `.checkpoint.parquet` files (Single-writer commit protocol) | Hierarchical JSON snapshot metadata -> Manifest Lists -> Manifest Files | Timeline metadata (`.hoodie/`) with instantaneous commits and compaction records |
 | **Catalog Independence** | Unity Catalog, Hive Metastore, or standalone filesystem path | Requires catalog (Iceberg REST Catalog, Unity, Glue, Nessie, Snowflake) | Hive Metastore, AWS Glue, filesystem |
 | **Concurrency Control** | Optimistic Concurrency Control (OCC) with Mutual Exclusion via commit coordinator | Optimistic Concurrency Control with atomic pointer swap in catalog | OCC with multi-writer lock provider (Zookeeper, DynamoDB, Hive) |
 | **Multi-Engine Interop** | Delta Universal Format (**UniForm**) generates Iceberg/Hudi metadata on commit | Native Iceberg engine support (Trino, Spark, Flink, Snowflake, DuckDB) | Native Spark/Flink/Presto connectors |

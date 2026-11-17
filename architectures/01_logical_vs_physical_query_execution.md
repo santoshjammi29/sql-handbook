@@ -68,11 +68,11 @@ flowchart LR
 ## 4. Join Physical Implementation Matrix
 
 | Physical Join Algorithm | Best Used When | Time Complexity | Memory Requirement | Common Pitfall / Failure Mode |
-| :--- | :--- | :--- | :--- | :--- |
-| **Nested Loop Join** | One side is tiny (< 100 rows) and inner table has indexed join key. | $\mathcal{O}(N \times \log M)$ | Minimal ($\mathcal{O}(1)$) | Catastrophic $\mathcal{O}(N \times M)$ Cartesian explosion when inner side is unindexed or cardinality underestimated. |
-| **Hash Join** | Both tables are large, unsorted, equality predicate (`=`), build side fits in RAM. | $\mathcal{O}(N + M)$ | Build table hash table in RAM ($\mathcal{O}(M)$) | Hash table exceeds RAM $\rightarrow$ TempDB / disk spill; high memory pressure. |
-| **Sort-Merge Join** | Both inputs are already sorted on join keys or large tables exceed available RAM. | $\mathcal{O}(N \log N + M \log M)$ | Low streaming memory footprint | Expensive sort phase if inputs are not pre-sorted by clustered index or storage layout. |
-| **Broadcast Hash Join** | One table is small enough to replicate to all worker nodes in distributed engine. | $\mathcal{O}(N)$ local | Size of small table replicated per worker | Driver OOM or network saturation if broadcast threshold misconfigured. |
+| :--- | :--- | :---: | :---: | :--- |
+| **Nested Loop Join** | One side is tiny (< 100 rows) and inner table has indexed join key. | `O(N * log M)` | Minimal `O(1)` | Catastrophic `O(N * M)` Cartesian explosion when inner side is unindexed or cardinality underestimated. |
+| **Hash Join** | Both tables are large, unsorted, equality predicate (`=`), build side fits in RAM. | `O(N + M)` | Build hash table in RAM `O(M)` | Hash table exceeds RAM -> TempDB / disk spill; high memory pressure. |
+| **Sort-Merge Join** | Both inputs are already sorted on join keys or large tables exceed available RAM. | `O(N log N + M log M)` | Low streaming footprint | Expensive sort phase if inputs are not pre-sorted by clustered index or storage layout. |
+| **Broadcast Hash Join** | One table is small enough to replicate to all worker nodes in distributed engine. | `O(N)` local | Size of small table per worker | Driver OOM or network saturation if broadcast threshold misconfigured. |
 
 ---
 
