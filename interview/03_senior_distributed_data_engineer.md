@@ -1871,3 +1871,106 @@ GDPR-compliant transaction analytics platform at a European bank — generated c
 - Deletion Vectors (TBLPROPERTIES 'delta.enableDeletionVectors'='true') make DELETE/UPDATE operations 10-100x faster by using soft-delete markers instead of file rewrites
 
 ---
+
+---
+
+### Q3.26: Databricks SQL Native GenAI Functions (Mosaic AI & GenAI SQL)
+
+**Scenario & System Overview:**  
+An enterprise data warehouse must automate customer feedback triage and PII anonymization directly in SQL ELT pipelines. How to use Databricks SQL AI Functions (`ai_query`, `ai_summarize`, `ai_classify`, `ai_extract`, `ai_mask`) to replace complex external Python microservices.
+
+**Technical Deep-Dive & Architecture:**  
+Databricks SQL AI functions execute serverless inference directly within the Photon query execution pipeline. The warehouse worker threads send batched vector/text payloads to Mosaic AI Model Serving endpoints over internal high-speed networks, caching repeated evaluations. Functions like `ai_classify` evaluate against an array of categories, `ai_extract` parses structured JSON from free-form text, and `ai_mask` redacts PII before data lands in reporting marts.
+
+**Production Implementation:**
+```sql
+-- Production SQL ELT pipeline with in-database GenAI enrichment
+WITH raw_feedback AS (
+    SELECT 
+        feedback_id,
+        customer_id,
+        feedback_text
+    FROM prod_catalog.silver.raw_customer_feedback
+    WHERE feedback_text IS NOT NULL AND length(trim(feedback_text)) > 10
+)
+SELECT 
+    feedback_id,
+    customer_id,
+    -- Classify urgency category using zero-shot LLM inference
+    ai_classify(feedback_text, ARRAY('critical_bug', 'billing_issue', 'feature_request', 'praise')) AS urgency_tier,
+    -- Extract product SKU and price mentions as typed JSON
+    ai_extract(feedback_text, ARRAY('sku_code', 'quoted_price', 'store_location')) AS parsed_attributes,
+    -- Automatically redact credit card numbers and email addresses
+    ai_mask(feedback_text, ARRAY('credit_card_number', 'email_address', 'phone_number')) AS sanitized_feedback,
+    -- Generate 10-word executive summary for dashboard display
+    ai_summarize(feedback_text, 10) AS executive_blurb
+FROM raw_feedback;
+```
+
+**Key Invariants & Performance Traps:**
+- Filter out empty or whitespace-only strings before invoking AI functions to save DBU cost.
+- Wrap `ai_query` calls with `TRY_CAST` or `COALESCE` to prevent query aborts on payload timeouts.
+- Set `temperature = 0.0` for deterministic classification tasks across repeatable pipeline runs.
+
+---
+
+### Q3.27: In-Database Vector Similarity Joins with vector_search() Table Functions (Mosaic AI SQL)
+
+**Scenario & System Overview:**  
+A global ecommerce catalog requires real-time semantic duplicate detection and product recommendation queries written in pure SQL without external vector database SDKs.
+
+**Technical Deep-Dive & Architecture:**  
+Databricks SQL exposes the `vector_search()` table function, allowing queries to perform Approximate Nearest Neighbor (ANN) vector similarity searches directly against Mosaic AI Vector Search indexes. The query engine passes query text or vector embeddings into the index and joins nearest-neighbor metadata back to dimension tables in a single unified distributed SQL query plan.
+
+**Production Implementation:**
+```sql
+-- Semantic product search joining Vector Search index with catalog
+SELECT 
+    vs.search_score,
+    p.product_id,
+    p.product_name,
+    p.category,
+    p.unit_price
+FROM vector_search(
+    index => 'prod_catalog.ai_schema.product_catalog_vector_idx',
+    query_text => 'wireless noise-canceling over-ear travel headphones with USB-C',
+    num_results => 10
+) AS vs
+JOIN prod_catalog.gold.dim_products AS p
+    ON vs.product_id = p.product_id
+WHERE p.is_active = true AND p.unit_price < 350.00
+ORDER BY vs.search_score DESC;
+```
+
+**Key Invariants & Performance Traps:**
+- The underlying Vector Search index must be created and granted `CAN_USE` in Unity Catalog.
+- Combining metadata filters inside `vector_search()` reduces latency vs post-filtering in `WHERE`.
+- Scores range between 0.0 and 1.0 for cosine similarity metrics.
+
+---
+
+### Q3.28: AI/BI Genie Conversational Semantic Models & SQL Metric Governance (Mosaic AI SQL)
+
+**Scenario & System Overview:**  
+Non-technical business stakeholders require natural-language ad-hoc queries over enterprise revenue tables. How to structure Databricks AI/BI Genie spaces, define Unity Catalog semantic annotations, and verify SQL query generation accuracy.
+
+**Technical Deep-Dive & Architecture:**  
+Databricks AI/BI Genie leverages Mosaic AI to translate plain-English user prompts into validated Databricks SQL queries. Rather than querying raw schemas blindly, Genie uses Unity Catalog table comments, column descriptions, and primary/foreign key relationships as semantic context. Data teams provide curated SQL benchmark queries and metric formulas (`gross_margin = (revenue - cogs) / revenue`), ensuring Genie generates verified, certified SQL without hallucinations.
+
+**Production Implementation:**
+```sql
+-- Semantic table annotations guiding AI/BI Genie conversational queries
+COMMENT ON TABLE prod_catalog.gold.fact_financial_performance IS 
+    'Certified financial performance mart. Grain: one row per customer invoice line item. Use for revenue, COGS, and gross margin calculations.';
+
+ALTER TABLE prod_catalog.gold.fact_financial_performance ALTER COLUMN invoice_date 
+    COMMENT 'Transaction timestamp in UTC. Used for fiscal year and monthly run-rate calculations.';
+
+ALTER TABLE prod_catalog.gold.fact_financial_performance ALTER COLUMN net_revenue_usd 
+    COMMENT 'Net billable revenue after deducting promo discounts and customer returns. Always sum this column for total revenue.';
+```
+
+**Key Invariants & Performance Traps:**
+- Comprehensive column comments in Unity Catalog improve Genie SQL generation accuracy from $\sim 65\%$ to $> 95\%$.
+- Specify certified SQL examples inside the Genie Space settings to guide complex join topologies.
+- Enforce Unity Catalog row filters to prevent unauthorized users from viewing restricted rows via Genie prompts.

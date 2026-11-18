@@ -118,3 +118,34 @@ BEGIN
     SELECT * FROM orders WHERE tenant_id = @LocalTenantId;
 END;
 ```
+
+
+---
+
+## 5. In-Database GenAI SQL Functions (ai_query) Latency Triage
+
+### 5.1 Incident Symptoms & Root Cause
+- **Symptoms**: ETL batches using `ai_query()` or `ai_classify()` experience query runtimes jumping from 5 minutes to 45 minutes, with warehouse logs reporting `HTTP 429 Too Many Requests` or `Gateway Timeout 504`.
+- **Root Cause**: The query processes millions of unpruned rows simultaneously, overwhelming the provisioned tokens-per-second capacity on the target Mosaic AI Model Serving endpoint.
+
+### 5.2 Remediation & Rate Limit Circuit Breakers
+1. **Pre-Filter Input Data**: Strip nulls, short strings, and duplicate inputs using `DISTINCT` or micro-batch filtering before invoking the LLM function:
+```sql
+-- Deduplicate and filter strings before LLM evaluation
+WITH distinct_inputs AS (
+    SELECT DISTINCT raw_text
+    FROM staging_comments
+    WHERE raw_text IS NOT NULL AND length(trim(raw_text)) > 15
+),
+classified_inputs AS (
+    SELECT 
+        raw_text,
+        ai_classify(raw_text, ARRAY('bug', 'feature', 'billing')) AS tag
+    FROM distinct_inputs
+)
+SELECT s.comment_id, c.tag
+FROM staging_comments s
+JOIN classified_inputs c ON s.raw_text = c.raw_text;
+```
+
+2. **Increase Endpoint Provisioned Concurrency**: Navigate to Databricks Model Serving and increase the endpoint's provisioned throughput to accommodate SQL warehouse parallelism.
