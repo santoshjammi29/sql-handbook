@@ -1,11 +1,13 @@
 """
-Pytest configuration and shared fixtures for The SQL Handbook test suite.
+Pytest configuration and shared fixtures.
 """
 
 import sys
 from pathlib import Path
+import pytest
 
-# Ensure root directory is on Python path
 BASE_DIR = Path(__file__).resolve().parent.parent
-if str(BASE_DIR) not in sys.path:
-    sys.path.insert(0, str(BASE_DIR))
+
+@pytest.fixture(scope="session")
+def base_dir():
+    return BASE_DIR
