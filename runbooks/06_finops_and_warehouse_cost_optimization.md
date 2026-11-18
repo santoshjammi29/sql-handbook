@@ -40,13 +40,13 @@ flowchart TD
 Execute these commands to eliminate common Snowflake credit waste:
 
 ```sql
--- 1. Create a cost-controlled virtual warehouse
+-- 1. Create cost-controlled virtual warehouse
 CREATE OR REPLACE WAREHOUSE wh_analytics_prod
     WITH WAREHOUSE_SIZE = 'X-SMALL'
-    AUTO_SUSPEND = 60                     -- Suspend after 60s of inactivity (never leave >300s)
+    AUTO_SUSPEND = 60                     -- Auto-suspend after 60s of inactivity
     AUTO_RESUME = TRUE
     MIN_CLUSTER_COUNT = 1
-    MAX_CLUSTER_COUNT = 3                 -- Enable multi-cluster scaling ONLY during peak concurrency
+    MAX_CLUSTER_COUNT = 3                 -- Multi-cluster scaling for peak concurrency
     SCALING_POLICY = 'STANDARD'
     INITIALLY_SUSPENDED = TRUE
     COMMENT = 'FinOps hardened production analytics warehouse';

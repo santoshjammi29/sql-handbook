@@ -1,142 +1,144 @@
 #!/usr/bin/env python3
 """
-Interactive SQL Sandbox:
-Loads an exercise's schema and seed data into an in-memory database,
-prints the problem context, and opens an interactive SQL REPL for practice.
+Interactive CLI Explorer for The SQL Handbook:
+Search, inspect, and explore production recipes, architectures, runbooks, and interview guides.
 
 Usage:
-    python scripts/interactive_shell.py 038
-    python scripts/interactive_shell.py gaps_and_islands
+    python scripts/interactive_shell.py 025
+    python scripts/interactive_shell.py "keyword"
+    python scripts/interactive_shell.py --list
+    python scripts/interactive_shell.py --runbooks
+    python scripts/interactive_shell.py --architectures
+    python scripts/interactive_shell.py --interview
+    python scripts/interactive_shell.py --ecosystem
 """
 
 import sys
-import sqlite3
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-EXERCISES_DIR = BASE_DIR / "exercises"
+CONTENT_DIR = BASE_DIR / "exercises"
+RUNBOOKS_DIR = BASE_DIR / "runbooks"
+ARCH_DIR = BASE_DIR / "architectures"
+INTERVIEW_DIR = BASE_DIR / "interview"
 
-def find_exercise(query: str):
-    files = list(EXERCISES_DIR.glob(f"*/*{query}*.sql"))
-    if not files:
-        # Try matching numeric prefix e.g. "38" -> "038"
-        if query.isdigit():
-            padded = f"{int(query):03d}"
-            files = list(EXERCISES_DIR.glob(f"*/*{padded}*.sql"))
-    return files[0] if files else None
+def list_all():
+    print("\n📚 The SQL Handbook: Core Catalog\n" + "=" * 80)
+    for mod_dir in sorted(list(CONTENT_DIR.glob("*"))):
+        if not mod_dir.is_dir():
+            if mod_dir.suffix in [".md", ".py", ".sql"]:
+                print(f"   ⚡ {mod_dir.name}")
+            continue
+        print(f"\n📂 {mod_dir.name}:")
+        for item in sorted(list(mod_dir.glob("*.sql"))):
+            print(f"   ⚡ {item.name}")
+    print("\n" + "=" * 80)
+
+def list_runbooks():
+    print("\n🚨 The SQL Handbook: Production Incident Runbooks\n" + "=" * 80)
+    for rb in sorted(list(RUNBOOKS_DIR.glob("*.md"))):
+        print(f"   🚨 {rb.name}")
+    print("\n" + "=" * 80)
+
+def list_architectures():
+    print("\n🏛️ The SQL Handbook: Deep-Dive Architectures\n" + "=" * 80)
+    for arch in sorted(list(ARCH_DIR.glob("*.md"))):
+        print(f"   🏛️ {arch.name}")
+    print("\n" + "=" * 80)
+
+def list_interviews():
+    print("\n🎓 The SQL Handbook: 4-Tier Interview Preparation Matrix\n" + "=" * 80)
+    for iv in sorted(list(INTERVIEW_DIR.glob("*.md"))):
+        print(f"   🎓 {iv.name}")
+    print("\n" + "=" * 80)
+
+def list_ecosystem():
+    print("""
+🌐 Modern Data Engineering Ecosystem Cross-Navigation:
+================================================================================
+Central Platform: https://moderndataengineer.uk (11,950+ verified assets)
+
+Cross-Repository Topic Mapping:
+1. PySpark & Distributed Compute:
+   • The PySpark Handbook:        https://github.com/santoshjammi29/pyspark-handbook
+   • The Databricks Handbook:     https://github.com/santoshjammi29/databricks-handbook
+
+2. Relational & MPP SQL:
+   • The SQL Handbook:            https://github.com/santoshjammi29/sql-handbook
+   • Cross-Engine Rosetta Stone:  sql-handbook/runbooks/05_cross_engine_rosetta_stone.md
+
+3. Cloud Infrastructure & Security:
+   • Azure Enterprise Handbook:   https://github.com/santoshjammi29/azure-cheat-sheet
+   • Unity Catalog Governance:    databricks-handbook/notebooks/09_unity_catalog_and_security
+
+4. Incident Triage Runbooks:
+   • Spark/Databricks OOMs:       pyspark-handbook/runbooks/01_driver_and_executor_oom_triage.md
+   • Data Skew Salting:           pyspark-handbook/runbooks/03_data_skew_and_two_phase_salting.md
+   • Cloud Networking & DNS:      azure-cheat-sheet/runbooks/02_vnet_peering_and_private_endpoint_dns_failures.md
+   • Warehouse FinOps:            sql-handbook/runbooks/06_finops_and_warehouse_cost_optimization.md
+================================================================================
+""")
+
+def find_file(query: str):
+    if query.isdigit():
+        padded = f"{int(query):03d}"
+        matches = list(CONTENT_DIR.glob(f"*/*{padded}*.sql")) or list(CONTENT_DIR.glob(f"*{padded}*.sql"))
+        if matches:
+            return matches[0]
+            
+    clean_q = query.lower().replace(" ", "_")
+    clean_q_dash = query.lower().replace(" ", "-")
+    for search_dir in [CONTENT_DIR, RUNBOOKS_DIR, ARCH_DIR, INTERVIEW_DIR]:
+        matches = (list(search_dir.glob(f"*{clean_q}*")) or 
+                   list(search_dir.glob(f"*/*{clean_q}*")) or
+                   list(search_dir.glob(f"*{clean_q_dash}*")) or
+                   list(search_dir.glob(f"*/*{clean_q_dash}*")))
+        if matches:
+            return matches[0]
+        
+    for search_dir in [CONTENT_DIR, RUNBOOKS_DIR, ARCH_DIR, INTERVIEW_DIR]:
+        for doc in sorted(list(search_dir.glob("*/*")) + list(search_dir.glob("*"))):
+            if doc.is_file() and doc.suffix in [".py", ".sql", ".md"]:
+                if query.lower() in doc.read_text(encoding="utf-8").lower():
+                    return doc
+            
+    return None
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python scripts/interactive_shell.py <exercise_number_or_name>")
-        print("Example: python scripts/interactive_shell.py 038")
-        sys.exit(1)
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
+        print("Usage: python scripts/interactive_shell.py <query_or_number>")
+        print("       python scripts/interactive_shell.py --list")
+        print("       python scripts/interactive_shell.py --runbooks")
+        print("       python scripts/interactive_shell.py --architectures")
+        print("       python scripts/interactive_shell.py --interview")
+        print("       python scripts/interactive_shell.py --ecosystem")
+        sys.exit(0)
 
-    target_query = sys.argv[1]
-    match = find_exercise(target_query)
+    arg = sys.argv[1]
+    if arg == "--list":
+        list_all()
+        sys.exit(0)
+    elif arg == "--runbooks":
+        list_runbooks()
+        sys.exit(0)
+    elif arg == "--architectures":
+        list_architectures()
+        sys.exit(0)
+    elif arg == "--interview":
+        list_interviews()
+        sys.exit(0)
+    elif arg == "--ecosystem":
+        list_ecosystem()
+        sys.exit(0)
+
+    match = find_file(arg)
     if not match:
-        print(f"❌ No exercise matching '{target_query}' found in {EXERCISES_DIR}")
+        print(f"❌ No matching content found for: '{arg}'")
         sys.exit(1)
 
-    print(f"\n⚡ Loading Exercise: {match.name}")
-    print(f"📂 Module:   {match.parent.name}")
+    print(f"\n📖 Found: {match.name}\n" + "=" * 80)
+    print(match.read_text(encoding="utf-8"))
     print("=" * 80)
-
-    content = match.read_text(encoding="utf-8")
-    
-    # Extract Context and Problem Statement from header
-    lines = content.splitlines()
-    in_context = False
-    in_problem = False
-    context_lines = []
-    problem_lines = []
-
-    for line in lines:
-        if "BUSINESS CONTEXT:" in line:
-            in_context = True
-            in_problem = False
-            continue
-        elif "PROBLEM STATEMENT:" in line:
-            in_context = False
-            in_problem = True
-            continue
-        elif "PRODUCTION PITFALL:" in line or "=====" in line:
-            in_context = False
-            in_problem = False
-
-        if in_context and line.strip().startswith("--"):
-            context_lines.append(line.replace("--", "").strip())
-        elif in_problem and line.strip().startswith("--"):
-            problem_lines.append(line.replace("--", "").strip())
-
-    if context_lines:
-        print("\n💼 BUSINESS CONTEXT:")
-        print("  " + "\n  ".join(context_lines))
-    if problem_lines:
-        print("\n🎯 PROBLEM STATEMENT:")
-        print("  " + "\n  ".join(problem_lines))
-
-    # Initialize in-memory SQLite
-    conn = sqlite3.connect(":memory:")
-    cur = conn.cursor()
-
-    # Split setup from solution
-    parts = content.split("-- --- [SOLUTION QUERY] ---")
-    setup_sql = parts[0]
-    
-    # Execute setup DDL & DML
-    clean_setup = "\n".join([
-        l for l in setup_sql.splitlines() 
-        if not l.strip().startswith("--")
-    ])
-    if clean_setup.strip():
-        cur.executescript(clean_setup)
-        print("\n✅ Schema & test seed data loaded into in-memory database.")
-
-    # Inspect available tables
-    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
-    tables = [r[0] for r in cur.fetchall()]
-    print(f"📋 Available Tables: {', '.join(tables)}")
-    print("=" * 80)
-    print("Type your SQL query below (end with ';' to execute, or 'exit'/'quit' to exit):")
-    print("Type '.solution' to view the reference production solution.\n")
-
-    query_buffer = []
-    while True:
-        try:
-            prompt = "sql> " if not query_buffer else "...> "
-            line = input(prompt).strip()
-            if line.lower() in ("exit", "quit", "\\q"):
-                print("Exiting SQL sandbox.")
-                break
-            if line.lower() == ".solution":
-                if len(parts) > 1:
-                    print("\n📖 REFERENCE PRODUCTION SOLUTION:")
-                    print("-" * 60)
-                    print(parts[1].strip())
-                    print("-" * 60 + "\n")
-                continue
-
-            query_buffer.append(line)
-            if line.endswith(";"):
-                sql = " ".join(query_buffer)
-                query_buffer = []
-                try:
-                    cur.execute(sql)
-                    rows = cur.fetchall()
-                    if cur.description:
-                        col_names = [d[0] for d in cur.description]
-                        print("\n" + " | ".join(f"{col:<18}" for col in col_names))
-                        print("-" * (len(col_names) * 21))
-                        for r in rows:
-                            print(" | ".join(f"{str(v):<18}" for v in r))
-                        print(f"({len(rows)} rows)\n")
-                    else:
-                        print("Query executed successfully (0 rows returned).\n")
-                except Exception as e:
-                    print(f"❌ SQL Error: {e}\n")
-        except (KeyboardInterrupt, EOFError):
-            print("\nExiting.")
-            break
 
 if __name__ == "__main__":
     main()
