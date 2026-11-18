@@ -376,6 +376,34 @@ Prepare for technical coding screens from Junior Analyst to Principal Lakehouse 
 
 ---
 
+## 🖼️ Whiteboard Blueprints
+
+The repository includes **52 publication-grade architectural whiteboard blueprints** mirrored under `assets/whiteboards/` and cataloged in [docs/whiteboard_diagrams/README.md](docs/whiteboard_diagrams/README.md), illustrating:
+- **Logical vs Physical Query Execution** pipelines
+- **MPP Distributed Data Movement** (Colocated vs Shuffle vs Broadcast joins)
+- **B-Tree Index Traversals & Covering Index Scans**
+- **Concurrency Control & MVCC Snapshot Isolation**
+- **Lakehouse ACID Storage Engines & Liquid Clustering**
+
+---
+
+## 💻 Interactive CLI Explorer
+
+Explore exercises, run SQL queries in an in-memory database sandbox, inspect incident runbooks, and study interview guides directly from your terminal:
+
+```bash
+# Run interactive in-memory SQL sandbox REPL
+python scripts/interactive_shell.py
+
+# Benchmark and validate all 105 exercises
+python scripts/run_all_exercises.py
+
+# Run complete test suite
+python scripts/run_tests.py
+```
+
+---
+
 ## 🏛️ Architectural Deep Dives
 
 In-depth technical architecture whitepapers:
@@ -421,6 +449,15 @@ sql-handbook/
 ├── interview/                                 # 4-Tier interview question bank & flashcards
 └── architectures/                             # 4 Deep-dive architectural whitepapers
 ```
+
+---
+
+## 📦 Sister Repositories & Knowledge Base
+
+- ⚡ **[The Databricks Handbook (105 Production Recipes)](https://github.com/santoshjammi29/databricks-handbook)**: 105 Databricks Data Intelligence Platform recipes, Unity Catalog governance, Delta 3.x, Lakeflow, and DABs.
+- ⚡ **[The PySpark Handbook (105 Production Recipes)](https://github.com/santoshjammi29/pyspark-handbook)**: 105 battle-tested PySpark & Delta Lake notebooks with Databricks Asset Bundles (DABs) IaC.
+- 🌐 **[Modern Data Engineer Hub (`moderndataengineer.uk`)](https://github.com/santoshjammi29/moderndataengineer)**: Live production encyclopedia featuring 11,950+ verified assets, interactive simulators, and 52 whiteboard blueprints.
+- ☁️ **[Azure Enterprise Cheat Sheet](https://github.com/santoshjammi29/azure-cheat-sheet)**: Enterprise Azure architecture, networking, security, and governance.
 
 ---
 

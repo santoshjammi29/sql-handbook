@@ -6,7 +6,20 @@
 
 ---
 
-## 1. The CDC Pipeline Failure Scenario
+## 1. Emergency Decision Tree
+
+```mermaid
+flowchart TD
+    CDCAlert["🚨 SCD Type 2 Timeline Corruption / Duplicate is_current Detected"] --> CheckTimeline{"Run Timeline Validation Query"}
+    
+    CheckTimeline -->|"Multiple is_current = TRUE for Same Business Key"| FixDuplicateCurrent["Duplicate Current State<br/>Remediation: Terminate earlier record, retain latest timestamp"]
+    CheckTimeline -->|"Overlapping [valid_from, valid_to] Intervals"| FixOverlaps["Interval Collision from Out-of-Order Ingestion<br/>Remediation: Re-sequence timelines with LEAD() windowing"]
+    CheckTimeline -->|"Gaps in Validity Dates"| FixGaps["Missing Change Events<br/>Remediation: Stitch validity window boundaries"]
+```
+
+---
+
+## 2. The CDC Pipeline Failure Scenario
 
 In real-time Lakehouse pipelines (Debezium $\rightarrow$ Kafka $\rightarrow$ Spark Structured Streaming / Delta Live Tables), network partitions or worker retries cause **out-of-order event arrival**.
 

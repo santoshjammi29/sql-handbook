@@ -6,7 +6,7 @@
 
 ---
 
-## 1. Query Tuning Diagnostic Flowchart
+## 1. Emergency Decision Tree
 
 ```mermaid
 flowchart TD

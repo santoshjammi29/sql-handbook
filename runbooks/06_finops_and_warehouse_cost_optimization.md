@@ -5,7 +5,26 @@
 
 ---
 
-## 1. Cloud Warehouse Billing Models
+## 1. Emergency Decision Tree
+
+```mermaid
+flowchart TD
+    CostAlert["🚨 Cloud Warehouse Billing Anomaly Alert: Budget Threshold Exceeded"] --> CheckPlatform{"Identify Cloud Platform"}
+    
+    CheckPlatform -->|"Snowflake"| SnowflakeTriage["Check Active Warehouses<br/>Inspect WAREHOUSE_METERING_HISTORY for idle running clusters"]
+    CheckPlatform -->|"BigQuery"| BigQueryTriage["Check INFORMATION_SCHEMA.JOBS_BY_PROJECT<br/>Find queries scanning >1TB with SELECT *"]
+    CheckPlatform -->|"Databricks SQL"| DatabricksTriage["Inspect system.billing.usage<br/>Check for non-serverless SQL warehouses without auto-stop"]
+    CheckPlatform -->|"Azure Synapse"| SynapseTriage["Check Dedicated SQL Pool DWU status<br/>Identify un-paused weekend compute"]
+
+    SnowflakeTriage --> FixSnowflake["Remediation: Set AUTO_SUSPEND = 60, statement_timeout_in_seconds"]
+    BigQueryTriage --> FixBigQuery["Remediation: Enforce Partition Filters & maximum_bytes_billed"]
+    DatabricksTriage --> FixDatabricks["Remediation: Switch to Serverless SQL with 5min Auto-Stop"]
+    SynapseTriage --> FixSynapse["Remediation: Automate Pause/Resume via Azure Automation"]
+```
+
+---
+
+## 2. Cloud Warehouse Billing Models
 
 | Platform | Core Billing Metric | Runaway Cost Risk | Primary Cost Levers |
 | :--- | :--- | :--- | :--- |

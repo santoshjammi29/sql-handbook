@@ -6,7 +6,23 @@
 
 ---
 
-## 1. Straggler Triage Diagnostic Protocol
+## 1. Emergency Decision Tree
+
+```mermaid
+flowchart TD
+    MPPAlert["🚨 Distributed Query Stalled / Straggler Task Hanging at 99%"] --> CheckMetrics["Check Query Profile / Spark UI Metrics"]
+    
+    CheckMetrics --> CheckSpill{"Is Spill to Disk / TempDB Non-Zero?"}
+    CheckSpill -->|"Yes, Massive Spill"| SpillTriage["Partition Size Exceeds Worker RAM<br/>Remediation: Increase shuffle partition count & enable AQE"]
+    CheckSpill -->|"No, Zero Spill"| CheckSkew{"Is Single Task Row Count > 10x Median?"}
+    
+    CheckSkew -->|"Yes, Hot Key Skew"| SkewTriage["Severe Data Skew on Join Key<br/>Remediation: Implement Key Salting or Filter NULLs"]
+    CheckSkew -->|"No, Broadcast Failure"| BroadcastTriage["Broadcast Buffer OOM Crash<br/>Remediation: Disable Broadcast Hint & Fall Back to Sort-Merge Join"]
+```
+
+---
+
+## 2. Straggler Triage Diagnostic Protocol
 
 In distributed query execution, 199 tasks finish in 10 seconds, while task 200 runs for 2 hours before crashing with an OutOfMemoryError.
 
