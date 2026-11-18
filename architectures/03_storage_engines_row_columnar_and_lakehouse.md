@@ -123,3 +123,50 @@ Querying this table requires 138,240 HTTP `GET` requests to S3/ADLS. Metadata li
    VACUUM gold_sales_orders RETAIN 168 HOURS;
    ```
 3. **Deletion Vectors**: In modern Delta Lake ($3.0+$) and Iceberg ($v2$), row-level `DELETE` and `UPDATE` statements do *not* rewrite entire 128MB Parquet files. Instead, they write tiny **Deletion Vectors** (compressed Roaring Bitmaps marking row offsets as deleted). Reading engines apply the bitmap during vectorized scan with near-zero latency impact.
+
+---
+
+## 4. Vector Search & Semantic Similarity Retrieval in SQL
+
+Modern Lakehouse SQL integrates semantic vector indexing directly into the relational query engine via the `vector_search()` table-valued function.
+
+```mermaid
+flowchart LR
+    subgraph SQLClient["Relational SQL Query"]
+        JoinQuery["SELECT * FROM orders JOIN vector_search(...)"]
+    end
+
+    subgraph VectorEngine["Mosaic AI Vector Index (HNSW / Delta Sync)"]
+        Embedding["Dense Query Embedding Vector (1536-dim)"]
+        Index["HNSW Graph Traversal (Sub-10ms Approximate NN)"]
+        Filters["Relational Metadata Pre-Filtering (Catalog ACLs)"]
+    end
+
+    subgraph DeltaStorage["Persistent Delta Tables"]
+        DocTable["Cataloged Knowledge Base Articles"]
+    end
+
+    SQLClient --> Embedding --> Index --> Filters --> DocTable
+```
+
+### Production Implementation: Vector Search Table Function in SQL
+```sql
+-- Hybrid semantic retrieval query combining vector search with relational filters
+SELECT
+    kb.article_id,
+    kb.title,
+    vs.score AS semantic_similarity_score
+FROM vector_search(
+    index => 'prod_catalog.knowledge_base.tech_docs_index',
+    query_text => 'How do I tune liquid clustering for multi-column joins?',
+    num_results => 5
+) AS vs
+INNER JOIN prod_catalog.knowledge_base.articles AS kb
+    ON vs.id = kb.article_id
+WHERE kb.publication_status = 'PUBLISHED'
+ORDER BY semantic_similarity_score DESC;
+```
+
+### Key Semantic Retrieval Invariants:
+- **Pre-Filtering with Metadata**: Relational `WHERE` predicates are pushed down directly into the vector index before graph traversal, ensuring strict tenant isolation.
+- **Delta Sync Ingestion**: When new documents are inserted into the Delta table, the vector search index syncs incrementally without manual re-indexing.

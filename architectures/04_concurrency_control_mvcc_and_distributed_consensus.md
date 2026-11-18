@@ -150,3 +150,56 @@ When data is partitioned across multiple cloud regions or physical server nodes 
 2. **Distributed Clocks (TrueTime & HLC)**:
    - To achieve external consistency (Linearizable reads) without locking across data centers, Google Spanner uses **TrueTime API** (synchronized GPS and atomic clocks bounding time uncertainty $\epsilon \approx 7 \text{ ms}$).
    - Other distributed engines (CockroachDB, YugabyteDB) implement **Hybrid Logical Clocks (HLC)** combining physical NTP time with Lamport logical counters.
+
+---
+
+## 4. Dynamic Row Filters, Column Masks & ABAC in Modern SQL
+
+Enterprise SQL security mandates declarative, centralized policy enforcement using **Dynamic Row Filters** and **Column Masks** governed by Attribute-Based Access Control (ABAC).
+
+```mermaid
+flowchart TD
+    subgraph QueryExecution["User Executes: SELECT * FROM prod_catalog.finance.payroll"]
+        User["User Identity (OAuth JWT)"]
+    end
+
+    subgraph SecurityEngine["Unity Catalog Policy Enforcement Engine"]
+        TagLookup["Inspect Column Tags ('compliance' = 'confidential')"]
+        RowFilter["Evaluate Row Filter: (dept_id = current_user_dept())"]
+        ColMask["Evaluate Column Mask: sha2(ssn, 256)"]
+    end
+
+    subgraph CleanResult["Authorized Output Stream"]
+        Output["Rows restricted to user department; SSN masked"]
+    end
+
+    User --> TagLookup --> RowFilter --> ColMask --> CleanResult
+```
+
+### Production Security Implementation: Row-Level Security & Cryptographic Masking
+```sql
+-- 1. Create reusable cryptographic column mask
+CREATE OR REPLACE FUNCTION prod_catalog.security.mask_ssn(ssn STRING)
+RETURN CASE
+    WHEN IS_ACCOUNT_GROUP_MEMBER('hr_executives') THEN ssn
+    ELSE concat('XXX-XX-', right(ssn, 4))
+END;
+
+-- 2. Create dynamic row filter restricting data by department
+CREATE OR REPLACE FUNCTION prod_catalog.security.filter_by_dept(dept_id STRING)
+RETURN (
+    IS_ACCOUNT_GROUP_MEMBER('c_suite') OR
+    dept_id = current_user()
+);
+
+-- 3. Apply security policies to sensitive table
+ALTER TABLE prod_catalog.finance.payroll
+ALTER COLUMN social_security_number SET MASK prod_catalog.security.mask_ssn;
+
+ALTER TABLE prod_catalog.finance.payroll
+SET ROW FILTER prod_catalog.security.filter_by_dept ON (department_id);
+```
+
+### Key Security Invariants:
+- **No View Sprawl**: Row filters and column masks attach directly to physical tables, eliminating the need to maintain hundreds of custom security views.
+- **Deterministic Execution**: Filter and mask expressions run inside the query engine physical plan, ensuring optimization without leaking raw values.

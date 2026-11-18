@@ -118,3 +118,48 @@ SET STATISTICS IO, TIME ON;
 2. **Implicit Conversions (`CONVERT_IMPLICIT`)**: Non-SARGable predicate preventing Index Seek.
 3. **Table Spills to Workfile / TempDB**: Insufficient `work_mem` or shuffle memory causing disk write penalties.
 4. **Broadcast Exchange with Massive Data**: Worker or driver memory exhaustion due to skewed dimensions.
+
+---
+
+## 4. In-Database GenAI SQL Functions & Photon Vectorized Execution
+
+Modern SQL engines evaluate Generative AI directly within analytical queries via native **Databricks SQL AI Functions**, executed with vectorized Photon C++ acceleration.
+
+```mermaid
+flowchart TD
+    subgraph SQLQuery["SQL Query with AI Functions"]
+        SQL["SELECT ticket_id, ai_mask(...), ai_classify(...)"]
+    end
+
+    subgraph Optimizer["Photon Query Engine (C++ SIMD)"]
+        Parser["Query Parser & Type Checker"]
+        Batcher["Dynamic Micro-Batcher (Group 100 rows/batch)"]
+        Retry["Exponential Backoff & Rate-Limit Controller"]
+    end
+
+    subgraph LLMCluster["Mosaic AI Foundation Model Gateway"]
+        Llama["Meta-Llama-3-70B / DBRX Endpoint"]
+        Cache["Semantic Response Cache (Eliminate Duplicate Inferences)"]
+    end
+
+    SQLQuery --> Parser --> Batcher --> Retry --> Cache --> Llama
+```
+
+### Production Implementation: In-Database Text Sanitization & Entity Extraction
+```sql
+-- Production SQL query using task-specific AI functions
+SELECT
+    customer_id,
+    -- Mask PII fields automatically before persistence
+    ai_mask(support_notes, ARRAY('email', 'phone', 'ssn')) AS masked_notes,
+    -- Fast zero-shot classification without prompt engineering
+    ai_classify(support_notes, ARRAY('billing', 'technical_bug', 'cancellation')) AS issue_tier,
+    -- Extract structured JSON entities from unstructured text
+    ai_extract(support_notes, ARRAY('device_model', 'error_code', 'os_version')) AS extracted_metadata
+FROM prod_catalog.silver.customer_support_logs
+WHERE support_notes IS NOT NULL;
+```
+
+### Key Query Optimization Invariants:
+- **Task-Specific Over General Purpose**: Always prefer `ai_classify`, `ai_extract`, and `ai_mask` over `ai_query` for $5	imes$ lower latency and deterministic outputs.
+- **Dynamic Micro-Batching**: The SQL execution engine automatically batches multiple rows into a single HTTP payload to model serving endpoints, avoiding per-row network roundtrips.

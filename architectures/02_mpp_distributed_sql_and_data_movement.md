@@ -155,3 +155,46 @@ GROUP BY f.customer_id, d.customer_name;
 | **Data Layout** | Automatic micro-partitioning + Clustering Keys | Physical Partitioning + Clustering (up to 4 cols) | Liquid Clustering (`CLUSTER BY`) + Z-Order | Hash (60 distributions), Replicated, Round-Robin |
 | **Scaling Mechanism** | Multi-cluster warehouse auto-scaling | Dynamic on-demand slot allocation / reservations | Serverless cluster auto-scaling & disk auto-tiering | Manual DWU scale up/down with cluster pause |
 | **File Compaction** | Automatic background re-clustering | Automatic background clustering & storage optimization | `OPTIMIZE table_name` / Auto-compaction | Manual index rebuild / partition reorg |
+
+---
+
+## 4. Serverless Databricks SQL & Intelligent Workload Management (IWM)
+
+Serverless Databricks SQL decouples concurrency management through **Intelligent Workload Management (IWM)**, dynamically routing queries to optimal warehouse cluster sizes and warm compute fleets.
+
+```mermaid
+flowchart TD
+    subgraph Ingress["BI Queries & SQL API Requests"]
+        Q1["Power BI Direct Lake Query"]
+        Q2["Executive Dashboard Aggregation"]
+        Q3["Scheduled Dataform / dbt Model Run"]
+    end
+
+    subgraph IWMManager["Intelligent Workload Management (IWM)"]
+        Router["Cost-Aware Predictive Query Router"]
+        Autoscale["Sub-Second Multi-Cluster Autoscaler"]
+    end
+
+    subgraph ComputeClusters["Serverless SQL Warehouse Instances"]
+        C1["Cluster 1 (Interactive P95 Latency < 200ms)"]
+        C2["Cluster 2 (Burst Autoscaled Instance)"]
+        C3["Cluster 3 (Batch Heavy Transform Instance)"]
+    end
+
+    Ingress --> Router --> Autoscale --> ComputeClusters
+```
+
+### Production Configuration: Serverless SQL Warehouse Autoscaling
+```sql
+-- Databricks SQL Serverless warehouse configuration parameters
+-- Intelligent Workload Management automatically allocates clusters
+ALTER WAREHOUSE serverless_bi_warehouse
+SET AUTO_STOP_MINS = 5,
+    MIN_NUM_CLUSTERS = 1,
+    MAX_NUM_CLUSTERS = 6,
+    SPOT_INSTANCE_POLICY = 'COST_OPTIMIZED';
+```
+
+### Key MPP Routing Invariants:
+- **Sub-Second Scaling**: Serverless compute provisions additional clusters in under 5 seconds during bursty dashboard query spikes.
+- **Predictive De-queuing**: Large analytical scans are automatically isolated from short interactive BI queries to prevent head-of-line blocking.
