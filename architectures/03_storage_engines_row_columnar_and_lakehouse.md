@@ -1,5 +1,15 @@
 # 🏛️ Architecture Deep Dive: Storage Engines — Row-Store, Columnar & Lakehouse Formats
 
+
+![Open Table Formats Blueprint: Lakehouse Storage Engines](../assets/whiteboards/open_table_formats_lakehouse_architecture.webp)
+> *Architectural Blueprint: [Open Table Formats Blueprint: Lakehouse Storage Engines](../docs/whiteboard_diagrams/README.md#open-table-formats-lakehouse). View full multi-persona breakdown and engine mechanisms in the master index.*
+
+
+![Open File Formats Blueprint: Physical Storage Engines](../assets/whiteboards/open_file_formats_storage_architecture.webp)
+> *Architectural Blueprint: [Open File Formats Blueprint: Physical Storage Engines](../docs/whiteboard_diagrams/README.md#open-file-formats-storage). View full multi-persona breakdown and engine mechanisms in the master index.*
+
+
+
 ## 1. Storage Architecture Taxonomy
 
 Database storage architecture determines I/O efficiency, cache locality, and compression ratios. Workloads broadly partition into:

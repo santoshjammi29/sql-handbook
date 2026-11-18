@@ -1,5 +1,15 @@
 # 🏛️ Architecture Deep Dive: MPP Distributed SQL & Data Movement
 
+
+![Apache Spark Memory Architecture & Shuffle Mechanics](../assets/whiteboards/spark_shuffle_memory_execution.webp)
+> *Architectural Blueprint: [Apache Spark Memory Architecture & Shuffle Mechanics](../docs/whiteboard_diagrams/README.md#spark-shuffle-memory-execution). View full multi-persona breakdown and engine mechanisms in the master index.*
+
+
+![Apache Spark Join Strategy Selection Decision Tree](../assets/whiteboards/spark_join_decision_tree.webp)
+> *Architectural Blueprint: [Apache Spark Join Strategy Selection Decision Tree](../docs/whiteboard_diagrams/README.md#spark-join-decision-tree). View full multi-persona breakdown and engine mechanisms in the master index.*
+
+
+
 ## 1. Massively Parallel Processing (MPP) vs. SMP Architecture
 
 Traditional Symmetric Multiprocessing (SMP) databases (PostgreSQL, MySQL, single-node SQL Server) share a single pool of memory, CPU, and storage. In contrast, Massively Parallel Processing (MPP) data warehouses (Snowflake, BigQuery, Databricks SQL, Azure Synapse, Amazon Redshift) scale queries horizontally across a shared-nothing or decoupled-storage-and-compute architecture.

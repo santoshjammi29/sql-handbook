@@ -1860,6 +1860,22 @@ Real-time Core Banking CDC pipeline at a European challenger bank — Debezium c
 
 ### Q4.20: Iceberg Equality vs Position Deletes Write Amplification in GDPR Art. 17 Compliance (Cloud Warehouse Architecture)
 
+**Production SQL & Architecture Implementation:**
+```sql
+-- Apache Iceberg Position Deletes vs Equality Deletes Configuration
+-- Position deletes write (file_path, pos); Equality deletes write matching values
+ALTER TABLE iceberg_catalog.gdpr.user_data SET TBLPROPERTIES (
+    'write.delete.mode' = 'merge-on-read',
+    'write.delete.format.default' = 'parquet',
+    'write.delete.isolation-level' = 'snapshot'
+);
+
+-- Executing targeted GDPR Art. 17 right-to-be-forgotten deletion
+DELETE FROM iceberg_catalog.gdpr.user_data
+WHERE user_id IN (SELECT user_id FROM gdpr_deletion_requests WHERE status = 'PENDING');
+```
+
+
 **Question & Concept Overview:**  
 An exabyte-scale open lakehouse table stores 8 petabytes of user activity data across 120,000 Apache Iceberg partitions, receiving 10,000 GDPR Article 17 'Right to Erasure' requests per hour. Each erasure request targets a single `user_id` dispersed across thousands of historic Parquet data files. The architecture team originally implemented Iceberg Equality Deletes (`user_id = X`), which writes small metadata marker files without touching existing Parquet data files. Within 3 weeks, over 1,500,000 equality delete files accumulate across the table metadata tree. Analytical queries executed by Trino and Apache Spark experience complete performance collapse: query planning times explode from 800ms to 4 minutes, and executor nodes crash with OutOfMemory errors because every scan task must load millions of equality delete predicates into in-memory hash sets before evaluating each Parquet row. When switching to Position Deletes (rewriting the specific data files containing targeted rows to record exact file-and-ordinal offsets), the cluster's compaction engine triggers a massive Write Amplification Factor (WAF) of 85x on the underlying cloud object store, generating $350,000 in monthly S3 PUT/GET API charges and causing optimistic concurrency control (OCC) commit collisions that fail 40% of streaming ingestion pipelines. How do you engineer a hybrid delete and compaction topology that guarantees legally compliant 30-day GDPR erasure verification without scan-time query death or catastrophic write amplification?
 
@@ -1872,6 +1888,21 @@ Enterprise Cloud Data Warehouse Scale
 ---
 
 ### Q4.21: Delta Lake Deletion Vectors and Roaring Bitmap Inline Decompression Latency (Cloud Warehouse Architecture)
+
+**Production SQL & Architecture Implementation:**
+```sql
+-- Enabling Delta Lake Deletion Vectors for sub-millisecond point deletes
+ALTER TABLE prod_catalog.silver.customer_profile SET TBLPROPERTIES (
+    'delta.enableDeletionVectors' = 'true',
+    'delta.minReaderVersion' = '3',
+    'delta.minWriterVersion' = '7'
+);
+
+-- Point-delete commits inline Roaring Bitmap without rewriting Parquet data files
+DELETE FROM prod_catalog.silver.customer_profile
+WHERE customer_id = 'CUST-883910';
+```
+
 
 **Question & Concept Overview:**  
 A transactional lakehouse table manages 3 petabytes of financial transactions across 400,000 Delta Lake Parquet files. The platform enables Delta Lake Deletion Vectors (DVs) to achieve millisecond-level point deletions without rewriting 500MB Parquet data files. When a row is deleted, a serialized Roaring Bitmap containing the 32-bit row indices within that specific Parquet file is written either inline into the Delta log or as a small standalone sidecar `.bin` file. Under an analytical query scanning 100,000 files across 1,000 worker cores, query latency degrades by 450%. CPU profiling with `perf` reveals that 38% of total CPU cycles are consumed inside the SIMD bitwise decompression and array-conversion loops of the Roaring Bitmap decoder (`roaring_bitmap_contains` or `RoaringBitmap.andNot`). Because the bitmap contains sparse clusterings of run-length encoded (RLE) intervals interleaved with raw 16-bit unsigned integer arrays, the CPU's branch prediction unit suffers a 22% misprediction rate, and L1 instruction cache misses explode as execution branches between bitmap containers, array containers, and run containers. How do you re-architect the deletion vector storage format and SIMD execution path to achieve line-rate Parquet scanning while retaining point-deletion capabilities?
@@ -1886,6 +1917,25 @@ Enterprise Cloud Data Warehouse Scale
 
 ### Q4.22: Hierarchical Envelope Encryption and KMS Rate-Limit Exhaustion during Exabyte Scans (Cloud Warehouse Architecture)
 
+**Production SQL & Architecture Implementation:**
+```sql
+-- Configuring KMS key rotation and envelope cache properties
+-- Local cached DEKs prevent KMS 429 throttling during exabyte scans
+CREATE TABLE prod_catalog.financial.wire_transfers (
+    transfer_id STRING,
+    source_iban STRING,
+    destination_iban STRING,
+    amount DECIMAL(18, 2)
+)
+USING DELTA
+TBLPROPERTIES (
+    'parquet.encryption.kms.key.id' = 'arn:aws:kms:us-east-1:123456789012:key/lakehouse-key',
+    'parquet.encryption.cache.timeout.seconds' = '86400',
+    'parquet.encryption.algorithm' = 'AES_GCM_V1'
+);
+```
+
+
 **Question & Concept Overview:**  
 A global healthcare lakehouse stores 12 petabytes of encrypted patient genomic data across 2,500,000 Parquet files on AWS S3. To enforce patient privacy and granular revocation, every individual Parquet file is encrypted with a unique Data Encryption Key (DEK) via AES-256-GCM in Parquet Modular Encryption (PME). Each DEK is encrypted under a regional Key Encryption Key (KEK) managed in AWS KMS. When a distributed machine learning pipeline launches a full-cohort analytical scan utilizing 4,000 Apache Spark executor tasks across 200 compute nodes, each executor task attempts to open 600 Parquet files concurrently. In the first 5 seconds of query initialization, the cluster fires 2,400,000 concurrent `kms:Decrypt` requests to the AWS KMS API. The AWS KMS regional endpoint (hard-capped at a burst limit of 50,000 requests/sec) instantly triggers exponential HTTP 429 'ThrottlingException' errors. The default AWS SDK retry logic on 4,000 workers initiates an uncontrolled Throttling Storm: retry queues saturate network buffers, workers block indefinitely in exponential backoff loops, and the entire analytical pipeline halts with fatal task failure exceptions after 3 hours. How do you design a high-throughput cryptographic key distribution and envelope caching layer that enables scanning 2.5 million encrypted Parquet files without breaching cloud KMS service quotas?
 
@@ -1898,6 +1948,17 @@ Enterprise Cloud Data Warehouse Scale
 ---
 
 ### Q4.23: Avro Manifest Tree B-Tree Pruning Collapse at 500,000 Partitions in Apache Iceberg (Cloud Warehouse Architecture)
+
+**Production SQL & Architecture Implementation:**
+```sql
+-- Iceberg manifest rewrite and compaction to prevent B-Tree scan collapse
+CALL iceberg_catalog.system.rewrite_manifests('sales.orders');
+
+-- Restructure partition hierarchy from high-cardinality dates to month buckets
+ALTER TABLE iceberg_catalog.sales.orders
+REPLACE PARTITION FIELD days(order_ts) WITH months(order_ts);
+```
+
 
 **Question & Concept Overview:**  
 An exabyte IoT telemetry lakehouse built on Apache Iceberg accumulates 500,000 active partitions with 15,000,000 underlying Parquet data files. The table metadata is structured as a hierarchical Avro metadata tree: a top-level Snapshot points to a Manifest List, which points to 12,000 individual Avro Manifest Files, each indexing up to 1,500 data files with partition summaries and column-level upper/lower bounds. A query engine (Trino or Spark) receives an interactive dashboard query that filters on `event_date = '2026-03-01' AND device_id = 'DEV-994182'`. Although partition pruning should theoretically eliminate 99.9% of partitions, query planning freezes for 180 seconds before a single worker task can be scheduled. JFR (Java Flight Recorder) profiling of the Spark Driver reveals that deserializing and parsing the 12,000 Avro manifest files requires reading 45GB of XML/JSON/Avro data over S3, consuming 68GB of Driver JVM heap memory and triggering severe G1GC Stop-The-World pauses. The driver spends 85% of its CPU time evaluating min/max partition ranges sequentially across thousands of non-pruned manifest files because manifests contain mixed date intervals resulting from streaming append micro-batches. How do you re-architect the Iceberg metadata hierarchy and manifest bin-packing topology to achieve deterministic sub-second query planning over 500,000 partitions?
@@ -1912,6 +1973,19 @@ Enterprise Cloud Data Warehouse Scale
 
 ### Q4.24: Optimistic Concurrency Control (OCC) Commit Explosions in Multi-Writer Streaming Sinks (Cloud Warehouse Architecture)
 
+**Production SQL & Architecture Implementation:**
+```sql
+-- Tuning OCC conflict resolution and exponential backoff retries
+ALTER TABLE prod_catalog.streaming.iot_telemetry SET TBLPROPERTIES (
+    'delta.logRetentionDuration' = 'interval 14 days',
+    'delta.checkpointInterval' = '20',
+    'delta.concurrency.maxCommitRetries' = '15',
+    'delta.concurrency.backoffMinMs' = '100',
+    'delta.concurrency.backoffMaxMs' = '5000'
+);
+```
+
+
 **Question & Concept Overview:**  
 A mission-critical financial ledger lakehouse table built on Apache Iceberg receives concurrent streaming ingestion from 64 independent Apache Flink and Spark Structured Streaming jobs operating across 8 regional Kubernetes clusters. Each streaming job commits micro-batches every 10 seconds using Iceberg's Optimistic Concurrency Control (OCC). Under high event velocity, multiple streaming writers attempt to commit their new snapshot to the Iceberg REST Catalog simultaneously. Writer A succeeds in committing Snapshot S1 via atomic HTTP CAS (Compare-And-Swap) or ETag verification. Writers B, C, and D receive a `CommitFailedException` (optimistic lock collision) because their base snapshot S0 is now stale. Iceberg's default commit retry logic forces Writers B, C, and D to re-read the metadata tree, verify whether their committed files conflict with S1, and attempt to re-commit. However, while B is retrying, Writers E and F commit S2 and S3, forcing B, C, and D into an exponential retry spiral. Within 3 minutes, 64 streaming writers enter continuous commit retry thrashing: CPU usage on the catalog database hits 100%, metadata file generation balloons by 10,000 files/hour, commit latency inflates from 200ms to 45 seconds, and Flink streaming jobs fail checkpoint SLAs, triggering global restart cascades. How do you architect a multi-writer ingestion topology that guarantees linear scalability without OCC retry collapse?
 
@@ -1924,6 +1998,17 @@ Enterprise Cloud Data Warehouse Scale
 ---
 
 ### Q4.25: S3 Object Lock Compliance Mode Retention Collisions with Analytical Lakehouse Scans (Cloud Warehouse Architecture)
+
+**Production SQL & Architecture Implementation:**
+```sql
+-- S3 Object Lock compliance configuration and lifecycle alignment
+-- Ensure VACUUM retention exceeds S3 legal hold duration to prevent conflict
+ALTER TABLE prod_catalog.compliance.sec_audit_records SET TBLPROPERTIES (
+    'delta.deletedFileRetentionDuration' = 'interval 2555 days', -- 7 year compliance
+    'delta.autoOptimize.autoCompact' = 'false' -- Prevent rewriting locked objects
+);
+```
+
 
 **Question & Concept Overview:**  
 A global investment bank mandates that all raw trading audit data stored in an enterprise Iceberg lakehouse must be protected under AWS S3 Object Lock in 'Compliance Mode' with a strict 7-year immutable retention policy to comply with SEC Rule 17a-4. Under Compliance Mode, no user—including the AWS root account—can overwrite, delete, or modify any locked S3 object until the retention period expires. During a routine lakehouse optimization run, an automated maintenance worker executes table compaction, creating new optimized 512MB Parquet files and marking old 2MB Parquet files as orphaned via Iceberg snapshot expiration. However, when the distributed garbage collection process (`expireSnapshots` / orphan file cleanup) attempts to issue `s3:DeleteObject` commands on the unreferenced historical files, AWS S3 rejects every request with `AccessDenied: Object under WORM compliance retention`. Over 12 months, 45,000,000 unreferenced obsolete Parquet files accumulate in the bucket (consuming 4.2 petabytes of redundant storage and costing $95,000/month in dead storage). Furthermore, when distributed analytical query engines execute partition scans over historical snapshots, the underlying S3 list operations traverse millions of deleted yet physically present files, degrading query planning and incurring massive object scan costs. How do you design an immutable regulatory storage topology that guarantees SEC Rule 17a-4 WORM compliance while allowing analytical lakehouse metadata compaction and physical storage reclamation?

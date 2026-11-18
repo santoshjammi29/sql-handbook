@@ -1039,3 +1039,305 @@ A data engineer at a European asset manager exploring newly landed ECB exchange 
 - CTAS (CREATE TABLE AS SELECT) is the fastest way to materialize exploratory queries into Delta tables
 
 ---
+
+### Q1.17: Common Table Expressions (CTEs) & Modular SQL (Query Design)
+
+**Question & Concept Overview:**  
+How CTEs (`WITH` clauses) structure complex multi-stage transformations, improve readability, and optimize execution compared to nested subqueries.
+
+**Detailed Technical Explanation:**  
+Common Table Expressions (CTEs) provide temporary named result sets that exist only within the execution scope of a single SQL statement. Unlike inline subqueries, CTEs can be referenced multiple times, enable recursive tree traversal, and allow query optimizers to produce cleaner execution trees. In distributed engines like Databricks and Snowflake, CTEs are often inlined or materialized based on cost estimation.
+
+**Production Code / SQL Implementation:**
+```sql
+-- Multi-tier customer spend tier calculation using CTEs
+WITH customer_aggregates AS (
+    SELECT
+        customer_id,
+        COUNT(order_id) AS total_orders,
+        SUM(order_amount) AS lifetime_value,
+        MAX(order_date) AS last_purchase_date
+    FROM prod_catalog.gold.fact_orders
+    WHERE order_status = 'COMPLETED'
+    GROUP BY customer_id
+),
+customer_segments AS (
+    SELECT
+        customer_id,
+        lifetime_value,
+        CASE
+            WHEN lifetime_value >= 10000 THEN 'VIP_TIER'
+            WHEN lifetime_value >= 2500 THEN 'GROWTH_TIER'
+            ELSE 'STANDARD_TIER'
+        END AS loyalty_segment
+    FROM customer_aggregates
+)
+SELECT
+    loyalty_segment,
+    COUNT(*) AS total_customers,
+    ROUND(AVG(lifetime_value), 2) AS avg_segment_ltv
+FROM customer_segments
+GROUP BY loyalty_segment
+ORDER BY avg_segment_ltv DESC;
+```
+
+**Key Invariants & Architectural Best Practices:**
+- Use CTEs to avoid deeply nested subqueries and enhance code review maintainability.
+- Be aware that in PostgreSQL <= 11, CTEs are optimization fences; modern engines (PG 12+, Spark, Snowflake) inline them automatically.
+- Keep CTE logic focused on a single logical transformation step per block.
+
+**Certification Alignment:** `Databricks Certified Data Engineer Associate / SQL Specialist`
+
+---
+
+### Q1.18: Set Operations: UNION, UNION ALL, INTERSECT, EXCEPT (Relational Algebra)
+
+**Question & Concept Overview:**  
+Differences in performance, deduplication overhead, and memory consumption between `UNION ALL` and `UNION`, plus `INTERSECT` and `EXCEPT`.
+
+**Detailed Technical Explanation:**  
+Set operations combine result sets from two or more queries. `UNION` performs an implicit `DISTINCT` operation across all returned columns, triggering an expensive distributed shuffle and sort/hash aggregation to eliminate duplicate rows. In contrast, `UNION ALL` simply concatenates partitions without inspecting row contents, executing at near zero CPU cost. `INTERSECT` returns rows present in both sets, while `EXCEPT` (or `MINUS`) returns rows in the first query not present in the second.
+
+**Production Code / SQL Implementation:**
+```sql
+-- Fast union across regional order tables avoiding sort-deduplication
+SELECT order_id, customer_id, order_amount, 'EMEA' AS region
+FROM prod_catalog.silver.orders_emea
+UNION ALL
+SELECT order_id, customer_id, order_amount, 'APAC' AS region
+FROM prod_catalog.silver.orders_apac
+UNION ALL
+SELECT order_id, customer_id, order_amount, 'NA' AS region
+FROM prod_catalog.silver.orders_na;
+```
+
+**Key Invariants & Architectural Best Practices:**
+- Always default to `UNION ALL` unless business logic strictly requires deduplicating entire rows.
+- Ensure column count, ordering, and compatible data types align across all queries in the set union.
+- In distributed engines, `UNION` triggers an expensive global shuffle; use explicit `GROUP BY` if you only need key deduplication.
+
+**Certification Alignment:** `Databricks Certified Data Engineer Associate`
+
+---
+
+### Q1.19: String Manipulation & Pattern Matching: LIKE, REGEXP, SUBSTRING (Data Cleaning)
+
+**Question & Concept Overview:**  
+Extracting structured tokens, masking sensitive substrings, and validating format patterns using SQL string functions and regular expressions.
+
+**Detailed Technical Explanation:**  
+Data cleaning frequently requires string sanitization, token parsing, and regex pattern matching. Standard SQL provides `LIKE` and `ILIKE` for wildcard searches, while modern lakehouse engines (Spark SQL, Snowflake, BigQuery) support POSIX regular expressions (`REGEXP_EXTRACT`, `REGEXP_REPLACE`, `REGEXP_LIKE`). For high-throughput queries, native string slicing (`SUBSTRING`, `SPLIT`) is significantly faster than compiling regex engines per row.
+
+**Production Code / SQL Implementation:**
+```sql
+-- Sanitizing, parsing and masking customer telemetry strings
+SELECT
+    raw_id,
+    -- Extract domain from email using regex
+    regexp_extract(email_address, '@([a-zA-Z0-9.-]+)', 1) AS email_domain,
+    -- Mask credit card number preserving last 4 digits
+    concat('XXXX-XXXX-XXXX-', substring(card_number, -4, 4)) AS masked_card,
+    -- Parse structured JSON tokens
+    get_json_object(metadata_payload, '$.device.os') AS client_os
+FROM prod_catalog.bronze.user_sessions
+WHERE email_address LIKE '%@%' AND card_number IS NOT NULL;
+```
+
+**Key Invariants & Architectural Best Practices:**
+- Prefer `LIKE` with prefix wildcards (`val%`) over regex when searching indexed columns.
+- Use `regexp_extract` with capture groups `( )` for precise token extraction.
+- Leverage vectorized string functions (`split_part`, `substring`) over complex regular expressions in hot ETL paths.
+
+**Certification Alignment:** `Databricks Certified Associate / Professional Data Engineer`
+
+---
+
+### Q1.20: Date & Time Manipulation: Intervals, Truncation & Timezones (Temporal Analysis)
+
+**Question & Concept Overview:**  
+Handling UTC normalization, timezone offsets, date truncation (`DATE_TRUNC`), and interval arithmetic for time-series analytics.
+
+**Detailed Technical Explanation:**  
+Temporal data must be normalized to UTC at the ingestion boundary to eliminate daylight saving ambiguities. Functions like `DATE_TRUNC('month', event_ts)` round timestamps down to the start of the specified interval, enabling clean time-grain grouping. Interval arithmetic (`CURRENT_TIMESTAMP() - INTERVAL 7 DAYS`) enables sliding lookback windows and automated data retention pruning without manual date calculation.
+
+**Production Code / SQL Implementation:**
+```sql
+-- Rolling 7-day active user metric normalized to UTC
+SELECT
+    date_trunc('day', from_utc_timestamp(event_timestamp, 'America/New_York')) AS event_day_est,
+    COUNT(DISTINCT user_id) AS daily_active_users,
+    COUNT(event_id) AS total_events
+FROM prod_catalog.silver.events_stream
+WHERE event_timestamp >= current_timestamp() - INTERVAL 30 DAYS
+GROUP BY 1
+ORDER BY event_day_est DESC;
+```
+
+**Key Invariants & Architectural Best Practices:**
+- Store all timestamps in UTC (`TIMESTAMP_NTZ` or UTC-normalized `TIMESTAMP`) in Bronze and Silver tiers.
+- Convert to target business timezones only at the consumption / reporting layer via `from_utc_timestamp`.
+- Use `date_trunc` instead of string formatting (`DATE_FORMAT`) to preserve native date types for downstream sorting.
+
+**Certification Alignment:** `Databricks Certified Data Engineer Associate`
+
+---
+
+### Q1.21: Window Functions Foundations: ROW_NUMBER(), RANK(), DENSE_RANK() (Analytical SQL)
+
+**Question & Concept Overview:**  
+Differences in tie-breaking, rank gaps, and deduplication patterns among `ROW_NUMBER()`, `RANK()`, and `DENSE_RANK()`.
+
+**Detailed Technical Explanation:**  
+Window functions perform calculations across a set of rows related to the current row without collapsing them into a single aggregate row. `ROW_NUMBER()` assigns a unique, strictly sequential integer to every row regardless of ties. `RANK()` assigns identical ranks to tied rows and skips subsequent numbers (e.g. 1, 2, 2, 4). `DENSE_RANK()` assigns identical ranks to ties without skipping numbers (e.g. 1, 2, 2, 3). For deduplicating records by recency, `ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC)` is the standard industry pattern.
+
+**Production Code / SQL Implementation:**
+```sql
+-- Deduplicating records by latest timestamp using ROW_NUMBER()
+WITH ranked_records AS (
+    SELECT
+        account_id,
+        account_status,
+        balance_amount,
+        updated_at,
+        ROW_NUMBER() OVER (
+            PARTITION BY account_id
+            ORDER BY updated_at DESC, transaction_id DESC
+        ) AS row_num
+    FROM prod_catalog.silver.account_snapshots
+)
+SELECT account_id, account_status, balance_amount, updated_at
+FROM ranked_records
+WHERE row_num = 1;
+```
+
+**Key Invariants & Architectural Best Practices:**
+- Include deterministic tie-breakers (e.g. `transaction_id DESC`) in `ORDER BY` when using `ROW_NUMBER()`.
+- Filter `row_num = 1` inside an outer query or CTE; window functions are forbidden directly in the `WHERE` clause.
+- Ensure the `PARTITION BY` column aligns with table clustering/partitioning keys to minimize shuffle data movement.
+
+**Certification Alignment:** `Databricks Certified Data Engineer Professional`
+
+---
+
+### Q1.22: Handling NULLs: COALESCE, NULLIF, and NVL2 (Defensive SQL)
+
+**Question & Concept Overview:**  
+Preventing divide-by-zero crashes, replacing missing values, and handling three-valued logic (`TRUE`, `FALSE`, `UNKNOWN`) in SQL.
+
+**Detailed Technical Explanation:**  
+SQL utilizes three-valued logic where comparisons with `NULL` evaluate to `UNKNOWN`. Functions like `COALESCE(col1, col2, default_val)` evaluate arguments from left to right, returning the first non-null value. `NULLIF(a, b)` returns `NULL` if `a == b`, which is essential for preventing catastrophic `division by zero` runtime failures (e.g. `revenue / NULLIF(units, 0)`). `NVL2(expr, val_if_not_null, val_if_null)` provides concise ternary evaluation without verbose `CASE` expressions.
+
+**Production Code / SQL Implementation:**
+```sql
+-- Defensive calculations preventing divide-by-zero and missing metrics
+SELECT
+    campaign_id,
+    impressions,
+    clicks,
+    -- Prevent division by zero when impressions is 0
+    ROUND(clicks * 100.0 / NULLIF(impressions, 0), 4) AS click_through_rate_pct,
+    -- Fallback hierarchy for customer contact email
+    COALESCE(primary_email, secondary_email, 'no-contact-email@domain.internal') AS active_email
+FROM prod_catalog.gold.marketing_campaigns;
+```
+
+**Key Invariants & Architectural Best Practices:**
+- Never use `= NULL` or `!= NULL`; always use `IS NULL` or `IS NOT NULL`.
+- Always wrap divisors in `NULLIF(divisor, 0)` in production queries to guarantee pipeline resilience.
+- When joining on nullable keys, use `colA <=> colB` (null-safe equality) in Spark SQL or coalesce keys with dummy values.
+
+**Certification Alignment:** `Databricks Certified Data Engineer Associate`
+
+---
+
+### Q1.23: Temporary Views vs Global Temp Views vs Managed Tables (Persistence Tiers)
+
+**Question & Concept Overview:**  
+Scope, lifecycle, metadata catalog registration, and memory overhead differences across session-scoped views, cross-session temp views, and managed tables.
+
+**Detailed Technical Explanation:**  
+Modern SQL engines provide multiple tiers of persistence. A local Temporary View (`CREATE TEMP VIEW`) is scoped strictly to the current Spark session/notebook and destroyed upon session termination. A Global Temporary View (`CREATE GLOBAL TEMP VIEW`) is tied to a system-preserved `global_temp` database and accessible across all sessions on the same cluster until the cluster restarts. A Managed Table (`CREATE TABLE`) permanently registers schema and metadata in Unity Catalog and persists Parquet files in cloud object storage.
+
+**Production Code / SQL Implementation:**
+```sql
+-- 1. Create a session-scoped temporary view
+CREATE OR REPLACE TEMP VIEW v_daily_summary AS
+SELECT date_trunc('day', order_ts) AS order_date, SUM(amount) AS daily_rev
+FROM prod_catalog.silver.orders
+GROUP BY 1;
+
+-- 2. Create a permanent Unity Catalog managed Delta table
+CREATE TABLE IF NOT EXISTS prod_catalog.gold.daily_financial_summary
+USING DELTA
+AS SELECT * FROM v_daily_summary;
+```
+
+**Key Invariants & Architectural Best Practices:**
+- Use Temp Views for intermediate notebook prototyping to avoid cluttering production catalogs with throwaway tables.
+- Global Temp Views require prefixing queries with `global_temp.<view_name>`.
+- In Unity Catalog, managed tables own both metadata and physical data files; dropping a managed table purges underlying storage after retention expiration.
+
+**Certification Alignment:** `Databricks Certified Data Engineer Associate`
+
+---
+
+### Q1.24: Delta Lake Time Travel & History Inspection in SQL (Data Auditing)
+
+**Question & Concept Overview:**  
+Executing audit queries, tracking who committed changes, and retrieving previous table states using `DESCRIBE HISTORY` and `VERSION AS OF`.
+
+**Detailed Technical Explanation:**  
+Because Delta Lake maintains an append-only transaction log (`_delta_log`), every committed transaction records who, when, and what operation modified the table (e.g. `WRITE`, `MERGE`, `OPTIMIZE`). Users can inspect this audit trail using `DESCRIBE HISTORY table_name`. Analysts can time-travel to any historical snapshot using `SELECT * FROM table_name VERSION AS OF <version>` or `TIMESTAMP AS OF '<timestamp>'`, enabling instant recovery from accidental deletions without restoring from backups.
+
+**Production Code / SQL Implementation:**
+```sql
+-- 1. Inspect transaction history and audit metadata
+DESCRIBE HISTORY prod_catalog.gold.dim_customer;
+
+-- 2. Query historical state before an erroneous batch update
+SELECT customer_id, email, updated_at
+FROM prod_catalog.gold.dim_customer VERSION AS OF 14
+WHERE customer_id = 99821;
+
+-- 3. Restore table to previous known good state
+RESTORE TABLE prod_catalog.gold.dim_customer TO VERSION AS OF 14;
+```
+
+**Key Invariants & Architectural Best Practices:**
+- Time travel depends on historical files retained by the table's `delta.deletedFileRetentionDuration` (default 7 days).
+- Running `VACUUM` with retention periods shorter than the requested time travel version causes `FileNotFoundException`.
+- Use `RESTORE TABLE` for immediate disaster recovery rollback following a corrupt ETL run.
+
+**Certification Alignment:** `Databricks Certified Data Engineer Professional`
+
+---
+
+### Q1.25: Storage Compaction & Hygiene: OPTIMIZE & VACUUM in SQL (Lakehouse Performance)
+
+**Question & Concept Overview:**  
+Bin-packing small files into optimal 1GB targets using `OPTIMIZE` and cleaning up obsolete historical files with `VACUUM`.
+
+**Detailed Technical Explanation:**  
+Frequent streaming ingestion or concurrent batch appends create thousands of small files (<10MB), causing severe metadata overhead and degrading query throughput. The `OPTIMIZE` SQL command compacts small files into uniform target files (typically 1GB). Co-locating related data along high-cardinality query predicate columns is achieved via `ZORDER BY`. To reclaim cloud object storage costs, `VACUUM` permanently deletes obsolete files no longer needed by the current snapshot or active retention window.
+
+**Production Code / SQL Implementation:**
+```sql
+-- 1. Bin-pack small files and co-locate data by customer and date
+OPTIMIZE prod_catalog.gold.fact_transactions
+ZORDER BY (customer_id, transaction_date);
+
+-- 2. Clean up obsolete files older than standard retention (7 days)
+VACUUM prod_catalog.gold.fact_transactions RETAIN 168 HOURS;
+
+-- 3. Check table file layout metrics
+DESCRIBE DETAIL prod_catalog.gold.fact_transactions;
+```
+
+**Key Invariants & Architectural Best Practices:**
+- Never run `VACUUM` with 0 hours retention in production without setting safety checks to false, as it crashes concurrent readers.
+- Run `OPTIMIZE` on a scheduled maintenance cadence (e.g. nightly or weekly) depending on ingestion velocity.
+- In Delta Lake 3.x with Liquid Clustering, `OPTIMIZE` incrementally clusters data without full re-sorting.
+
+**Certification Alignment:** `Databricks Certified Data Engineer Professional`
+
+---

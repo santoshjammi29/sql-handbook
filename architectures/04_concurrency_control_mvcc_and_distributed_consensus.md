@@ -1,5 +1,15 @@
 # 🏛️ Architecture Deep Dive: Concurrency Control, MVCC & Distributed Consensus
 
+
+![Lakehouse ACID Concurrency & Write Conflict Resolution Matrix](../assets/whiteboards/lakehouse_acid_concurrency.webp)
+> *Architectural Blueprint: [Lakehouse ACID Concurrency & Write Conflict Resolution Matrix](../docs/whiteboard_diagrams/README.md#lakehouse-acid-concurrency). View full multi-persona breakdown and engine mechanisms in the master index.*
+
+
+![Delta Lake vs. Apache Iceberg Storage & Metadata Architecture](../assets/whiteboards/delta_lake_vs_iceberg_architecture.webp)
+> *Architectural Blueprint: [Delta Lake vs. Apache Iceberg Storage & Metadata Architecture](../docs/whiteboard_diagrams/README.md#delta-vs-iceberg-architecture). View full multi-persona breakdown and engine mechanisms in the master index.*
+
+
+
 ## 1. The ACID Paradigm & Concurrency Anomalies
 
 Database concurrency control ensures that multiple transactions executing concurrently yield identical state to a serial execution schedule. 

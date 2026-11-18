@@ -376,16 +376,80 @@ Prepare for technical coding screens from Junior Analyst to Principal Lakehouse 
 
 ---
 
-## 🖼️ Whiteboard Blueprints
+## 🖼️ Master Whiteboard Architecture Blueprints
 
-The repository includes **52 publication-grade architectural whiteboard blueprints** mirrored under `assets/whiteboards/` and cataloged in [docs/whiteboard_diagrams/README.md](docs/whiteboard_diagrams/README.md), illustrating:
-- **Logical vs Physical Query Execution** pipelines
-- **MPP Distributed Data Movement** (Colocated vs Shuffle vs Broadcast joins)
-- **B-Tree Index Traversals & Covering Index Scans**
-- **Concurrency Control & MVCC Snapshot Isolation**
-- **Lakehouse ACID Storage Engines & Liquid Clustering**
+The repository includes **52 publication-grade architectural whiteboard blueprints** mirrored under [`assets/whiteboards/`](assets/whiteboards) and cataloged with comprehensive multi-persona breakdowns, failure modes, and engine internals in [`docs/whiteboard_diagrams/README.md`](docs/whiteboard_diagrams/README.md).
 
----
+### 📐 Visual Blueprints Showcase
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#sql-server-query-engine-optimization">
+        <img src="assets/whiteboards/sql_server_query_engine_optimization.webp" alt="SQL Server & Relational Query Engine Architecture" width="100%" />
+      </a>
+      <br><strong>SQL Server & Relational Query Engine Architecture</strong><br>
+      <em>Query compilation, Cardinality Estimator, memo space search, and execution operators.</em>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#spark-catalyst-photon-engine">
+        <img src="assets/whiteboards/catalyst_photon_engine.webp" alt="Databricks Compute: Catalyst Optimizer, AQE & Photon" width="100%" />
+      </a>
+      <br><strong>Databricks Compute: Catalyst Optimizer, AQE & Photon</strong><br>
+      <em>Multi-stage relational optimization from parsed AST to native machine instructions.</em>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#spark-shuffle-memory-execution">
+        <img src="assets/whiteboards/spark_shuffle_memory_execution.webp" alt="Apache Spark Memory Architecture & Shuffle Mechanics" width="100%" />
+      </a>
+      <br><strong>Apache Spark Memory Architecture & Shuffle Mechanics</strong><br>
+      <em>Distributed hash partitioning, Tungsten binary serialization, and memory buffer management.</em>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#spark-join-decision-tree">
+        <img src="assets/whiteboards/spark_join_decision_tree.webp" alt="Apache Spark Join Strategy Selection Decision Tree" width="100%" />
+      </a>
+      <br><strong>Apache Spark Join Strategy Selection Decision Tree</strong><br>
+      <em>Join algorithm selection heuristics based on table size, hints, and equivalence predicates.</em>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#open-table-formats-lakehouse">
+        <img src="assets/whiteboards/open_table_formats_lakehouse_architecture.webp" alt="Open Table Formats Blueprint: Lakehouse Storage Engines" width="100%" />
+      </a>
+      <br><strong>Open Table Formats Blueprint: Lakehouse Storage Engines</strong><br>
+      <em>Comparative architecture of Delta Lake, Apache Iceberg, and Apache Hudi storage layers.</em>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#lakehouse-acid-concurrency">
+        <img src="assets/whiteboards/lakehouse_acid_concurrency.webp" alt="Lakehouse ACID Concurrency & Write Conflict Resolution Matrix" width="100%" />
+      </a>
+      <br><strong>Lakehouse ACID Concurrency & Write Conflict Resolution Matrix</strong><br>
+      <em>Optimistic concurrency control, commit conflict detection, and write serialization protocols.</em>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#scd-types-lakehouse">
+        <img src="assets/whiteboards/scd_types_lakehouse.webp" alt="Slowly Changing Dimensions (SCD Types 1, 2, 3, 4, 6) in SQL" width="100%" />
+      </a>
+      <br><strong>Slowly Changing Dimensions (SCD Types 1, 2, 3, 4, 6) in SQL</strong><br>
+      <em>Complete SQL DDL and MERGE patterns for historical dimension tracking.</em>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#delta-lake-under-the-hood">
+        <img src="assets/whiteboards/delta_lake_mechanism.webp" alt="How Delta Lake Works Under the Hood" width="100%" />
+      </a>
+      <br><strong>How Delta Lake Works Under the Hood</strong><br>
+      <em>Append-only JSON commit log, snapshot isolation, checkpoints, and time travel mechanisms.</em>
+    </td>
+  </tr>
+</table>
+
+> 🔍 **Explore all 52 blueprints with 5-persona breakdowns, failure modes, and engine internals in [docs/whiteboard_diagrams/README.md](docs/whiteboard_diagrams/README.md)**.
 
 ## 💻 Interactive CLI Explorer
 
