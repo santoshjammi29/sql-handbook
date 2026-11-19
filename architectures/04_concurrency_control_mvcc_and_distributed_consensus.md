@@ -170,7 +170,7 @@ flowchart TD
     end
 
     subgraph CleanResult["Authorized Output Stream"]
-        Output["Rows restricted to user department; SSN masked"]
+        Output["Rows restricted to user department, SSN masked"]
     end
 
     User --> TagLookup --> RowFilter --> ColMask --> CleanResult
