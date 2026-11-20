@@ -1,0 +1,1160 @@
+{
+  "repo": "sql-handbook",
+  "github": "santoshjammi29/sql-handbook",
+  "name": "SQL Handbook",
+  "role": "105 SQL production exercises, query execution plans, MPP distributed joins, MVCC concurrency",
+  "last_synced": "2026-11-20T08:25:01.796969Z",
+  "entry_count": 115,
+  "entries": [
+    {
+      "id": "sql-handbook-001_logical_query_execution_order",
+      "type": "sql_exercise",
+      "title": "SQL: Logical Query Execution Order",
+      "difficulty": "L200",
+      "relative_path": "exercises/01_core_sql_fundamentals/001_logical_query_execution_order.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-002_three_valued_logic_and_null_traps",
+      "type": "sql_exercise",
+      "title": "SQL: Three Valued Logic And Null Traps",
+      "difficulty": "L200",
+      "relative_path": "exercises/01_core_sql_fundamentals/002_three_valued_logic_and_null_traps.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-003_sargability_and_predicate_rewriting",
+      "type": "sql_exercise",
+      "title": "SQL: Sargability And Predicate Rewriting",
+      "difficulty": "L200",
+      "relative_path": "exercises/01_core_sql_fundamentals/003_sargability_and_predicate_rewriting.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-004_relational_constraints_and_cascade_rules",
+      "type": "sql_exercise",
+      "title": "SQL: Relational Constraints And Cascade Rules",
+      "difficulty": "L200",
+      "relative_path": "exercises/01_core_sql_fundamentals/004_relational_constraints_and_cascade_rules.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-005_safe_type_casting_and_numeric_precision",
+      "type": "sql_exercise",
+      "title": "SQL: Safe Type Casting And Numeric Precision",
+      "difficulty": "L200",
+      "relative_path": "exercises/01_core_sql_fundamentals/005_safe_type_casting_and_numeric_precision.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-006_string_manipulation_and_pattern_extraction",
+      "type": "sql_exercise",
+      "title": "SQL: String Manipulation And Pattern Extraction",
+      "difficulty": "L200",
+      "relative_path": "exercises/01_core_sql_fundamentals/006_string_manipulation_and_pattern_extraction.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-007_temporal_and_timestamp_arithmetic",
+      "type": "sql_exercise",
+      "title": "SQL: Temporal And Timestamp Arithmetic",
+      "difficulty": "L200",
+      "relative_path": "exercises/01_core_sql_fundamentals/007_temporal_and_timestamp_arithmetic.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-008_conditional_case_logic_and_nullif_coalesce",
+      "type": "sql_exercise",
+      "title": "SQL: Conditional Case Logic And Nullif Coalesce",
+      "difficulty": "L200",
+      "relative_path": "exercises/01_core_sql_fundamentals/008_conditional_case_logic_and_nullif_coalesce.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-009_filtering_edge_cases_not_exists_vs_not_in",
+      "type": "sql_exercise",
+      "title": "SQL: Filtering Edge Cases Not Exists Vs Not In",
+      "difficulty": "L200",
+      "relative_path": "exercises/01_core_sql_fundamentals/009_filtering_edge_cases_not_exists_vs_not_in.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-010_idempotent_ddl_and_safe_schema_migrations",
+      "type": "sql_exercise",
+      "title": "SQL: Idempotent Ddl And Safe Schema Migrations",
+      "difficulty": "L200",
+      "relative_path": "exercises/01_core_sql_fundamentals/010_idempotent_ddl_and_safe_schema_migrations.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-011_inner_left_right_full_outer_joins",
+      "type": "sql_exercise",
+      "title": "SQL: Inner Left Right Full Outer Joins",
+      "difficulty": "L200",
+      "relative_path": "exercises/02_joins_and_set_operations/011_inner_left_right_full_outer_joins.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-012_semi_joins_and_duplicate_multiplier_prevention",
+      "type": "sql_exercise",
+      "title": "SQL: Semi Joins And Duplicate Multiplier Prevention",
+      "difficulty": "L200",
+      "relative_path": "exercises/02_joins_and_set_operations/012_semi_joins_and_duplicate_multiplier_prevention.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-013_anti_joins_for_missing_record_detection",
+      "type": "sql_exercise",
+      "title": "SQL: Anti Joins For Missing Record Detection",
+      "difficulty": "L200",
+      "relative_path": "exercises/02_joins_and_set_operations/013_anti_joins_for_missing_record_detection.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-014_full_outer_joins_for_reconciliation",
+      "type": "sql_exercise",
+      "title": "SQL: Full Outer Joins For Reconciliation",
+      "difficulty": "L200",
+      "relative_path": "exercises/02_joins_and_set_operations/014_full_outer_joins_for_reconciliation.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-015_cross_joins_and_cartesian_grid_generation",
+      "type": "sql_exercise",
+      "title": "SQL: Cross Joins And Cartesian Grid Generation",
+      "difficulty": "L200",
+      "relative_path": "exercises/02_joins_and_set_operations/015_cross_joins_and_cartesian_grid_generation.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-016_non_equi_joins_and_effective_date_matching",
+      "type": "sql_exercise",
+      "title": "SQL: Non Equi Joins And Effective Date Matching",
+      "difficulty": "L200",
+      "relative_path": "exercises/02_joins_and_set_operations/016_non_equi_joins_and_effective_date_matching.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-017_lateral_joins_and_cross_apply_expansions",
+      "type": "sql_exercise",
+      "title": "SQL: Lateral Joins And Cross Apply Expansions",
+      "difficulty": "L200",
+      "relative_path": "exercises/02_joins_and_set_operations/017_lateral_joins_and_cross_apply_expansions.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-018_union_vs_union_all_internals",
+      "type": "sql_exercise",
+      "title": "SQL: Union Vs Union All Internals",
+      "difficulty": "L200",
+      "relative_path": "exercises/02_joins_and_set_operations/018_union_vs_union_all_internals.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-019_intersect_and_except_data_audits",
+      "type": "sql_exercise",
+      "title": "SQL: Intersect And Except Data Audits",
+      "difficulty": "L200",
+      "relative_path": "exercises/02_joins_and_set_operations/019_intersect_and_except_data_audits.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-020_self_joins_for_sequential_event_pairs",
+      "type": "sql_exercise",
+      "title": "SQL: Self Joins For Sequential Event Pairs",
+      "difficulty": "L200",
+      "relative_path": "exercises/02_joins_and_set_operations/020_self_joins_for_sequential_event_pairs.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-021_count_semantics_star_one_column",
+      "type": "sql_exercise",
+      "title": "SQL: Count Semantics Star One Column",
+      "difficulty": "L200",
+      "relative_path": "exercises/03_aggregations_and_grouping/021_count_semantics_star_one_column.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-022_multi_column_group_by_and_grain_integrity",
+      "type": "sql_exercise",
+      "title": "SQL: Multi Column Group By And Grain Integrity",
+      "difficulty": "L200",
+      "relative_path": "exercises/03_aggregations_and_grouping/022_multi_column_group_by_and_grain_integrity.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-023_where_pre_filtering_vs_having_post_aggregation",
+      "type": "sql_exercise",
+      "title": "SQL: Where Pre Filtering Vs Having Post Aggregation",
+      "difficulty": "L200",
+      "relative_path": "exercises/03_aggregations_and_grouping/023_where_pre_filtering_vs_having_post_aggregation.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-024_conditional_aggregation_filtered_metrics",
+      "type": "sql_exercise",
+      "title": "SQL: Conditional Aggregation Filtered Metrics",
+      "difficulty": "L200",
+      "relative_path": "exercises/03_aggregations_and_grouping/024_conditional_aggregation_filtered_metrics.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-025_multidimensional_olap_rollup_subtotals",
+      "type": "sql_exercise",
+      "title": "SQL: Multidimensional Olap Rollup Subtotals",
+      "difficulty": "L200",
+      "relative_path": "exercises/03_aggregations_and_grouping/025_multidimensional_olap_rollup_subtotals.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-026_multidimensional_olap_cube_combinations",
+      "type": "sql_exercise",
+      "title": "SQL: Multidimensional Olap Cube Combinations",
+      "difficulty": "L200",
+      "relative_path": "exercises/03_aggregations_and_grouping/026_multidimensional_olap_cube_combinations.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-027_grouping_sets_for_targeted_cubes",
+      "type": "sql_exercise",
+      "title": "SQL: Grouping Sets For Targeted Cubes",
+      "difficulty": "L200",
+      "relative_path": "exercises/03_aggregations_and_grouping/027_grouping_sets_for_targeted_cubes.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-028_relational_pivoting_rows_to_columns",
+      "type": "sql_exercise",
+      "title": "SQL: Relational Pivoting Rows To Columns",
+      "difficulty": "L200",
+      "relative_path": "exercises/03_aggregations_and_grouping/028_relational_pivoting_rows_to_columns.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-029_relational_unpivoting_columns_to_rows",
+      "type": "sql_exercise",
+      "title": "SQL: Relational Unpivoting Columns To Rows",
+      "difficulty": "L200",
+      "relative_path": "exercises/03_aggregations_and_grouping/029_relational_unpivoting_columns_to_rows.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-030_statistical_aggregations_median_and_percentiles",
+      "type": "sql_exercise",
+      "title": "SQL: Statistical Aggregations Median And Percentiles",
+      "difficulty": "L200",
+      "relative_path": "exercises/03_aggregations_and_grouping/030_statistical_aggregations_median_and_percentiles.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-031_ranking_functions_row_number_rank_dense_rank",
+      "type": "sql_exercise",
+      "title": "SQL: Ranking Functions Row Number Rank Dense Rank",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/031_ranking_functions_row_number_rank_dense_rank.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-032_quantile_distribution_ntile_bucketing",
+      "type": "sql_exercise",
+      "title": "SQL: Quantile Distribution Ntile Bucketing",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/032_quantile_distribution_ntile_bucketing.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-033_value_offsets_lag_lead_period_over_period",
+      "type": "sql_exercise",
+      "title": "SQL: Value Offsets Lag Lead Period Over Period",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/033_value_offsets_lag_lead_period_over_period.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-034_navigation_functions_first_last_nth_value",
+      "type": "sql_exercise",
+      "title": "SQL: Navigation Functions First Last Nth Value",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/034_navigation_functions_first_last_nth_value.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-035_cumulative_and_running_totals",
+      "type": "sql_exercise",
+      "title": "SQL: Cumulative And Running Totals",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/035_cumulative_and_running_totals.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-036_moving_averages_and_rolling_windows",
+      "type": "sql_exercise",
+      "title": "SQL: Moving Averages And Rolling Windows",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/036_moving_averages_and_rolling_windows.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-037_physical_vs_logical_frames_rows_vs_range",
+      "type": "sql_exercise",
+      "title": "SQL: Physical Vs Logical Frames Rows Vs Range",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/037_physical_vs_logical_frames_rows_vs_range.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-038_gaps_and_islands_consecutive_streaks",
+      "type": "sql_exercise",
+      "title": "SQL: Gaps And Islands Consecutive Streaks",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/038_gaps_and_islands_consecutive_streaks.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-039_gaps_and_islands_threshold_sessionization",
+      "type": "sql_exercise",
+      "title": "SQL: Gaps And Islands Threshold Sessionization",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/039_gaps_and_islands_threshold_sessionization.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-040_gaps_and_islands_overlapping_interval_merging",
+      "type": "sql_exercise",
+      "title": "SQL: Gaps And Islands Overlapping Interval Merging",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/040_gaps_and_islands_overlapping_interval_merging.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-041_running_peak_and_maximum_drawdown",
+      "type": "sql_exercise",
+      "title": "SQL: Running Peak And Maximum Drawdown",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/041_running_peak_and_maximum_drawdown.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-042_year_over_year_and_month_over_month_growth",
+      "type": "sql_exercise",
+      "title": "SQL: Year Over Year And Month Over Month Growth",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/042_year_over_year_and_month_over_month_growth.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-043_customer_retention_cohort_curves",
+      "type": "sql_exercise",
+      "title": "SQL: Customer Retention Cohort Curves",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/043_customer_retention_cohort_curves.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-044_top_n_per_category_deterministic_ties",
+      "type": "sql_exercise",
+      "title": "SQL: Top N Per Category Deterministic Ties",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/044_top_n_per_category_deterministic_ties.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-045_windowed_aggregates_without_group_by",
+      "type": "sql_exercise",
+      "title": "SQL: Windowed Aggregates Without Group By",
+      "difficulty": "L200",
+      "relative_path": "exercises/04_window_functions_mastery/045_windowed_aggregates_without_group_by.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-046_scalar_and_multi_row_subqueries",
+      "type": "sql_exercise",
+      "title": "SQL: Scalar And Multi Row Subqueries",
+      "difficulty": "L200",
+      "relative_path": "exercises/05_subqueries_and_recursive_ctes/046_scalar_and_multi_row_subqueries.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-047_correlated_subqueries_and_decorrelation",
+      "type": "sql_exercise",
+      "title": "SQL: Correlated Subqueries And Decorrelation",
+      "difficulty": "L200",
+      "relative_path": "exercises/05_subqueries_and_recursive_ctes/047_correlated_subqueries_and_decorrelation.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-048_ctes_vs_temp_tables_vs_subqueries",
+      "type": "sql_exercise",
+      "title": "SQL: Ctes Vs Temp Tables Vs Subqueries",
+      "difficulty": "L200",
+      "relative_path": "exercises/05_subqueries_and_recursive_ctes/048_ctes_vs_temp_tables_vs_subqueries.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-049_recursive_cte_organizational_hierarchy",
+      "type": "sql_exercise",
+      "title": "SQL: Recursive Cte Organizational Hierarchy",
+      "difficulty": "L200",
+      "relative_path": "exercises/05_subqueries_and_recursive_ctes/049_recursive_cte_organizational_hierarchy.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-050_recursive_cte_bill_of_materials_explosion",
+      "type": "sql_exercise",
+      "title": "SQL: Recursive Cte Bill Of Materials Explosion",
+      "difficulty": "L200",
+      "relative_path": "exercises/05_subqueries_and_recursive_ctes/050_recursive_cte_bill_of_materials_explosion.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-051_recursive_cte_graph_shortest_path_cycle_detection",
+      "type": "sql_exercise",
+      "title": "SQL: Recursive Cte Graph Shortest Path Cycle Detection",
+      "difficulty": "L200",
+      "relative_path": "exercises/05_subqueries_and_recursive_ctes/051_recursive_cte_graph_shortest_path_cycle_detection.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-052_recursive_cte_calendar_dimension_spine",
+      "type": "sql_exercise",
+      "title": "SQL: Recursive Cte Calendar Dimension Spine",
+      "difficulty": "L200",
+      "relative_path": "exercises/05_subqueries_and_recursive_ctes/052_recursive_cte_calendar_dimension_spine.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-053_binary_tree_node_classification",
+      "type": "sql_exercise",
+      "title": "SQL: Binary Tree Node Classification",
+      "difficulty": "L200",
+      "relative_path": "exercises/05_subqueries_and_recursive_ctes/053_binary_tree_node_classification.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-054_materialized_vs_inlined_ctes",
+      "type": "sql_exercise",
+      "title": "SQL: Materialized Vs Inlined Ctes",
+      "difficulty": "L200",
+      "relative_path": "exercises/05_subqueries_and_recursive_ctes/054_materialized_vs_inlined_ctes.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-055_deterministic_duplicate_deletion",
+      "type": "sql_exercise",
+      "title": "SQL: Deterministic Duplicate Deletion",
+      "difficulty": "L200",
+      "relative_path": "exercises/05_subqueries_and_recursive_ctes/055_deterministic_duplicate_deletion.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-056_kimball_star_schema_fact_dimension_design",
+      "type": "sql_exercise",
+      "title": "SQL: Kimball Star Schema Fact Dimension Design",
+      "difficulty": "L200",
+      "relative_path": "exercises/06_data_modeling_and_scd/056_kimball_star_schema_fact_dimension_design.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-057_slowly_changing_dimension_type_1_overwrite",
+      "type": "sql_exercise",
+      "title": "SQL: Slowly Changing Dimension Type 1 Overwrite",
+      "difficulty": "L200",
+      "relative_path": "exercises/06_data_modeling_and_scd/057_slowly_changing_dimension_type_1_overwrite.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-058_slowly_changing_dimension_type_2_historical",
+      "type": "sql_exercise",
+      "title": "SQL: Slowly Changing Dimension Type 2 Historical",
+      "difficulty": "L200",
+      "relative_path": "exercises/06_data_modeling_and_scd/058_slowly_changing_dimension_type_2_historical.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-059_slowly_changing_dimension_type_3_previous_value",
+      "type": "sql_exercise",
+      "title": "SQL: Slowly Changing Dimension Type 3 Previous Value",
+      "difficulty": "L200",
+      "relative_path": "exercises/06_data_modeling_and_scd/059_slowly_changing_dimension_type_3_previous_value.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-060_slowly_changing_dimension_type_4_mini_dimensions",
+      "type": "sql_exercise",
+      "title": "SQL: Slowly Changing Dimension Type 4 Mini Dimensions",
+      "difficulty": "L200",
+      "relative_path": "exercises/06_data_modeling_and_scd/060_slowly_changing_dimension_type_4_mini_dimensions.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-061_slowly_changing_dimension_type_6_hybrid_implementation",
+      "type": "sql_exercise",
+      "title": "SQL: Slowly Changing Dimension Type 6 Hybrid Implementation",
+      "difficulty": "L200",
+      "relative_path": "exercises/06_data_modeling_and_scd/061_slowly_changing_dimension_type_6_hybrid_implementation.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-062_data_vault_2_0_hubs_links_satellites",
+      "type": "sql_exercise",
+      "title": "SQL: Data Vault 2 0 Hubs Links Satellites",
+      "difficulty": "L200",
+      "relative_path": "exercises/06_data_modeling_and_scd/062_data_vault_2_0_hubs_links_satellites.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-063_bridge_tables_for_many_to_many_relationships",
+      "type": "sql_exercise",
+      "title": "SQL: Bridge Tables For Many To Many Relationships",
+      "difficulty": "L200",
+      "relative_path": "exercises/06_data_modeling_and_scd/063_bridge_tables_for_many_to_many_relationships.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-064_accumulating_snapshot_fact_tables",
+      "type": "sql_exercise",
+      "title": "SQL: Accumulating Snapshot Fact Tables",
+      "difficulty": "L200",
+      "relative_path": "exercises/06_data_modeling_and_scd/064_accumulating_snapshot_fact_tables.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-065_deterministic_surrogate_key_generation",
+      "type": "sql_exercise",
+      "title": "SQL: Deterministic Surrogate Key Generation",
+      "difficulty": "L200",
+      "relative_path": "exercises/06_data_modeling_and_scd/065_deterministic_surrogate_key_generation.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-066_btree_index_seek_vs_index_scan",
+      "type": "sql_exercise",
+      "title": "SQL: Btree Index Seek Vs Index Scan",
+      "difficulty": "L200",
+      "relative_path": "exercises/07_indexing_and_query_optimization/066_btree_index_seek_vs_index_scan.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-067_composite_index_column_ordering_left_prefix",
+      "type": "sql_exercise",
+      "title": "SQL: Composite Index Column Ordering Left Prefix",
+      "difficulty": "L200",
+      "relative_path": "exercises/07_indexing_and_query_optimization/067_composite_index_column_ordering_left_prefix.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-068_covering_indexes_and_index_only_scans",
+      "type": "sql_exercise",
+      "title": "SQL: Covering Indexes And Index Only Scans",
+      "difficulty": "L200",
+      "relative_path": "exercises/07_indexing_and_query_optimization/068_covering_indexes_and_index_only_scans.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-069_filtered_and_partial_indexes",
+      "type": "sql_exercise",
+      "title": "SQL: Filtered And Partial Indexes",
+      "difficulty": "L200",
+      "relative_path": "exercises/07_indexing_and_query_optimization/069_filtered_and_partial_indexes.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-070_cardinality_estimation_and_statistics",
+      "type": "sql_exercise",
+      "title": "SQL: Cardinality Estimation And Statistics",
+      "difficulty": "L200",
+      "relative_path": "exercises/07_indexing_and_query_optimization/070_cardinality_estimation_and_statistics.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-071_clustered_vs_non_clustered_index_layout",
+      "type": "sql_exercise",
+      "title": "SQL: Clustered Vs Non Clustered Index Layout",
+      "difficulty": "L200",
+      "relative_path": "exercises/07_indexing_and_query_optimization/071_clustered_vs_non_clustered_index_layout.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-072_join_algorithms_nested_loop_hash_merge",
+      "type": "sql_exercise",
+      "title": "SQL: Join Algorithms Nested Loop Hash Merge",
+      "difficulty": "L200",
+      "relative_path": "exercises/07_indexing_and_query_optimization/072_join_algorithms_nested_loop_hash_merge.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-073_preventing_accidental_cartesian_products",
+      "type": "sql_exercise",
+      "title": "SQL: Preventing Accidental Cartesian Products",
+      "difficulty": "L200",
+      "relative_path": "exercises/07_indexing_and_query_optimization/073_preventing_accidental_cartesian_products.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-074_sargable_date_range_predicates",
+      "type": "sql_exercise",
+      "title": "SQL: Sargable Date Range Predicates",
+      "difficulty": "L200",
+      "relative_path": "exercises/07_indexing_and_query_optimization/074_sargable_date_range_predicates.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-075_index_bloat_and_fragmentation_maintenance",
+      "type": "sql_exercise",
+      "title": "SQL: Index Bloat And Fragmentation Maintenance",
+      "difficulty": "L200",
+      "relative_path": "exercises/07_indexing_and_query_optimization/075_index_bloat_and_fragmentation_maintenance.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-076_acid_atomicity_and_savepoints",
+      "type": "sql_exercise",
+      "title": "SQL: Acid Atomicity And Savepoints",
+      "difficulty": "L200",
+      "relative_path": "exercises/08_transactions_concurrency_and_locks/076_acid_atomicity_and_savepoints.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-077_dirty_read_anomaly_read_uncommitted",
+      "type": "sql_exercise",
+      "title": "SQL: Dirty Read Anomaly Read Uncommitted",
+      "difficulty": "L200",
+      "relative_path": "exercises/08_transactions_concurrency_and_locks/077_dirty_read_anomaly_read_uncommitted.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-078_non_repeatable_read_anomaly",
+      "type": "sql_exercise",
+      "title": "SQL: Non Repeatable Read Anomaly",
+      "difficulty": "L200",
+      "relative_path": "exercises/08_transactions_concurrency_and_locks/078_non_repeatable_read_anomaly.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-079_phantom_read_anomaly_range_locks",
+      "type": "sql_exercise",
+      "title": "SQL: Phantom Read Anomaly Range Locks",
+      "difficulty": "L200",
+      "relative_path": "exercises/08_transactions_concurrency_and_locks/079_phantom_read_anomaly_range_locks.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-080_write_skew_anomaly_under_snapshot_isolation",
+      "type": "sql_exercise",
+      "title": "SQL: Write Skew Anomaly Under Snapshot Isolation",
+      "difficulty": "L200",
+      "relative_path": "exercises/08_transactions_concurrency_and_locks/080_write_skew_anomaly_under_snapshot_isolation.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-081_mvcc_internals_and_version_visibility",
+      "type": "sql_exercise",
+      "title": "SQL: Mvcc Internals And Version Visibility",
+      "difficulty": "L200",
+      "relative_path": "exercises/08_transactions_concurrency_and_locks/081_mvcc_internals_and_version_visibility.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-082_optimistic_concurrency_control_version_checks",
+      "type": "sql_exercise",
+      "title": "SQL: Optimistic Concurrency Control Version Checks",
+      "difficulty": "L200",
+      "relative_path": "exercises/08_transactions_concurrency_and_locks/082_optimistic_concurrency_control_version_checks.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-083_deadlock_reproduction_and_inverse_locking",
+      "type": "sql_exercise",
+      "title": "SQL: Deadlock Reproduction And Inverse Locking",
+      "difficulty": "L200",
+      "relative_path": "exercises/08_transactions_concurrency_and_locks/083_deadlock_reproduction_and_inverse_locking.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-084_pessimistic_locking_for_update",
+      "type": "sql_exercise",
+      "title": "SQL: Pessimistic Locking For Update",
+      "difficulty": "L200",
+      "relative_path": "exercises/08_transactions_concurrency_and_locks/084_pessimistic_locking_for_update.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-085_double_entry_ledger_atomic_transfer",
+      "type": "sql_exercise",
+      "title": "SQL: Double Entry Ledger Atomic Transfer",
+      "difficulty": "L200",
+      "relative_path": "exercises/08_transactions_concurrency_and_locks/085_double_entry_ledger_atomic_transfer.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-086_snowflake_micropartition_pruning",
+      "type": "sql_exercise",
+      "title": "SQL: Snowflake Micropartition Pruning",
+      "difficulty": "L200",
+      "relative_path": "exercises/09_mpp_and_cloud_warehouses/086_snowflake_micropartition_pruning.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-087_mpp_table_distribution_hash_replicated_roundrobin",
+      "type": "sql_exercise",
+      "title": "SQL: Mpp Table Distribution Hash Replicated Roundrobin",
+      "difficulty": "L200",
+      "relative_path": "exercises/09_mpp_and_cloud_warehouses/087_mpp_table_distribution_hash_replicated_roundrobin.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-088_liquid_clustering_vs_hive_partitioning",
+      "type": "sql_exercise",
+      "title": "SQL: Liquid Clustering Vs Hive Partitioning",
+      "difficulty": "L200",
+      "relative_path": "exercises/09_mpp_and_cloud_warehouses/088_liquid_clustering_vs_hive_partitioning.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-089_detecting_distribution_skew_in_parallel_shards",
+      "type": "sql_exercise",
+      "title": "SQL: Detecting Distribution Skew In Parallel Shards",
+      "difficulty": "L200",
+      "relative_path": "exercises/09_mpp_and_cloud_warehouses/089_detecting_distribution_skew_in_parallel_shards.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-090_distributed_key_salting_for_skewed_joins",
+      "type": "sql_exercise",
+      "title": "SQL: Distributed Key Salting For Skewed Joins",
+      "difficulty": "L200",
+      "relative_path": "exercises/09_mpp_and_cloud_warehouses/090_distributed_key_salting_for_skewed_joins.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-091_broadcast_vs_shuffle_join_thresholds",
+      "type": "sql_exercise",
+      "title": "SQL: Broadcast Vs Shuffle Join Thresholds",
+      "difficulty": "L200",
+      "relative_path": "exercises/09_mpp_and_cloud_warehouses/091_broadcast_vs_shuffle_join_thresholds.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-092_partition_pruning_and_dynamic_partition_elimination",
+      "type": "sql_exercise",
+      "title": "SQL: Partition Pruning And Dynamic Partition Elimination",
+      "difficulty": "L200",
+      "relative_path": "exercises/09_mpp_and_cloud_warehouses/092_partition_pruning_and_dynamic_partition_elimination.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-093_delta_merge_into_multi_condition_matching",
+      "type": "sql_exercise",
+      "title": "SQL: Delta Merge Into Multi Condition Matching",
+      "difficulty": "L200",
+      "relative_path": "exercises/09_mpp_and_cloud_warehouses/093_delta_merge_into_multi_condition_matching.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-094_query_memory_spill_mitigation",
+      "type": "sql_exercise",
+      "title": "SQL: Query Memory Spill Mitigation",
+      "difficulty": "L200",
+      "relative_path": "exercises/09_mpp_and_cloud_warehouses/094_query_memory_spill_mitigation.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-095_serverless_sql_querying_external_files",
+      "type": "sql_exercise",
+      "title": "SQL: Serverless Sql Querying External Files",
+      "difficulty": "L200",
+      "relative_path": "exercises/09_mpp_and_cloud_warehouses/095_serverless_sql_querying_external_files.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-096_incident_the_99_percent_straggler_task_disaster",
+      "type": "sql_exercise",
+      "title": "SQL: Incident The 99 Percent Straggler Task Disaster",
+      "difficulty": "L200",
+      "relative_path": "exercises/10_production_incidents_and_triage/096_incident_the_99_percent_straggler_task_disaster.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-097_incident_payment_gateway_deadlock_storm",
+      "type": "sql_exercise",
+      "title": "SQL: Incident Payment Gateway Deadlock Storm",
+      "difficulty": "L200",
+      "relative_path": "exercises/10_production_incidents_and_triage/097_incident_payment_gateway_deadlock_storm.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-098_incident_out_of_order_cdc_timeline_corruption",
+      "type": "sql_exercise",
+      "title": "SQL: Incident Out Of Order Cdc Timeline Corruption",
+      "difficulty": "L200",
+      "relative_path": "exercises/10_production_incidents_and_triage/098_incident_out_of_order_cdc_timeline_corruption.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-099_incident_accidental_cartesian_tempdb_exhaustion",
+      "type": "sql_exercise",
+      "title": "SQL: Incident Accidental Cartesian Tempdb Exhaustion",
+      "difficulty": "L200",
+      "relative_path": "exercises/10_production_incidents_and_triage/099_incident_accidental_cartesian_tempdb_exhaustion.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-100_incident_silent_schema_drift_bi_refresh_failure",
+      "type": "sql_exercise",
+      "title": "SQL: Incident Silent Schema Drift Bi Refresh Failure",
+      "difficulty": "L200",
+      "relative_path": "exercises/10_production_incidents_and_triage/100_incident_silent_schema_drift_bi_refresh_failure.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-101_incident_parameter_sniffing_query_timeout",
+      "type": "sql_exercise",
+      "title": "SQL: Incident Parameter Sniffing Query Timeout",
+      "difficulty": "L200",
+      "relative_path": "exercises/10_production_incidents_and_triage/101_incident_parameter_sniffing_query_timeout.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-102_incident_phantom_read_financial_ledger_double_spend",
+      "type": "sql_exercise",
+      "title": "SQL: Incident Phantom Read Financial Ledger Double Spend",
+      "difficulty": "L200",
+      "relative_path": "exercises/10_production_incidents_and_triage/102_incident_phantom_read_financial_ledger_double_spend.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-103_incident_unindexed_foreign_key_table_lock_cascade",
+      "type": "sql_exercise",
+      "title": "SQL: Incident Unindexed Foreign Key Table Lock Cascade",
+      "difficulty": "L200",
+      "relative_path": "exercises/10_production_incidents_and_triage/103_incident_unindexed_foreign_key_table_lock_cascade.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-104_incident_delta_lake_concurrent_append_conflict",
+      "type": "sql_exercise",
+      "title": "SQL: Incident Delta Lake Concurrent Append Conflict",
+      "difficulty": "L200",
+      "relative_path": "exercises/10_production_incidents_and_triage/104_incident_delta_lake_concurrent_append_conflict.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-105_master_enterprise_data_quality_reconciliation_suite",
+      "type": "sql_exercise",
+      "title": "SQL: Master Enterprise Data Quality Reconciliation Suite",
+      "difficulty": "L200",
+      "relative_path": "exercises/10_production_incidents_and_triage/105_master_enterprise_data_quality_reconciliation_suite.sql",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-rb-01_deadlock_and_lock_contention_triage",
+      "type": "incident_runbook",
+      "title": "Incident Runbook: Deadlock And Lock Contention Triage",
+      "difficulty": "L400",
+      "relative_path": "runbooks/01_deadlock_and_lock_contention_triage.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-rb-02_query_performance_and_execution_plan_tuning",
+      "type": "incident_runbook",
+      "title": "Incident Runbook: Query Performance And Execution Plan Tuning",
+      "difficulty": "L400",
+      "relative_path": "runbooks/02_query_performance_and_execution_plan_tuning.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-rb-03_mpp_skew_spill_and_broadcast_failures",
+      "type": "incident_runbook",
+      "title": "Incident Runbook: Mpp Skew Spill And Broadcast Failures",
+      "difficulty": "L400",
+      "relative_path": "runbooks/03_mpp_skew_spill_and_broadcast_failures.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-rb-04_scd_and_cdc_reconciliation_disaster_recovery",
+      "type": "incident_runbook",
+      "title": "Incident Runbook: Scd And Cdc Reconciliation Disaster Recovery",
+      "difficulty": "L400",
+      "relative_path": "runbooks/04_scd_and_cdc_reconciliation_disaster_recovery.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-rb-05_cross_engine_rosetta_stone",
+      "type": "incident_runbook",
+      "title": "Incident Runbook: Cross Engine Rosetta Stone",
+      "difficulty": "L400",
+      "relative_path": "runbooks/05_cross_engine_rosetta_stone.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-rb-06_finops_and_warehouse_cost_optimization",
+      "type": "incident_runbook",
+      "title": "Incident Runbook: Finops And Warehouse Cost Optimization",
+      "difficulty": "L400",
+      "relative_path": "runbooks/06_finops_and_warehouse_cost_optimization.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-doc-01_logical_vs_physical_query_execution",
+      "type": "architecture_blueprint",
+      "title": "Architecture: 01 Logical Vs Physical Query Execution",
+      "difficulty": "L400",
+      "relative_path": "architectures/01_logical_vs_physical_query_execution.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-doc-02_mpp_distributed_sql_and_data_movement",
+      "type": "architecture_blueprint",
+      "title": "Architecture: 02 Mpp Distributed Sql And Data Movement",
+      "difficulty": "L400",
+      "relative_path": "architectures/02_mpp_distributed_sql_and_data_movement.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-doc-03_storage_engines_row_columnar_and_lakehouse",
+      "type": "architecture_blueprint",
+      "title": "Architecture: 03 Storage Engines Row Columnar And Lakehouse",
+      "difficulty": "L400",
+      "relative_path": "architectures/03_storage_engines_row_columnar_and_lakehouse.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-doc-04_concurrency_control_mvcc_and_distributed_consensus",
+      "type": "architecture_blueprint",
+      "title": "Architecture: 04 Concurrency Control Mvcc And Distributed Consensus",
+      "difficulty": "L400",
+      "relative_path": "architectures/04_concurrency_control_mvcc_and_distributed_consensus.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    }
+  ]
+}
