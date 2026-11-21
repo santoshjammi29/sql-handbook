@@ -13,7 +13,7 @@ flowchart TD
     Alert["NoSQL Production Alert / P99 Latency Spike"] --> Engine{"Database Type?"}
     
     Engine -->|Redis| RedisCheck{"OOM or High CPU?"}
-    RedisCheck -->|High CPU (100% Core)| RedisCmd["Run SLOWLOG GET / Check for KEYS * or large SMEMBERS"]
+    RedisCheck -->|High CPU - 100% Core| RedisCmd["Run SLOWLOG GET / Check for KEYS * or large SMEMBERS"]
     RedisCheck -->|OOM / Eviction Alert| RedisMem["Check maxmemory-policy & Memory Usage per Key via MEMORY USAGE"]
     
     Engine -->|Cassandra / ScyllaDB| CassCheck{"ReadTimeout / Tombstone Warning?"}
@@ -24,7 +24,7 @@ flowchart TD
     MongoCheck -->|WiredTiger Cache Eviction Contention| MongoLock["Check currentOp for unindexed collscans; Scale dirty cache target"]
     MongoCheck -->|Document Exceeds 16MB BSON Limit| MongoArray["Split Unbounded Array into Sub-Collection / Bucket Pattern"]
     
-    Engine -->|DynamoDB| DynamoCheck{"ProvisionedThroughputExceeded (429)?"}
+    Engine -->|DynamoDB| DynamoCheck{"ProvisionedThroughputExceeded 429?"}
     DynamoCheck -->|Hot Partition Key| DynamoSalt["Implement Random/Hash Suffix Salting on PK"]
     DynamoCheck -->|Unthrottled Table with 429s| DynamoGSI["Check GSI Provisioned Capacity & Backpressure"]
 ```

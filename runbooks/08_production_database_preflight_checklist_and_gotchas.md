@@ -20,7 +20,7 @@ flowchart TD
     Classify -->|Performance Degradation / Latency Spike| Perf{"Bottleneck Type?"}
     Perf -->|Unindexed Foreign Key / Seq Scan| AddIdx["Create Index Concurrently (Postgres) / Online (MySQL/MSSQL)"]
     Perf -->|High CPU / Missing SARGability| FixQuery["Eliminate Column Wrapping Scalar Functions & Implicit Casts"]
-    Perf -->|Connection Pool Saturation (100%)| FixPool["Scale PgBouncer / Adjust Max Connections & Set Statement Timeout"]
+    Perf -->|Connection Pool Saturation 100%| FixPool["Scale PgBouncer / Adjust Max Connections & Set Statement Timeout"]
     
     Classify -->|Pre-Flight Release Audit| Audit["Execute Production Pre-Flight Checklist"]
     Audit --> DDLCheck["Verify Non-Blocking DDL & Zero-Downtime Migration"]

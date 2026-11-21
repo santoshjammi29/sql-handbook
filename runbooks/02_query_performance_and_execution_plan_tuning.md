@@ -20,7 +20,7 @@ flowchart TD
     CheckIdx -->|Yes| CheckStats["Check Cardinality Stats: Stale Statistics?"]
     
     CheckScan -->|Index Scan / Seek| CheckCard{"Actual Rows >> Estimated Rows?"}
-    CheckCard -->|Yes (10x+ Drift)| UpdStats["Run ANALYZE / UPDATE STATISTICS"]
+    CheckCard -->|Yes - 10x+ Drift| UpdStats["Run ANALYZE / UPDATE STATISTICS"]
     CheckCard -->|No| CheckJoin{"Join Spill or Cartesian?"}
     
     CheckJoin -->|Spill to Disk| BoostMem["Increase work_mem / Shuffle Partitions"]
