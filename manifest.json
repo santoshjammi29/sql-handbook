@@ -3,8 +3,8 @@
   "github": "santoshjammi29/sql-handbook",
   "name": "SQL Handbook",
   "role": "105 SQL production exercises, query execution plans, MPP distributed joins, MVCC concurrency",
-  "last_synced": "2026-11-20T08:25:01.796969Z",
-  "entry_count": 115,
+  "last_synced": "2026-11-21T04:42:03.796159Z",
+  "entry_count": 119,
   "entries": [
     {
       "id": "sql-handbook-001_logical_query_execution_order",
@@ -1117,6 +1117,26 @@
       ]
     },
     {
+      "id": "sql-handbook-rb-07_nosql_triage_and_sharding_runbooks",
+      "type": "incident_runbook",
+      "title": "Incident Runbook: Nosql Triage And Sharding Runbooks",
+      "difficulty": "L400",
+      "relative_path": "runbooks/07_nosql_triage_and_sharding_runbooks.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-rb-08_production_database_preflight_checklist_and_gotchas",
+      "type": "incident_runbook",
+      "title": "Incident Runbook: Production Database Preflight Checklist And Gotchas",
+      "difficulty": "L400",
+      "relative_path": "runbooks/08_production_database_preflight_checklist_and_gotchas.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
       "id": "sql-handbook-doc-01_logical_vs_physical_query_execution",
       "type": "architecture_blueprint",
       "title": "Architecture: 01 Logical Vs Physical Query Execution",
@@ -1152,6 +1172,26 @@
       "title": "Architecture: 04 Concurrency Control Mvcc And Distributed Consensus",
       "difficulty": "L400",
       "relative_path": "architectures/04_concurrency_control_mvcc_and_distributed_consensus.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-doc-05_nosql_systems_storage_engines_and_tradeoffs",
+      "type": "architecture_blueprint",
+      "title": "Architecture: 05 Nosql Systems Storage Engines And Tradeoffs",
+      "difficulty": "L400",
+      "relative_path": "architectures/05_nosql_systems_storage_engines_and_tradeoffs.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-doc-06_database_tooling_migrations_profiling_and_pooling",
+      "type": "architecture_blueprint",
+      "title": "Architecture: 06 Database Tooling Migrations Profiling And Pooling",
+      "difficulty": "L400",
+      "relative_path": "architectures/06_database_tooling_migrations_profiling_and_pooling.md",
       "pillars": [
         "SQL Server & Database Architecture"
       ]
