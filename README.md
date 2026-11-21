@@ -1037,7 +1037,7 @@ sql-handbook/
 
 ## 🌐 Ecosystem Interlinking & Sister Repositories
 
-The Modern Data Engineering Lakehouse Ecosystem is an integrated suite of 13 production-grade, specialized repositories anchored by the **[Modern Data Engineer Platform ()](https://github.com/santoshjammi29/moderndataengineer)**. Use this cross-reference matrix to navigate directly between complementary implementations across our repositories:
+The Modern Data Engineering Lakehouse Ecosystem is an integrated suite of 14 production-grade, specialized repositories anchored by the **[Modern Data Engineer Platform (`moderndataengineer.uk`)](https://github.com/santoshjammi29/moderndataengineer)**. Use this cross-reference matrix to navigate directly between complementary implementations across our repositories:
 
 | Repository | Focus & Domain | Tightly Coupled Cross-Reference & Integration Points |
 | :--- | :--- | :--- |
@@ -1052,6 +1052,7 @@ The Modern Data Engineering Lakehouse Ecosystem is an integrated suite of 13 pro
 | **[System Design Handbook](https://github.com/santoshjammi29/data-system-design-handbook)** | Distributed Storage, Table Formats & BCDR | • **Storage Engine Internals**: B-Tree vs LSM-Tree amplification, MVCC snapshot isolation, and ARIES crash recovery.<br>• **Table Formats**: Delta Lake vs Apache Iceberg transactional metadata mechanics. |
 | **[Azure Cheat Sheet](https://github.com/santoshjammi29/azure-cheat-sheet)** | Fabric OneLake, Synapse & Azure Infrastructure | • **Synapse Dedicated SQL vs Fabric DW**: Comparing distributed MPP hash distributions with Fabric OneLake columnar tables.<br>• **Direct Lake T-SQL**: Querying Delta tables directly without provisioning dedicated compute clusters. |
 | **[Interview Handbook](https://github.com/santoshjammi29/data-engineering-interview-handbook)** | Architectural Defense Playbooks & Concepts | • **Pillars 09 & 10 Defense**: Relational database storage engine mechanics, B-Tree vs LSM, and Columnstore rowgroups.<br>• **Playbook 01 Defense**: SQL & PySpark internals defense scenarios covering 125 core questions. |
+| **[The Security Handbook](https://github.com/santoshjammi29/security-handbook)** | Enterprise Cloud Security, Zero Trust & Lakehouse Governance | • **Zero Trust Lakehouse Perimeter**: Private endpoints, NSGs, and Azure Key Vault envelope encryption.<br>• **Workload Identity Federation**: Keyless GitHub Actions OIDC and Azure Managed Identities. |
 | **[Modern Data Engineer Hub](https://github.com/santoshjammi29/moderndataengineer)** | Central Edge Presentation Platform | • **Interactive Whiteboard Viewer**: Pan, zoom, and inspect all 52 blueprints at [moderndataengineer.uk/whiteboards](https://moderndataengineer.uk/whiteboards).<br>• **Concept Encyclopedia**: 921 verified topics across relational databases and distributed data systems. |
 
 ## 🤝 Contributing & License
