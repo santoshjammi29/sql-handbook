@@ -11,19 +11,19 @@
 ```mermaid
 flowchart TD
     Alert["NoSQL Production Alert / P99 Latency Spike"] --> Engine{"Database Type?"}
-    
+
     Engine -->|Redis| RedisCheck{"OOM or High CPU?"}
     RedisCheck -->|High CPU - 100% Core| RedisCmd["Run SLOWLOG GET / Check for KEYS * or large SMEMBERS"]
     RedisCheck -->|OOM / Eviction Alert| RedisMem["Check maxmemory-policy & Memory Usage per Key via MEMORY USAGE"]
-    
+
     Engine -->|Cassandra / ScyllaDB| CassCheck{"ReadTimeout / Tombstone Warning?"}
     CassCheck -->|ReadFailureException: 100k+ Tombstones| CassTomb["Identify Anti-Pattern Deletions; Run nodetool flush & nodetool compact"]
     CassCheck -->|Replication Lag / Hints Spooling| CassRep["Run nodetool repair -pr & Check Disk Space on SSTables"]
-    
+
     Engine -->|MongoDB| MongoCheck{"WiredTiger Tickets Depleted or 16MB Cap?"}
     MongoCheck -->|WiredTiger Cache Eviction Contention| MongoLock["Check currentOp for unindexed collscans; Scale dirty cache target"]
     MongoCheck -->|Document Exceeds 16MB BSON Limit| MongoArray["Split Unbounded Array into Sub-Collection / Bucket Pattern"]
-    
+
     Engine -->|DynamoDB| DynamoCheck{"ProvisionedThroughputExceeded 429?"}
     DynamoCheck -->|Hot Partition Key| DynamoSalt["Implement Random/Hash Suffix Salting on PK"]
     DynamoCheck -->|Unthrottled Table with 429s| DynamoGSI["Check GSI Provisioned Capacity & Backpressure"]
@@ -131,11 +131,11 @@ flowchart TD
   ```javascript
   // Sub-collection bucket pattern
   db.user_telemetry_buckets.updateOne(
-      { 
-          userId: "USR-9921", 
-          count: { $lt: 500 } 
+      {
+          userId: "USR-9921",
+          count: { $lt: 500 }
       },
-      { 
+      {
           $push: { events: { timestamp: new Date(), action: "PAGE_VIEW" } },
           $inc: { count: 1 }
       },
@@ -156,12 +156,12 @@ flowchart TD
      - Append a random suffix ($0 \dots N$) to the partition key during write:
      ```python
      import random
-     
+
      def write_event(tenant_id, event_data):
          # Salt partition key across 10 virtual shards
          salt = random.randint(0, 9)
          partition_key = f"{tenant_id}#{salt}"
-         
+
          dynamo_table.put_item(
              Item={
                  'pk': partition_key,

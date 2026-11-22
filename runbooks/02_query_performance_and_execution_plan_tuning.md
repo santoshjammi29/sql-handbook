@@ -12,17 +12,17 @@
 flowchart TD
     Start["Query Exceeds SLA (Latency > 5s or CPU Spike)"] --> Capture["Capture Execution Plan (EXPLAIN ANALYZE / Query Profile)"]
     Capture --> CheckScan{"Scan Type?"}
-    
+
     CheckScan -->|Seq Scan / Table Scan| CheckPred{"SARGable Predicate?"}
     CheckPred -->|No - Function wrap or Cast| FixSarg["Rewrite Predicate: Col >= Start AND Col < End"]
     CheckPred -->|Yes - SARGable| CheckIdx{"Index Exists?"}
     CheckIdx -->|No| CreateIdx["Create Targeted Composite / Covering Index"]
     CheckIdx -->|Yes| CheckStats["Check Cardinality Stats: Stale Statistics?"]
-    
+
     CheckScan -->|Index Scan / Seek| CheckCard{"Actual Rows >> Estimated Rows?"}
     CheckCard -->|Yes - 10x+ Drift| UpdStats["Run ANALYZE / UPDATE STATISTICS"]
     CheckCard -->|No| CheckJoin{"Join Spill or Cartesian?"}
-    
+
     CheckJoin -->|Spill to Disk| BoostMem["Increase work_mem / Shuffle Partitions"]
     CheckJoin -->|Nested Loop Explosion| FixJoin["Optimize Join Order / Hints"]
 ```
@@ -54,7 +54,7 @@ When the database Cost-Based Optimizer makes a catastrophic decision (such as pi
 #### PostgreSQL
 ```sql
 -- Check last analyze timestamp and dead tuple ratio
-SELECT 
+SELECT
     schemaname,
     relname,
     n_live_tup,
@@ -72,7 +72,7 @@ ANALYZE VERBOSE fact_orders;
 #### Microsoft SQL Server / Azure Synapse
 ```sql
 -- Check stats date and modification counter
-SELECT 
+SELECT
     s.name AS stats_name,
     sp.last_updated,
     sp.rows,
@@ -101,12 +101,12 @@ The optimizer compiled an execution plan using the parameters from an outlier ca
 
 ```sql
 -- Solution 1: Optimize for typical distribution (SQL Server)
-SELECT * FROM orders 
+SELECT * FROM orders
 WHERE tenant_id = @TenantId
 OPTION (OPTIMIZE FOR (@TenantId = 1001));
 
 -- Solution 2: Recompile query per invocation for highly skewed parameters
-SELECT * FROM orders 
+SELECT * FROM orders
 WHERE tenant_id = @TenantId
 OPTION (RECOMPILE);
 
@@ -118,7 +118,6 @@ BEGIN
     SELECT * FROM orders WHERE tenant_id = @LocalTenantId;
 END;
 ```
-
 
 ---
 
@@ -138,7 +137,7 @@ WITH distinct_inputs AS (
     WHERE raw_text IS NOT NULL AND length(trim(raw_text)) > 15
 ),
 classified_inputs AS (
-    SELECT 
+    SELECT
         raw_text,
         ai_classify(raw_text, ARRAY('bug', 'feature', 'billing')) AS tag
     FROM distinct_inputs

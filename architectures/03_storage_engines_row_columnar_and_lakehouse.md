@@ -1,14 +1,10 @@
 # 🏛️ Architecture Deep Dive: Storage Engines — Row-Store, Columnar & Lakehouse Formats
 
-
 ![Open Table Formats Blueprint: Lakehouse Storage Engines](../assets/whiteboards/open_table_formats_lakehouse_architecture.webp)
 > *Architectural Blueprint: [Open Table Formats Blueprint: Lakehouse Storage Engines](../docs/whiteboard_diagrams/README.md#open-table-formats-lakehouse). View full multi-persona breakdown and engine mechanisms in the master index.*
 
-
 ![Open File Formats Blueprint: Physical Storage Engines](../assets/whiteboards/open_file_formats_storage_architecture.webp)
 > *Architectural Blueprint: [Open File Formats Blueprint: Physical Storage Engines](../docs/whiteboard_diagrams/README.md#open-file-formats-storage). View full multi-persona breakdown and engine mechanisms in the master index.*
-
-
 
 ## 1. Storage Architecture Taxonomy
 
@@ -85,7 +81,7 @@ flowchart TD
 
 ## 4. Open Lakehouse Table Formats (Delta Lake, Apache Iceberg, Apache Hudi)
 
-Cloud object storage (Amazon S3, Azure ADLS Gen2, Google Cloud Storage) lacks native POSIX filesystem guarantees (no atomic directory renames, eventual consistency, no file-level locking). 
+Cloud object storage (Amazon S3, Azure ADLS Gen2, Google Cloud Storage) lacks native POSIX filesystem guarantees (no atomic directory renames, eventual consistency, no file-level locking).
 
 Open table formats solve this by introducing an **ACID Transaction Log** on top of immutable Parquet files.
 
@@ -113,7 +109,7 @@ Querying this table requires 138,240 HTTP `GET` requests to S3/ADLS. Metadata li
    ```sql
    -- Databricks / Delta Lake
    OPTIMIZE gold_sales_orders;
-   
+
    -- With Liquid Clustering
    OPTIMIZE gold_sales_orders CLUSTER BY (customer_id, order_date);
    ```

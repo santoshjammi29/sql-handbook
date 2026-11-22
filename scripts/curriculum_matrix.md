@@ -15,7 +15,6 @@
 
 ---
 
-
 <a id="module-01-core-sql-fundamentals"></a>
 ### 📦 Module: 01. Core SQL Fundamentals
 

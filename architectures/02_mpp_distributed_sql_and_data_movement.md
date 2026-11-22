@@ -1,14 +1,10 @@
 # 🏛️ Architecture Deep Dive: MPP Distributed SQL & Data Movement
 
-
 ![Apache Spark Memory Architecture & Shuffle Mechanics](../assets/whiteboards/spark_shuffle_memory_execution.webp)
 > *Architectural Blueprint: [Apache Spark Memory Architecture & Shuffle Mechanics](../docs/whiteboard_diagrams/README.md#spark-shuffle-memory-execution). View full multi-persona breakdown and engine mechanisms in the master index.*
 
-
 ![Apache Spark Join Strategy Selection Decision Tree](../assets/whiteboards/spark_join_decision_tree.webp)
 > *Architectural Blueprint: [Apache Spark Join Strategy Selection Decision Tree](../docs/whiteboard_diagrams/README.md#spark-join-decision-tree). View full multi-persona breakdown and engine mechanisms in the master index.*
-
-
 
 ## 1. Massively Parallel Processing (MPP) vs. SMP Architecture
 
@@ -22,13 +18,13 @@ flowchart TD
     DistPlan --> Worker2["Compute Worker 2 (Slice/Core)"]
     DistPlan --> Worker3["Compute Worker 3 (Slice/Core)"]
     DistPlan --> WorkerN["Compute Worker N (Slice/Core)"]
-    
+
     subgraph DataExchange["Distributed Data Exchange / Interconnect (Shuffle)"]
         Worker1 <--> Worker2
         Worker2 <--> Worker3
         Worker3 <--> WorkerN
     end
-    
+
     Worker1 --> Storage["Decoupled Storage (S3 / ADLS / GCS / Colossus)"]
     Worker2 --> Storage
     Worker3 --> Storage
@@ -65,16 +61,16 @@ sequenceDiagram
     User->>Coord: SELECT * FROM FactA JOIN DimB ON FactA.id = DimB.id
     Coord->>W1: Assign Scan & Hash Partitioning Task
     Coord->>W2: Assign Scan & Hash Partitioning Task
-    
+
     Note over W1, W2: Stage 1: Local Scan & Filter
     W1->>Net: Send mismatched hash buckets to W2
     W2->>Net: Send mismatched hash buckets to W1
     Note over Net: Stage 2: Data Movement Service (DMS) / Shuffle
-    
+
     W1->>W1: Execute Local Hash Join on received keys
     W2->>W2: Execute Local Hash Join on received keys
     Note over W1, W2: Stage 3: Local Join Evaluation
-    
+
     W1->>Coord: Emit Aggregated Result Stream
     W2->>Coord: Emit Aggregated Result Stream
     Coord->>User: Consolidated Output Result
@@ -111,9 +107,9 @@ When joining a skewed fact table with a dimension table, append a random integer
 ```sql
 -- Step 1: Salt the skewed fact table (0 to 9)
 WITH salted_fact AS (
-    SELECT 
+    SELECT
         customer_id,
-        CASE 
+        CASE
             WHEN customer_id = 0 THEN CAST(customer_id AS VARCHAR) || '_' || CAST(FLOOR(RANDOM() * 10) AS VARCHAR)
             ELSE CAST(customer_id AS VARCHAR) || '_0'
         END AS salted_customer_key,
@@ -122,9 +118,9 @@ WITH salted_fact AS (
 ),
 -- Step 2: Explode dimension table 10x for the skewed key
 exploded_dim AS (
-    SELECT 
+    SELECT
         d.customer_id,
-        CASE 
+        CASE
             WHEN d.customer_id = 0 THEN CAST(d.customer_id AS VARCHAR) || '_' || CAST(s.salt AS VARCHAR)
             ELSE CAST(d.customer_id AS VARCHAR) || '_0'
         END AS salted_customer_key,
@@ -135,7 +131,7 @@ exploded_dim AS (
         UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9
     ) s
 )
-SELECT 
+SELECT
     f.customer_id,
     d.customer_name,
     SUM(f.amount) AS total_spend

@@ -10,7 +10,7 @@
 ```mermaid
 flowchart TD
     CostAlert["🚨 Cloud Warehouse Billing Anomaly Alert: Budget Threshold Exceeded"] --> CheckPlatform{"Identify Cloud Platform"}
-    
+
     CheckPlatform -->|"Snowflake"| SnowflakeTriage["Check Active Warehouses<br/>Inspect WAREHOUSE_METERING_HISTORY for idle running clusters"]
     CheckPlatform -->|"BigQuery"| BigQueryTriage["Check INFORMATION_SCHEMA.JOBS_BY_PROJECT<br/>Find queries scanning >1TB with SELECT *"]
     CheckPlatform -->|"Databricks SQL"| DatabricksTriage["Inspect system.billing.usage<br/>Check for non-serverless SQL warehouses without auto-stop"]
@@ -56,7 +56,7 @@ ALTER WAREHOUSE wh_analytics_prod SET STATEMENT_TIMEOUT_IN_SECONDS = 1800;
 ALTER WAREHOUSE wh_analytics_prod SET STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 300;
 
 -- 3. Audit top 10 most expensive queries in the last 7 days
-SELECT 
+SELECT
     query_id,
     user_name,
     warehouse_name,
@@ -120,5 +120,5 @@ flowchart TD
 ```
 
 ### Best Practices to Maximize Cache Hits:
-1. **Avoid Non-Deterministic Functions in Filters**: Queries containing `CURRENT_TIMESTAMP()`, `NOW()`, or `RANDOM()` **bypass the result cache entirely** on Snowflake and BigQuery. 
+1. **Avoid Non-Deterministic Functions in Filters**: Queries containing `CURRENT_TIMESTAMP()`, `NOW()`, or `RANDOM()` **bypass the result cache entirely** on Snowflake and BigQuery.
 2. **Standardize SQL Formatting in BI Tools**: Snowflake result caching requires identical query text. Consistent SQL casing and whitespace preserves cache reuse.

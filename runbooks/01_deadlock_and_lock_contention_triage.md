@@ -37,7 +37,7 @@
 Run this query to locate which PID is holding locks and blocking downstream queries:
 
 ```sql
-SELECT 
+SELECT
     blocked_locks.pid     AS blocked_pid,
     blocked_activity.usename AS blocked_user,
     blocking_locks.pid    AS blocking_pid,
@@ -49,7 +49,7 @@ SELECT
     NOW() - blocked_activity.query_start AS waiting_duration
 FROM  pg_catalog.pg_locks         blocked_locks
 JOIN pg_catalog.pg_stat_activity blocked_activity ON blocked_activity.pid = blocked_locks.pid
-JOIN pg_catalog.pg_locks         blocking_locks 
+JOIN pg_catalog.pg_locks         blocking_locks
     ON blocking_locks.locktype = blocked_locks.locktype
     AND blocking_locks.database IS NOT DISTINCT FROM blocked_locks.database
     AND blocking_locks.relation IS NOT DISTINCT FROM blocked_locks.relation
@@ -80,7 +80,7 @@ SELECT pg_terminate_backend(12345);
 
 ### 3.1 Identify Lead Blocker in Session Chains
 ```sql
-SELECT 
+SELECT
     r.session_id,
     r.blocking_session_id,
     r.status,
@@ -101,7 +101,7 @@ ORDER BY r.blocking_session_id ASC;
 
 ### 3.2 Extract Deadlock XML Graph from Extended Events
 ```sql
-SELECT 
+SELECT
     XEvent.value('(event/data[@name="xml_report"]/value)[1]', 'VARCHAR(MAX)') AS DeadlockGraphXML
 FROM (
     SELECT CAST(target_data AS XML) AS TargetData
@@ -126,7 +126,7 @@ CROSS APPLY TargetData.nodes('//RingBufferTarget/event[@name="xml_deadlock_repor
 
 ```sql
 -- Audit missing indexes on Foreign Keys in PostgreSQL
-SELECT 
+SELECT
     conrelid::regclass AS table_name,
     conname AS foreign_key_name,
     pg_get_constraintdef(c.oid) AS constraint_definition
