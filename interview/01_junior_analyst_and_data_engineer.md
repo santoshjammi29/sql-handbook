@@ -389,7 +389,7 @@ BEGIN
     -- Upsert pattern using MERGE
     MERGE dbo.fact_transactions AS tgt
     USING (
-        SELECT transaction_id, amount_eur, currency, status, transaction_date, customer_id 
+        SELECT transaction_id, amount_eur, currency, status, transaction_date, customer_id
         FROM dbo.stage_transactions
         WHERE batch_date = @batch_date AND source_system = @source_system
     ) AS src
@@ -935,8 +935,8 @@ SELECT
     IFNULL(processing_fee, 0.00)                    AS processing_fee_safe,
 
     -- NVL2: NVL2(expr, if_not_null, if_null)
-    NVL2(counterparty_country, 
-         CONCAT('CROSS-BORDER:', counterparty_country), 
+    NVL2(counterparty_country,
+         CONCAT('CROSS-BORDER:', counterparty_country),
          'DOMESTIC')                                AS txn_geography,
 
     -- Combining CAST + COALESCE for safe numeric operations

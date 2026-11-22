@@ -29,7 +29,7 @@ flowchart TD
         P -->|Yes| P_Trade["Trade-Off: Availability (A) vs Consistency (C)"]
         P_Trade --> PA["AP: Cassandra, DynamoDB, Couchbase"]
         P_Trade --> PC["CP: MongoDB, HBase, Bigtable, Spanner"]
-        
+
         P -->|No| E_Trade["Normal Operation (Else - E): Latency (L) vs Consistency (C)"]
         E_Trade --> EL["PA/EL: DynamoDB, Cassandra (Default: Low Latency)"]
         E_Trade --> EC["PC/EC: Spanner, CockroachDB, Bigtable (Strong Consistency)"]
@@ -196,8 +196,8 @@ mindmap
   );
 
   -- Build HNSW index with cosine distance metric
-  CREATE INDEX idx_doc_embeddings_hnsw 
-  ON doc_embeddings 
+  CREATE INDEX idx_doc_embeddings_hnsw
+  ON doc_embeddings
   USING hnsw (embedding vector_cosine_ops)
   WITH (m = 16, ef_construction = 64);
 

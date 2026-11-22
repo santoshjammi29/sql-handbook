@@ -3,8 +3,8 @@
   "github": "santoshjammi29/sql-handbook",
   "name": "SQL Handbook",
   "role": "105 SQL production exercises, query execution plans, MPP distributed joins, MVCC concurrency",
-  "last_synced": "2026-11-21T04:54:58.627618Z",
-  "entry_count": 119,
+  "last_synced": "2026-11-22T07:34:24.143830Z",
+  "entry_count": 120,
   "entries": [
     {
       "id": "sql-handbook-001_logical_query_execution_order",
@@ -1192,6 +1192,16 @@
       "title": "Architecture: 06 Database Tooling Migrations Profiling And Pooling",
       "difficulty": "L400",
       "relative_path": "architectures/06_database_tooling_migrations_profiling_and_pooling.md",
+      "pillars": [
+        "SQL Server & Database Architecture"
+      ]
+    },
+    {
+      "id": "sql-handbook-curriculum-topics",
+      "type": "curriculum_topics_catalog",
+      "title": "Topics Directory: SQL Handbook",
+      "difficulty": "L200",
+      "relative_path": "topics/README.md",
       "pillars": [
         "SQL Server & Database Architecture"
       ]

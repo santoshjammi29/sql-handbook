@@ -11,17 +11,17 @@
 ```mermaid
 flowchart TD
     Alert["Production Database Incident Detected"] --> Classify{"Incident Classification"}
-    
+
     Classify -->|Immediate Outage / Panic| Sev1{"Severity 1 Root Cause?"}
     Sev1 -->|TXID Wraparound Shutdown| FixTXID["Run Emergency VACUUM FREEZE in Single-User Mode"]
     Sev1 -->|Deadlock Cascade on FK Delete| FixFK["Identify Missing FK Indexes; Cancel Blocking Queries"]
     Sev1 -->|Lock Escalation / Table Lock| FixLock["Kill Long-Running Lock Holder via pg_terminate_backend / KILL"]
-    
+
     Classify -->|Performance Degradation / Latency Spike| Perf{"Bottleneck Type?"}
     Perf -->|Unindexed Foreign Key / Seq Scan| AddIdx["Create Index Concurrently (Postgres) / Online (MySQL/MSSQL)"]
     Perf -->|High CPU / Missing SARGability| FixQuery["Eliminate Column Wrapping Scalar Functions & Implicit Casts"]
     Perf -->|Connection Pool Saturation 100%| FixPool["Scale PgBouncer / Adjust Max Connections & Set Statement Timeout"]
-    
+
     Classify -->|Pre-Flight Release Audit| Audit["Execute Production Pre-Flight Checklist"]
     Audit --> DDLCheck["Verify Non-Blocking DDL & Zero-Downtime Migration"]
     Audit --> BackupCheck["Verify Automated PITR Snapshot & Restoration Drill"]
@@ -40,7 +40,7 @@ Before deploying any application release, schema migration, or database paramete
 - [ ] **Safe Constraint Validation**: Never add a `FOREIGN KEY` or `CHECK` constraint with immediate full validation on tables with $>1\text{M}$ rows. Always use two phases:
   ```sql
   -- Step 1: Add constraint without table scan lock
-  ALTER TABLE orders ADD CONSTRAINT fk_orders_customer 
+  ALTER TABLE orders ADD CONSTRAINT fk_orders_customer
   FOREIGN KEY (customer_id) REFERENCES customers(id) NOT VALID;
 
   -- Step 2: Validate existing rows with share update lock (non-blocking)
@@ -80,7 +80,7 @@ Before deploying any application release, schema migration, or database paramete
   ```bash
   # In an emergency shutdown, restart postgres in single-user mode:
   postgres --single -D /var/lib/postgresql/data template1
-  
+
   # Run emergency freeze vacuum across oldest tables:
   VACUUM FREEZE ANALYZE;
   ```
@@ -90,7 +90,7 @@ Before deploying any application release, schema migration, or database paramete
 - **Remediation**:
   ```sql
   -- Find all unindexed foreign keys in PostgreSQL:
-  SELECT 
+  SELECT
       c.conrelid::regclass AS child_table,
       a.attname AS fk_column,
       c.conname AS fk_constraint_name
@@ -102,7 +102,7 @@ Before deploying any application release, schema migration, or database paramete
         WHERE i.indrelid = c.conrelid
           AND i.indkey[0] = a.attnum
     );
-  
+
   -- Surgical Fix:
   CREATE INDEX CONCURRENTLY idx_orders_customer_id ON orders(customer_id);
   ```
@@ -112,7 +112,7 @@ Before deploying any application release, schema migration, or database paramete
 - **Remediation**:
   - Replace with **Keyset / Seek Pagination** ($\mathcal{O}(1)$):
   ```sql
-  SELECT * FROM transactions 
+  SELECT * FROM transactions
   WHERE (created_at, id) < (:last_created_at, :last_id)
   ORDER BY created_at DESC, id DESC
   LIMIT 50;
@@ -204,7 +204,7 @@ Before deploying any application release, schema migration, or database paramete
   - Proactively migrate all primary key and foreign key columns to **`BIGINT`** (64-bit integer, max value $9.22 \times 10^{18}$).
   - Monitor sequence progress in system catalogs:
   ```sql
-  SELECT sequence_name, last_value, max_value, 
+  SELECT sequence_name, last_value, max_value,
          ROUND(100.0 * last_value / max_value, 2) AS pct_exhausted
   FROM information_schema.sequences;
   ```

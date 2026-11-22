@@ -566,22 +566,22 @@ Calculates running cumulative revenue and a rolling 7-day moving average using e
 
 **SQL Implementation & Query Plan:**
 ```sql
-SELECT 
+SELECT
     sale_date,
     daily_revenue_eur,
     -- Running Total: Cumulative sum from start to current row
     SUM(daily_revenue_eur) OVER (
-        ORDER BY sale_date 
+        ORDER BY sale_date
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     ) AS running_total_revenue_eur,
     -- 7-Day Moving Average: Current row plus previous 6 rows
     AVG(daily_revenue_eur) OVER (
-        ORDER BY sale_date 
+        ORDER BY sale_date
         ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
     ) AS moving_avg_7d_eur,
     -- Moving 7-Day Total Transaction Count
     COUNT(*) OVER (
-        ORDER BY sale_date 
+        ORDER BY sale_date
         ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
     ) AS moving_window_count
 FROM dbo.fact_daily_sales_summary
@@ -605,7 +605,7 @@ Transposes quarterly rows into structured columns without relying on vendor-spec
 
 **SQL Implementation & Query Plan:**
 ```sql
-SELECT 
+SELECT
     department_id,
     fiscal_year,
     SUM(CASE WHEN quarter = 'Q1' THEN revenue_eur ELSE 0 END) AS q1_revenue_eur,
@@ -636,13 +636,13 @@ Eliminates duplicate entities across business keys while preserving the earliest
 **SQL Implementation & Query Plan:**
 ```sql
 WITH ranked_duplicates AS (
-    SELECT 
+    SELECT
         customer_sk,
         customer_id,
         email,
         created_at,
         ROW_NUMBER() OVER (
-            PARTITION BY email 
+            PARTITION BY email
             ORDER BY created_at ASC, customer_sk ASC
         ) AS duplicate_rank
     FROM dbo.dim_customers
@@ -682,7 +682,7 @@ WHERE YEAR(OrderDate) = 2024 AND MONTH(OrderDate) = 6;
 -- ✅ SARGable Production Pattern (enables logarithmic index seek)
 SELECT OrderID, CustomerID, OrderDate, TotalAmount
 FROM dbo.Orders
-WHERE OrderDate >= '2024-06-01' 
+WHERE OrderDate >= '2024-06-01'
   AND OrderDate < '2024-07-01';
 ```
 
@@ -1781,7 +1781,7 @@ COPY_OPTIONS (
 DESCRIBE HISTORY eu_bfsi_prod.silver.payment_events LIMIT 5;
 
 -- View number of added files and rows in latest commit
-SELECT 
+SELECT
     version,
     timestamp,
     operation,
@@ -1826,17 +1826,17 @@ USE SCHEMA silver;
 -- SELECT * FROM ranked WHERE rnk <= 3;
 
 -- ✅ MODERN QUALIFY PATTERN: Single declarative statement
-SELECT 
+SELECT
     customer_id,
     txn_id,
     txn_amount,
     txn_timestamp,
     ROW_NUMBER() OVER (
-        PARTITION BY customer_id 
+        PARTITION BY customer_id
         ORDER BY txn_amount DESC
     ) AS transaction_rank,
     DENSE_RANK() OVER (
-        PARTITION BY customer_id 
+        PARTITION BY customer_id
         ORDER BY txn_amount DESC
     ) AS transaction_dense_rank
 FROM sales_transactions
@@ -1867,7 +1867,7 @@ Transforming normalized relational rows into cross-tabulated metric matrices usi
 -- 1. PIVOT: Transpose quarterly revenue metrics by Region
 -- =============================================================================
 SELECT * FROM (
-    SELECT 
+    SELECT
         region,
         quarter,
         revenue
@@ -1882,7 +1882,7 @@ ORDER BY region;
 -- =============================================================================
 -- 2. UNPIVOT: Normalize wide monthly columns back into relational key-value rows
 -- =============================================================================
-SELECT 
+SELECT
     product_id,
     month_name,
     units_sold

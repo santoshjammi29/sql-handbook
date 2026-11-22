@@ -10,7 +10,7 @@
 ```mermaid
 flowchart TD
     MigrationAlert["🚨 Query Fails on Target Warehouse after Cross-Engine Migration"] --> IdentifyError{"Identify Dialect Syntax Error"}
-    
+
     IdentifyError -->|"Data Type Casting Failure / Overflow"| CastTriage["Type Casting Dialect Mismatch<br/>Remediation: Use SAFE_CAST (BQ) or TRY_CAST (Snowflake/DuckDB/T-SQL)"]
     IdentifyError -->|"Date Arithmetic / Timestamp Function Syntax"| DateTriage["Date Interval Dialect Incompatibility<br/>Remediation: Convert to DATEADD / DATE_DIFF / DATE_TRUNC standards"]
     IdentifyError -->|"JSON Parsing / Nested Extraction Error"| JsonTriage["JSON Path Syntax Discrepancy<br/>Remediation: Use data:key (Databricks/Snowflake) vs JSON_VALUE (BQ/T-SQL)"]
@@ -78,7 +78,7 @@ ON t.id = s.id
 WHEN MATCHED AND s.is_deleted = TRUE THEN
     DELETE
 WHEN MATCHED THEN
-    UPDATE SET 
+    UPDATE SET
         t.val = s.val,
         t.updated_at = CURRENT_TIMESTAMP
 WHEN NOT MATCHED THEN

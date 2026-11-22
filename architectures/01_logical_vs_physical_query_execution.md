@@ -1,14 +1,10 @@
 # 🏛️ Architecture Deep Dive: Logical vs. Physical Query Execution
 
-
 ![SQL Server & Relational Query Engine Architecture](../assets/whiteboards/sql_server_query_engine_optimization.webp)
 > *Architectural Blueprint: [SQL Server & Relational Query Engine Architecture](../docs/whiteboard_diagrams/README.md#sql-server-query-engine-optimization). View full multi-persona breakdown and engine mechanisms in the master index.*
 
-
 ![Databricks Compute: Catalyst Optimizer, AQE & Photon](../assets/whiteboards/catalyst_photon_engine.webp)
 > *Architectural Blueprint: [Databricks Compute: Catalyst Optimizer, AQE & Photon](../docs/whiteboard_diagrams/README.md#spark-catalyst-photon-engine). View full multi-persona breakdown and engine mechanisms in the master index.*
-
-
 
 ## 1. Overview & Theoretical Foundations
 

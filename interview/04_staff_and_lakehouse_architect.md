@@ -411,11 +411,11 @@ SELECT TOP (@page_size)
     o.order_date,
     o.total_amount
 FROM dbo.orders o
-WHERE 
+WHERE
     (o.order_date < @last_seen_date)
     OR (o.order_date = @last_seen_date AND o.order_id < @last_seen_id)
-ORDER BY 
-    o.order_date DESC, 
+ORDER BY
+    o.order_date DESC,
     o.order_id DESC;
 
 -- Note: Bypasses scanning preceding 500,000 rows, executing in <2ms!
@@ -453,11 +453,11 @@ WITH NextJob AS (
     ORDER BY priority DESC, job_id ASC
 )
 UPDATE NextJob
-SET 
+SET
     status = 'PROCESSING',
     locked_by = HOST_NAME(),
     locked_at = SYSUTCDATETIME()
-OUTPUT 
+OUTPUT
     inserted.job_id,
     inserted.payload;
 
@@ -525,11 +525,11 @@ Techniques to resolve query plan regressions caused by the post-2014 Cardinality
 **SQL Implementation & Query Plan:**
 ```sql
 -- 1. Database Scoped Configuration (Fixes regressions across entire database):
-ALTER DATABASE SCOPED CONFIGURATION 
+ALTER DATABASE SCOPED CONFIGURATION
 SET LEGACY_CARDINALITY_ESTIMATION = ON;
 
 -- 2. Single-Query Targeted Hint (Preserves modern CE for other queries):
-SELECT 
+SELECT
     c.CustomerName,
     o.OrderID,
     o.TotalAmount
@@ -568,7 +568,7 @@ SET READ_COMMITTED_SNAPSHOT ON
 WITH ROLLBACK IMMEDIATE;
 
 -- Step 2: Verify database isolation state:
-SELECT 
+SELECT
     name,
     is_read_committed_snapshot_on,
     snapshot_isolation_state_desc
@@ -576,7 +576,7 @@ FROM sys.databases
 WHERE name = 'CoreBanking';
 
 -- Step 3: Monitor Persistent Version Store (PVS) memory:
-SELECT 
+SELECT
     db_name(database_id) AS DatabaseName,
     pvs_in_row_version_store_size_kb,
     pvs_off_row_version_store_size_kb
@@ -1875,7 +1875,6 @@ DELETE FROM iceberg_catalog.gdpr.user_data
 WHERE user_id IN (SELECT user_id FROM gdpr_deletion_requests WHERE status = 'PENDING');
 ```
 
-
 **Question & Concept Overview:**  
 An exabyte-scale open lakehouse table stores 8 petabytes of user activity data across 120,000 Apache Iceberg partitions, receiving 10,000 GDPR Article 17 'Right to Erasure' requests per hour. Each erasure request targets a single `user_id` dispersed across thousands of historic Parquet data files. The architecture team originally implemented Iceberg Equality Deletes (`user_id = X`), which writes small metadata marker files without touching existing Parquet data files. Within 3 weeks, over 1,500,000 equality delete files accumulate across the table metadata tree. Analytical queries executed by Trino and Apache Spark experience complete performance collapse: query planning times explode from 800ms to 4 minutes, and executor nodes crash with OutOfMemory errors because every scan task must load millions of equality delete predicates into in-memory hash sets before evaluating each Parquet row. When switching to Position Deletes (rewriting the specific data files containing targeted rows to record exact file-and-ordinal offsets), the cluster's compaction engine triggers a massive Write Amplification Factor (WAF) of 85x on the underlying cloud object store, generating $350,000 in monthly S3 PUT/GET API charges and causing optimistic concurrency control (OCC) commit collisions that fail 40% of streaming ingestion pipelines. How do you engineer a hybrid delete and compaction topology that guarantees legally compliant 30-day GDPR erasure verification without scan-time query death or catastrophic write amplification?
 
@@ -1883,7 +1882,7 @@ An exabyte-scale open lakehouse table stores 8 petabytes of user activity data a
 Enterprise Cloud Data Warehouse Scale
 
 **Optimizer Invariants & Performance Traps:**
-- 
+-
 
 ---
 
@@ -1903,7 +1902,6 @@ DELETE FROM prod_catalog.silver.customer_profile
 WHERE customer_id = 'CUST-883910';
 ```
 
-
 **Question & Concept Overview:**  
 A transactional lakehouse table manages 3 petabytes of financial transactions across 400,000 Delta Lake Parquet files. The platform enables Delta Lake Deletion Vectors (DVs) to achieve millisecond-level point deletions without rewriting 500MB Parquet data files. When a row is deleted, a serialized Roaring Bitmap containing the 32-bit row indices within that specific Parquet file is written either inline into the Delta log or as a small standalone sidecar `.bin` file. Under an analytical query scanning 100,000 files across 1,000 worker cores, query latency degrades by 450%. CPU profiling with `perf` reveals that 38% of total CPU cycles are consumed inside the SIMD bitwise decompression and array-conversion loops of the Roaring Bitmap decoder (`roaring_bitmap_contains` or `RoaringBitmap.andNot`). Because the bitmap contains sparse clusterings of run-length encoded (RLE) intervals interleaved with raw 16-bit unsigned integer arrays, the CPU's branch prediction unit suffers a 22% misprediction rate, and L1 instruction cache misses explode as execution branches between bitmap containers, array containers, and run containers. How do you re-architect the deletion vector storage format and SIMD execution path to achieve line-rate Parquet scanning while retaining point-deletion capabilities?
 
@@ -1911,7 +1909,7 @@ A transactional lakehouse table manages 3 petabytes of financial transactions ac
 Enterprise Cloud Data Warehouse Scale
 
 **Optimizer Invariants & Performance Traps:**
-- 
+-
 
 ---
 
@@ -1935,7 +1933,6 @@ TBLPROPERTIES (
 );
 ```
 
-
 **Question & Concept Overview:**  
 A global healthcare lakehouse stores 12 petabytes of encrypted patient genomic data across 2,500,000 Parquet files on AWS S3. To enforce patient privacy and granular revocation, every individual Parquet file is encrypted with a unique Data Encryption Key (DEK) via AES-256-GCM in Parquet Modular Encryption (PME). Each DEK is encrypted under a regional Key Encryption Key (KEK) managed in AWS KMS. When a distributed machine learning pipeline launches a full-cohort analytical scan utilizing 4,000 Apache Spark executor tasks across 200 compute nodes, each executor task attempts to open 600 Parquet files concurrently. In the first 5 seconds of query initialization, the cluster fires 2,400,000 concurrent `kms:Decrypt` requests to the AWS KMS API. The AWS KMS regional endpoint (hard-capped at a burst limit of 50,000 requests/sec) instantly triggers exponential HTTP 429 'ThrottlingException' errors. The default AWS SDK retry logic on 4,000 workers initiates an uncontrolled Throttling Storm: retry queues saturate network buffers, workers block indefinitely in exponential backoff loops, and the entire analytical pipeline halts with fatal task failure exceptions after 3 hours. How do you design a high-throughput cryptographic key distribution and envelope caching layer that enables scanning 2.5 million encrypted Parquet files without breaching cloud KMS service quotas?
 
@@ -1943,7 +1940,7 @@ A global healthcare lakehouse stores 12 petabytes of encrypted patient genomic d
 Enterprise Cloud Data Warehouse Scale
 
 **Optimizer Invariants & Performance Traps:**
-- 
+-
 
 ---
 
@@ -1959,7 +1956,6 @@ ALTER TABLE iceberg_catalog.sales.orders
 REPLACE PARTITION FIELD days(order_ts) WITH months(order_ts);
 ```
 
-
 **Question & Concept Overview:**  
 An exabyte IoT telemetry lakehouse built on Apache Iceberg accumulates 500,000 active partitions with 15,000,000 underlying Parquet data files. The table metadata is structured as a hierarchical Avro metadata tree: a top-level Snapshot points to a Manifest List, which points to 12,000 individual Avro Manifest Files, each indexing up to 1,500 data files with partition summaries and column-level upper/lower bounds. A query engine (Trino or Spark) receives an interactive dashboard query that filters on `event_date = '2026-03-01' AND device_id = 'DEV-994182'`. Although partition pruning should theoretically eliminate 99.9% of partitions, query planning freezes for 180 seconds before a single worker task can be scheduled. JFR (Java Flight Recorder) profiling of the Spark Driver reveals that deserializing and parsing the 12,000 Avro manifest files requires reading 45GB of XML/JSON/Avro data over S3, consuming 68GB of Driver JVM heap memory and triggering severe G1GC Stop-The-World pauses. The driver spends 85% of its CPU time evaluating min/max partition ranges sequentially across thousands of non-pruned manifest files because manifests contain mixed date intervals resulting from streaming append micro-batches. How do you re-architect the Iceberg metadata hierarchy and manifest bin-packing topology to achieve deterministic sub-second query planning over 500,000 partitions?
 
@@ -1967,7 +1963,7 @@ An exabyte IoT telemetry lakehouse built on Apache Iceberg accumulates 500,000 a
 Enterprise Cloud Data Warehouse Scale
 
 **Optimizer Invariants & Performance Traps:**
-- 
+-
 
 ---
 
@@ -1985,7 +1981,6 @@ ALTER TABLE prod_catalog.streaming.iot_telemetry SET TBLPROPERTIES (
 );
 ```
 
-
 **Question & Concept Overview:**  
 A mission-critical financial ledger lakehouse table built on Apache Iceberg receives concurrent streaming ingestion from 64 independent Apache Flink and Spark Structured Streaming jobs operating across 8 regional Kubernetes clusters. Each streaming job commits micro-batches every 10 seconds using Iceberg's Optimistic Concurrency Control (OCC). Under high event velocity, multiple streaming writers attempt to commit their new snapshot to the Iceberg REST Catalog simultaneously. Writer A succeeds in committing Snapshot S1 via atomic HTTP CAS (Compare-And-Swap) or ETag verification. Writers B, C, and D receive a `CommitFailedException` (optimistic lock collision) because their base snapshot S0 is now stale. Iceberg's default commit retry logic forces Writers B, C, and D to re-read the metadata tree, verify whether their committed files conflict with S1, and attempt to re-commit. However, while B is retrying, Writers E and F commit S2 and S3, forcing B, C, and D into an exponential retry spiral. Within 3 minutes, 64 streaming writers enter continuous commit retry thrashing: CPU usage on the catalog database hits 100%, metadata file generation balloons by 10,000 files/hour, commit latency inflates from 200ms to 45 seconds, and Flink streaming jobs fail checkpoint SLAs, triggering global restart cascades. How do you architect a multi-writer ingestion topology that guarantees linear scalability without OCC retry collapse?
 
@@ -1993,7 +1988,7 @@ A mission-critical financial ledger lakehouse table built on Apache Iceberg rece
 Enterprise Cloud Data Warehouse Scale
 
 **Optimizer Invariants & Performance Traps:**
-- 
+-
 
 ---
 
@@ -2009,7 +2004,6 @@ ALTER TABLE prod_catalog.compliance.sec_audit_records SET TBLPROPERTIES (
 );
 ```
 
-
 **Question & Concept Overview:**  
 A global investment bank mandates that all raw trading audit data stored in an enterprise Iceberg lakehouse must be protected under AWS S3 Object Lock in 'Compliance Mode' with a strict 7-year immutable retention policy to comply with SEC Rule 17a-4. Under Compliance Mode, no user—including the AWS root account—can overwrite, delete, or modify any locked S3 object until the retention period expires. During a routine lakehouse optimization run, an automated maintenance worker executes table compaction, creating new optimized 512MB Parquet files and marking old 2MB Parquet files as orphaned via Iceberg snapshot expiration. However, when the distributed garbage collection process (`expireSnapshots` / orphan file cleanup) attempts to issue `s3:DeleteObject` commands on the unreferenced historical files, AWS S3 rejects every request with `AccessDenied: Object under WORM compliance retention`. Over 12 months, 45,000,000 unreferenced obsolete Parquet files accumulate in the bucket (consuming 4.2 petabytes of redundant storage and costing $95,000/month in dead storage). Furthermore, when distributed analytical query engines execute partition scans over historical snapshots, the underlying S3 list operations traverse millions of deleted yet physically present files, degrading query planning and incurring massive object scan costs. How do you design an immutable regulatory storage topology that guarantees SEC Rule 17a-4 WORM compliance while allowing analytical lakehouse metadata compaction and physical storage reclamation?
 
@@ -2017,6 +2011,6 @@ A global investment bank mandates that all raw trading audit data stored in an e
 Enterprise Cloud Data Warehouse Scale
 
 **Optimizer Invariants & Performance Traps:**
-- 
+-
 
 ---

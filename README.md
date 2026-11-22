@@ -219,7 +219,7 @@
 
 ## 🎯 Overview & Mission
 
-Modern data engineering and analytics engineering demand far more than basic `SELECT * FROM table WHERE condition`. 
+Modern data engineering and analytics engineering demand far more than basic `SELECT * FROM table WHERE condition`.
 
 Enterprise workloads operate on high-concurrency transactional databases (PostgreSQL, Aurora, SQL Server) and distributed lakehouse MPP engines (Snowflake, Databricks Spark SQL, Google BigQuery) where a single non-SARGable predicate, missing index, or skewed join key can exhaust cluster memory, trigger multi-hour straggler tasks, or cause 10,000 USD cloud billing surprises.
 
@@ -268,7 +268,7 @@ flowchart TD
         P -->|Yes| P_Trade["Trade-Off: Availability (A) vs Consistency (C)"]
         P_Trade --> PA["AP: Cassandra, DynamoDB, Couchbase"]
         P_Trade --> PC["CP: MongoDB, HBase, Bigtable, Spanner"]
-        
+
         P -->|No| E_Trade["Normal Operation (Else - E): Latency (L) vs Consistency (C)"]
         E_Trade --> EL["PA/EL: DynamoDB, Cassandra (Default: Sub-10ms Reads)"]
         E_Trade --> EC["PC/EC: Spanner, CockroachDB, Bigtable (Strong Consistency)"]
@@ -402,13 +402,13 @@ flowchart TD
         direction TB
         M["1. Schema Migration Engines"] --> M1["Flyway & Liquibase (Versioned GitOps)"]
         M --> M2["pgroll & gh-ost (Zero-Downtime Expand/Contract)"]
-        
+
         P["2. Observability & Profiling"] --> P1["pg_stat_statements & EXPLAIN ANALYZE BUFFERS"]
         P --> P2["SQL Server Query Store & MySQL Performance Schema"]
-        
+
         C["3. Connection Pooling & Traffic"] --> C1["PgBouncer (Transaction Multiplexing)"]
         C --> C2["HikariCP (Low-Latency Application Pool)"]
-        
+
         H["4. High Availability & Sharding"] --> H1["Patroni (etcd DCS Postgres Failover)"]
         H --> H2["Vitess & Citus (Distributed SQL Sharding)"]
     end
@@ -469,9 +469,9 @@ A predicate is **SARGable** (*Search Argument Able*) if the query engine can tra
 #### The Offset Pagination Problem:
 ```sql
 -- Catastrophic performance on deep pages:
-SELECT id, transaction_date, amount 
-FROM ledger_transactions 
-ORDER BY transaction_date DESC, id DESC 
+SELECT id, transaction_date, amount
+FROM ledger_transactions
+ORDER BY transaction_date DESC, id DESC
 LIMIT 50 OFFSET 10000000;
 ```
 The database engine must read, sort, and discard **10,000,000 preceding rows** in memory before returning 50 rows. Response times degrade linearly ($\mathcal{O}(N)$), resulting in multi-minute queries and buffer pool churn.
@@ -479,10 +479,10 @@ The database engine must read, sort, and discard **10,000,000 preceding rows** i
 #### The Keyset / Seek Pagination Solution ($\mathcal{O}(1)$):
 ```sql
 -- Sub-millisecond index seek regardless of page depth:
-SELECT id, transaction_date, amount 
-FROM ledger_transactions 
-WHERE (transaction_date, id) < (:last_seen_date, :last_seen_id) 
-ORDER BY transaction_date DESC, id DESC 
+SELECT id, transaction_date, amount
+FROM ledger_transactions
+WHERE (transaction_date, id) < (:last_seen_date, :last_seen_id)
+ORDER BY transaction_date DESC, id DESC
 LIMIT 50;
 ```
 Because `(transaction_date, id)` is backed by a composite index, the database executes an exact logarithmic B-Tree seek directly to the 50 desired rows!
@@ -695,7 +695,6 @@ mindmap
 | 🚨 **[10. Production Incidents & Triage](#module-10-production-incidents-and-triage)** | `096 – 105` | 🟣<br>Architect | 99% straggler skew, deadlock storms, out-of-order CDC recovery, data quality suites |
 
 ---
-
 
 <a id="module-01-core-sql-fundamentals"></a>
 ### 📦 Module: 01. Core SQL Fundamentals

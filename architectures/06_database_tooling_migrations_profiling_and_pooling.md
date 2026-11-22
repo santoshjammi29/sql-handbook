@@ -64,7 +64,7 @@ flowchart LR
 - **`pg_stat_statements`**: The definitive extension for query telemetry. Tracks normalized query fingerprints, execution counts, total/mean runtime, buffer cache reads (`shared_blks_hit`), disk reads (`shared_blks_read`), dirty blocks, and WAL generation.
   ```sql
   -- Top 5 queries by total CPU and I/O time
-  SELECT 
+  SELECT
       queryid,
       SUBSTRING(query, 1, 80) AS query_snip,
       calls,
@@ -102,7 +102,7 @@ flowchart LR
 
 ## 3. Connection Pooling & Traffic Governance
 
-Database connections are heavy operating system entities. In PostgreSQL, each incoming connection spawns a dedicated Linux process consuming $5 - 10\text{MB}$ of resident memory, plus internal per-process cache allocations (`work_mem`, `temp_buffers`). 
+Database connections are heavy operating system entities. In PostgreSQL, each incoming connection spawns a dedicated Linux process consuming $5 - 10\text{MB}$ of resident memory, plus internal per-process cache allocations (`work_mem`, `temp_buffers`).
 
 Exceeding 200–500 direct client connections triggers severe CPU context switching, OS thread contention, and cache thrashing.
 

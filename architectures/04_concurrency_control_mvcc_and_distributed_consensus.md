@@ -1,18 +1,14 @@
 # 🏛️ Architecture Deep Dive: Concurrency Control, MVCC & Distributed Consensus
 
-
 ![Lakehouse ACID Concurrency & Write Conflict Resolution Matrix](../assets/whiteboards/lakehouse_acid_concurrency.webp)
 > *Architectural Blueprint: [Lakehouse ACID Concurrency & Write Conflict Resolution Matrix](../docs/whiteboard_diagrams/README.md#lakehouse-acid-concurrency). View full multi-persona breakdown and engine mechanisms in the master index.*
-
 
 ![Delta Lake vs. Apache Iceberg Storage & Metadata Architecture](../assets/whiteboards/delta_lake_vs_iceberg_architecture.webp)
 > *Architectural Blueprint: [Delta Lake vs. Apache Iceberg Storage & Metadata Architecture](../docs/whiteboard_diagrams/README.md#delta-vs-iceberg-architecture). View full multi-persona breakdown and engine mechanisms in the master index.*
 
-
-
 ## 1. The ACID Paradigm & Concurrency Anomalies
 
-Database concurrency control ensures that multiple transactions executing concurrently yield identical state to a serial execution schedule. 
+Database concurrency control ensures that multiple transactions executing concurrently yield identical state to a serial execution schedule.
 
 ### The ANSI SQL Isolation Hierarchy & Anomalies Matrix:
 
@@ -62,7 +58,7 @@ flowchart TD
         T1["Tuple v1: (xmin: 100, xmax: 105, balance: $1000)"]
         T2["Tuple v2: (xmin: 105, xmax: 0,   balance: $1200)"]
     end
-    
+
     Q1["Transaction 102 Query: Sees Tuple v1 (xmin 100 <= 102 < xmax 105)"] -.-> T1
     Q2["Transaction 108 Query: Sees Tuple v2 (xmin 105 <= 108, xmax is 0)"] -.-> T2
 ```
@@ -95,10 +91,10 @@ sequenceDiagram
 
     T1->>LockMgr: UPDATE Account_A (Acquires Exclusive Lock on Row A)
     T2->>LockMgr: UPDATE Account_B (Acquires Exclusive Lock on Row B)
-    
+
     T1->>LockMgr: UPDATE Account_B (Blocks: Waiting for T2 to release Lock B)
     T2->>LockMgr: UPDATE Account_A (Blocks: Waiting for T1 to release Lock A)
-    
+
     Note over LockMgr: Deadlock Detected via Wait-For Graph Cycle!
     LockMgr-->>T2: Kill Transaction 2 (Victim): Error 1205 Deadlock
     LockMgr-->>T1: Grant Lock on Account_B (T1 completes and commits)
@@ -119,7 +115,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
-    
+
     -- Canonical ordering: Lock smaller ID first regardless of transfer direction!
     DECLARE @FirstAccount INT = IIF(@FromAccount < @ToAccount, @FromAccount, @ToAccount);
     DECLARE @SecondAccount INT = IIF(@FromAccount < @ToAccount, @ToAccount, @FromAccount);

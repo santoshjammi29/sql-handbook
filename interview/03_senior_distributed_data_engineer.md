@@ -556,7 +556,7 @@ Correlated inline iterator pattern utilizing CROSS APPLY to fetch the Top-N reco
 -- Top-3 Recent Transactions per Customer
 -- Supporting Index: CREATE INDEX idx_cust_txn ON dbo.transactions (customer_id, transaction_date DESC) INCLUDE (amount, status);
 
-SELECT 
+SELECT
     c.customer_id,
     c.customer_name,
     t.transaction_id,
@@ -600,17 +600,17 @@ Computing multi-level hierarchical sub-totals and cross-tabulations in a single 
 -- Hierarchy: Year -> Quarter -> Region -> Channel -> Total
 
 SELECT
-    CASE 
-        WHEN GROUPING(r.region_name) = 1 THEN 'All Regions' 
-        ELSE r.region_name 
+    CASE
+        WHEN GROUPING(r.region_name) = 1 THEN 'All Regions'
+        ELSE r.region_name
     END AS region,
-    CASE 
-        WHEN GROUPING(d.fiscal_year) = 1 THEN 'All Years' 
-        ELSE CAST(d.fiscal_year AS VARCHAR(10)) 
+    CASE
+        WHEN GROUPING(d.fiscal_year) = 1 THEN 'All Years'
+        ELSE CAST(d.fiscal_year AS VARCHAR(10))
     END AS fiscal_year,
-    CASE 
-        WHEN GROUPING(c.channel_name) = 1 THEN 'All Channels' 
-        ELSE c.channel_name 
+    CASE
+        WHEN GROUPING(c.channel_name) = 1 THEN 'All Channels'
+        ELSE c.channel_name
     END AS sales_channel,
     SUM(f.gross_revenue) AS total_gross_revenue,
     SUM(f.net_revenue) AS total_net_revenue,
@@ -624,9 +624,9 @@ GROUP BY ROLLUP (
     d.fiscal_year,
     c.channel_name
 )
-ORDER BY 
-    r.region_name, 
-    d.fiscal_year, 
+ORDER BY
+    r.region_name,
+    d.fiscal_year,
     c.channel_name;
 ```
 
@@ -688,15 +688,15 @@ WITH (
 );
 
 -- 3. Validate row counts and verify zero memory spill across distributions
-SELECT 
+SELECT
     COUNT(*) AS total_loaded_rows,
     MIN(transaction_ts) AS earliest_txn,
     MAX(transaction_ts) AS latest_txn
 FROM dbo.FactTransactions_Staging;
 
 -- Check Columnstore row group health (aiming for ~1M rows per active rowgroup)
-SELECT 
-    state_desc, 
+SELECT
+    state_desc,
     COUNT(*) AS row_group_count,
     SUM(total_rows) AS total_rows,
     SUM(size_in_bytes) / 1024 / 1024 AS total_size_mb
@@ -876,16 +876,16 @@ DECLARE @TotalDeleted INT = 0;
 WHILE @RowsDeleted > 0
 BEGIN
     BEGIN TRANSACTION;
-    
+
     DELETE TOP (@BatchSize)
     FROM dbo.fact_audit_log WITH (ROWLOCK)
     WHERE log_date < DATEADD(month, -6, GETUTCDATE());
-    
+
     SET @RowsDeleted = @@ROWCOUNT;
     SET @TotalDeleted = @TotalDeleted + @RowsDeleted;
-    
+
     COMMIT TRANSACTION;
-    
+
     -- Optional: checkpoint log breath and reduce CPU throttling
     WAITFOR DELAY '00:00:01';
 END;
@@ -915,10 +915,10 @@ CREATE OR ALTER PROCEDURE dbo.usp_get_orders_by_status
 AS
 BEGIN
     SET NOCOUNT ON;
-    
+
     -- Strategy 1: Standard query with OPTIMIZE FOR UNKNOWN
     -- Generates a stable plan based on average statistical distribution
-    SELECT 
+    SELECT
         order_id,
         customer_id,
         order_date,
@@ -926,7 +926,7 @@ BEGIN
     FROM dbo.fact_orders
     WHERE order_status = @order_status
     OPTION (OPTIMIZE FOR (@order_status UNKNOWN));
-    
+
     -- Strategy 2: For extreme cardinality differences, force statement-level recompile
     -- SELECT * FROM dbo.fact_orders WHERE order_status = @order_status OPTION (RECOMPILE);
 END;
@@ -1007,14 +1007,14 @@ WITH DailyLogins AS (
     FROM dbo.UserActivity
 ),
 IslandGrouped AS (
-    SELECT 
+    SELECT
         UserID,
         LoginDate,
         -- The invariant: Date - RowNumber produces a static anchor for consecutive days:
         DATEADD(day, -ROW_NUMBER() OVER (PARTITION BY UserID ORDER BY LoginDate), LoginDate) AS IslandAnchor
     FROM DailyLogins
 )
-SELECT 
+SELECT
     UserID,
     MIN(LoginDate) AS StreakStart,
     MAX(LoginDate) AS StreakEnd,
@@ -1886,14 +1886,14 @@ Databricks SQL AI functions execute serverless inference directly within the Pho
 ```sql
 -- Production SQL ELT pipeline with in-database GenAI enrichment
 WITH raw_feedback AS (
-    SELECT 
+    SELECT
         feedback_id,
         customer_id,
         feedback_text
     FROM prod_catalog.silver.raw_customer_feedback
     WHERE feedback_text IS NOT NULL AND length(trim(feedback_text)) > 10
 )
-SELECT 
+SELECT
     feedback_id,
     customer_id,
     -- Classify urgency category using zero-shot LLM inference
@@ -1925,7 +1925,7 @@ Databricks SQL exposes the `vector_search()` table function, allowing queries to
 **Production Implementation:**
 ```sql
 -- Semantic product search joining Vector Search index with catalog
-SELECT 
+SELECT
     vs.search_score,
     p.product_id,
     p.product_name,
@@ -1960,13 +1960,13 @@ Databricks AI/BI Genie leverages Mosaic AI to translate plain-English user promp
 **Production Implementation:**
 ```sql
 -- Semantic table annotations guiding AI/BI Genie conversational queries
-COMMENT ON TABLE prod_catalog.gold.fact_financial_performance IS 
+COMMENT ON TABLE prod_catalog.gold.fact_financial_performance IS
     'Certified financial performance mart. Grain: one row per customer invoice line item. Use for revenue, COGS, and gross margin calculations.';
 
-ALTER TABLE prod_catalog.gold.fact_financial_performance ALTER COLUMN invoice_date 
+ALTER TABLE prod_catalog.gold.fact_financial_performance ALTER COLUMN invoice_date
     COMMENT 'Transaction timestamp in UTC. Used for fiscal year and monthly run-rate calculations.';
 
-ALTER TABLE prod_catalog.gold.fact_financial_performance ALTER COLUMN net_revenue_usd 
+ALTER TABLE prod_catalog.gold.fact_financial_performance ALTER COLUMN net_revenue_usd
     COMMENT 'Net billable revenue after deducting promo discounts and customer returns. Always sum this column for total revenue.';
 ```
 

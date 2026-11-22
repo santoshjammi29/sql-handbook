@@ -11,11 +11,11 @@
 ```mermaid
 flowchart TD
     MPPAlert["🚨 Distributed Query Stalled / Straggler Task Hanging at 99%"] --> CheckMetrics["Check Query Profile / Spark UI Metrics"]
-    
+
     CheckMetrics --> CheckSpill{"Is Spill to Disk / TempDB Non-Zero?"}
     CheckSpill -->|"Yes, Massive Spill"| SpillTriage["Partition Size Exceeds Worker RAM<br/>Remediation: Increase shuffle partition count & enable AQE"]
     CheckSpill -->|"No, Zero Spill"| CheckSkew{"Is Single Task Row Count > 10x Median?"}
-    
+
     CheckSkew -->|"Yes, Hot Key Skew"| SkewTriage["Severe Data Skew on Join Key<br/>Remediation: Implement Key Salting or Filter NULLs"]
     CheckSkew -->|"No, Broadcast Failure"| BroadcastTriage["Broadcast Buffer OOM Crash<br/>Remediation: Disable Broadcast Hint & Fall Back to Sort-Merge Join"]
 ```
@@ -63,7 +63,7 @@ In distributed query execution, 199 tasks finish in 10 seconds, while task 200 r
 ### 2.3 Azure Synapse Dedicated SQL Pool
 ```sql
 -- Check row skew across the 60 physical distributions
-SELECT 
+SELECT
     distribution_id,
     row_count
 FROM sys.dm_pdw_nodes_db_partition_stats
@@ -82,11 +82,11 @@ When joining a massive fact table containing skewed keys (e.g. `customer_id = 0`
 ```sql
 -- Phase 1: Salt the skewed rows on the fact table with a random integer 0-9
 WITH fact_salted AS (
-    SELECT 
+    SELECT
         transaction_id,
         customer_id,
-        CASE 
-            WHEN customer_id = 0 OR customer_id IS NULL 
+        CASE
+            WHEN customer_id = 0 OR customer_id IS NULL
             THEN CAST(COALESCE(customer_id, -1) AS VARCHAR) || '_' || CAST(FLOOR(RAND() * 10) AS VARCHAR)
             ELSE CAST(customer_id AS VARCHAR) || '_0'
         END AS join_key_salted,
@@ -95,12 +95,12 @@ WITH fact_salted AS (
 ),
 -- Phase 2: Replicate the dimension table 10x for the skewed keys
 dim_exploded AS (
-    SELECT 
+    SELECT
         d.customer_id,
         d.customer_name,
         d.tier,
-        CASE 
-            WHEN d.customer_id = 0 
+        CASE
+            WHEN d.customer_id = 0
             THEN CAST(d.customer_id AS VARCHAR) || '_' || CAST(s.salt AS VARCHAR)
             ELSE CAST(d.customer_id AS VARCHAR) || '_0'
         END AS join_key_salted
@@ -111,7 +111,7 @@ dim_exploded AS (
     ) s
 )
 -- Phase 3: Execute balanced join across all worker partitions
-SELECT 
+SELECT
     f.transaction_id,
     d.customer_name,
     d.tier,
