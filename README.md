@@ -1069,3 +1069,13 @@ Contributions, new production incident postmortems, and dialect optimizations ar
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.  
 Created and maintained with ❤️ by [Santosh Jammi](https://github.com/santoshjammi29).
+
+
+---
+
+## 🗺️ Interactive Curriculum Roadmap & Contributing
+
+- **[Interactive Roadmap & Checkbox Tracker](ROADMAP.md)**: Track your personal progress across all 4 Mastery Tiers (`Level 100` to `Level 400`).
+- **[Curriculum Taxonomy & Standards](TAXONOMY.md)**: Canonical controlled vocabulary, pillar mappings, and evidence standards.
+- **[Contributing Guidelines](CONTRIBUTING.md)**: Authoring standards enforcing the Code-Test-Doc Triad and Anti-Pattern comparisons.
+- **[Live Platform Hub](https://moderndataengineer.uk)**: Access the full 11,280+ record search engine, mindmaps, and vector PDF downloads.
