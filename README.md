@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/repo-header.svg" width="100%" alt="Repository Header Banner" />
+</p>
+
 # ⚡ The SQL Handbook
 
 **105 Production Coding Use Cases, Query Optimization Recipes, MPP Architectures & Incident Runbooks**
