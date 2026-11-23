@@ -346,6 +346,13 @@ flowchart TD
 
         H["4. High Availability & Sharding"] --> H1["Patroni (etcd DCS Postgres Failover)"]
         H --> H2["Vitess & Citus (Distributed SQL Sharding)"]
+
+        M ~~~ P
+        C ~~~ H
+        M1 ~~~ C
+        M2 ~~~ C
+        P1 ~~~ H
+        P2 ~~~ H
     end
 ```
 
@@ -436,14 +443,13 @@ Because `(transaction_date, id)` is backed by a composite index, the database ex
 Before applying any migration, DDL change, or parameter update in production, verify each of the following 5 operational pillars:
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph Checklist["Production Pre-Flight Verification Pillars"]
         direction TB
-        C1["Pillar 1: Schema Migrations (Non-blocking DDL, CONCURRENTLY)"]
-        C2["Pillar 2: Connection Sizing (Max DB Connections = 2x Cores + Spindles)"]
-        C3["Pillar 3: Defensive Timeouts (statement_timeout, lock_timeout)"]
-        C4["Pillar 4: Backup & Recovery (Continuous WAL archiving & PITR drills)"]
-        C5["Pillar 5: Observability & SLOs (Disk > 80%, Wraparound Age, Replication Lag)"]
+        C1["Pillar 1: Schema Migrations (Non-blocking DDL, CONCURRENTLY)"] --> C2["Pillar 2: Connection Sizing (Max DB Connections = 2x Cores + Spindles)"]
+        C2 --> C3["Pillar 3: Defensive Timeouts (statement_timeout, lock_timeout)"]
+        C3 --> C4["Pillar 4: Backup & Recovery (Continuous WAL archiving & PITR drills)"]
+        C4 --> C5["Pillar 5: Observability & SLOs (Disk > 80%, Wraparound Age, Replication Lag)"]
     end
 ```
 
