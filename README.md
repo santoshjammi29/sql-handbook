@@ -22,6 +22,791 @@
 
 ---
 
+## 🎯 Overview & Mission
+
+Modern data engineering and analytics engineering demand far more than basic `SELECT * FROM table WHERE condition`.
+
+Enterprise workloads operate on high-concurrency transactional databases (PostgreSQL, Aurora, SQL Server) and distributed lakehouse MPP engines (Snowflake, Databricks Spark SQL, Google BigQuery) where a single non-SARGable predicate, missing index, or skewed join key can exhaust cluster memory, trigger multi-hour straggler tasks, or cause 10,000 USD cloud billing surprises.
+
+This repository provides **105 end-to-end, runnable, modular SQL coding use cases** covering:
+- **Core & Advanced Relational Fundamentals:** Logical execution order, Three-Valued Logic (3VL), SARGability, cascading integrity, and safe numeric precision.
+- **Complex Joins & Aggregations:** Semi-joins (`EXISTS`), anti-joins, full outer reconciliations, non-equi joins, multidimensional `ROLLUP`/`CUBE`, and dynamic pivoting.
+- **Analytical Window Functions Mastery:** Ranking with ties, lead/lag offsets, sliding frames (`ROWS` vs. `RANGE`), Gaps and Islands (consecutive streaks & sessionization), and portfolio drawdowns.
+- **Hierarchical Trees & Graph Traversal:** Recursive Common Table Expressions (`WITH RECURSIVE`) for organizational charts, Bill of Materials (BOM) part explosions, flight path cycle detection, and calendar spines.
+- **Data Modeling & Lakehouse Formats:** Kimball star schemas, Slowly Changing Dimensions (SCD Types 1, 2, 3, 4, 6), Data Vault 2.0 (Hubs/Links/Satellites), and deterministic hash surrogate keys.
+- **Storage Engines & Physical Optimization:** B-Tree index traversal, composite index left-prefix rule, covering indexes, partial/filtered indexes, join algorithms, and cardinality estimation tuning.
+- **Transactions, MVCC & Concurrency Control:** ACID savepoints, isolation levels (Read Committed, Repeatable Read, Serializable), write skew anomalies, MVCC tuple lifecycles, and deadlock-free canonical resource ordering.
+- **MPP Distributed Engines & Big Data SQL:** Snowflake micro-partition pruning, table distributions (Hash/Replicated), Liquid Clustering (`CLUSTER BY`), two-phase key salting for join skew, and multi-condition `MERGE INTO`.
+- **Production Incidents & Disaster Postmortems:** 10 real-world production postmortems with forensic analysis and surgical recovery queries (the 99% straggler task, deadlock storms, out-of-order CDC corruption, and automated data quality test suites).
+
+---
+
+## 🚀 Quickstart & Interactive Sandbox
+
+All 105 exercises are **100% self-contained** and executable locally using Python's standard library with zero external dependencies!
+
+### 1. Clone & Verify Installation
+```bash
+git clone https://github.com/santoshjammi29/sql-handbook.git
+cd sql-handbook
+```
+
+### 2. Run the Full Automated Test Suite (105 Exercises in < 1 Second)
+```bash
+python scripts/run_all_exercises.py
+```
+
+### 3. Open Any Problem in the Interactive SQL REPL
+Practice queries against pre-seeded in-memory databases with instant feedback:
+
+```bash
+# Load Exercise 038: Gaps and Islands Login Streaks
+python scripts/interactive_shell.py 038
+
+# Load Exercise 090: Distributed Key Salting for Skewed Joins
+python scripts/interactive_shell.py 090
+```
+
+Inside the interactive shell:
+- Inspect schemas and test datasets with standard SQL queries (`SELECT * FROM player_logins;`).
+- Type `.solution` to inspect the battle-tested reference answer.
+- Type `exit` to return to your terminal.
+
+---
+
+## 💻 Interactive CLI Explorer
+
+Explore exercises, run SQL queries in an in-memory database sandbox, inspect incident runbooks, and study interview guides directly from your terminal:
+
+```bash
+# Run interactive in-memory SQL sandbox REPL
+python scripts/interactive_shell.py
+
+# Benchmark and validate all 105 exercises
+python scripts/run_all_exercises.py
+
+# Run complete test suite
+python scripts/run_tests.py
+```
+
+---
+
+## 🏛️ Logical Query Architecture
+
+Understanding the discrepancy between **syntax order** and **logical execution order** is the foundation of SQL mastery:
+
+```mermaid
+flowchart TD
+    Step1["1. FROM & JOINs (Table access, Cartesian products & ON predicates)"] --> Step2["2. WHERE (Row-level predicate filtering before aggregation)"]
+    Step2 --> Step3["3. GROUP BY (Hash table bucketing across dimensions)"]
+    Step3 --> Step4["4. HAVING (Filtering aggregated summary buckets)"]
+    Step4 --> Step5["5. WINDOW FUNCTIONS (ROW_NUMBER, RANK, LAG, LEAD, SUM OVER)"]
+    Step5 --> Step6["6. SELECT (Projection, Scalar expressions, Aliasing)"]
+    Step6 --> Step7["7. DISTINCT (Duplicate tuple elimination across projected columns)"]
+    Step7 --> Step8["8. SET OPERATIONS (UNION, INTERSECT, EXCEPT)"]
+    Step8 --> Step9["9. ORDER BY (Sorting output rows using projected columns/aliases)"]
+    Step9 --> Step10["10. LIMIT / OFFSET / TOP (Result set truncation & pagination)"]
+```
+
+---
+
+## 🖼️ Master Whiteboard Architecture Blueprints
+
+The repository includes **52 publication-grade architectural whiteboard blueprints** mirrored under [`assets/whiteboards/`](assets/whiteboards) and cataloged with comprehensive multi-persona breakdowns, failure modes, and engine internals in [`docs/whiteboard_diagrams/README.md`](docs/whiteboard_diagrams/README.md).
+
+- 🖼️ **[Master Whiteboard Blueprints Hub](docs/whiteboard_diagrams/handbook_whiteboard_blueprints.md)**: Complete whiteboard architecture blueprints with storage vs. compute, control vs. data planes, memory tiers, and failure modes.
+- 📊 **[Spark Architecture & Tuning Cheatsheet](assets/whiteboards/spark_architecture_catalyst_cheatsheet.jpg)**: High-resolution visual cheatsheet covering cluster topology, Catalyst compiler phases, and memory tiers.
+- 🔀 **[Join Strategies Decision Matrix](assets/whiteboards/spark_join_strategies_decision_matrix.jpg)**: Visual flowchart and decision tree for distributed joins and broadcast thresholds.
+- ⚡ **[Skew & Memory Spill Triage](assets/whiteboards/spark_performance_skew_spill_triage.jpg)**: Step-by-step diagnostic workflow for data skew, spill to disk, and OOM triage.
+
+### 📐 Visual Blueprints Showcase
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#sql-server-query-engine-optimization">
+        <img src="assets/whiteboards/sql_server_query_engine_optimization.webp" alt="SQL Server & Relational Query Engine Architecture" width="100%" />
+      </a>
+      <br><strong>SQL Server & Relational Query Engine Architecture</strong><br>
+      <em>Query compilation, Cardinality Estimator, memo space search, and execution operators.</em>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#spark-catalyst-photon-engine">
+        <img src="assets/whiteboards/catalyst_photon_engine.webp" alt="Databricks Compute: Catalyst Optimizer, AQE & Photon" width="100%" />
+      </a>
+      <br><strong>Databricks Compute: Catalyst Optimizer, AQE & Photon</strong><br>
+      <em>Multi-stage relational optimization from parsed AST to native machine instructions.</em>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#spark-shuffle-memory-execution">
+        <img src="assets/whiteboards/spark_shuffle_memory_execution.webp" alt="Apache Spark Memory Architecture & Shuffle Mechanics" width="100%" />
+      </a>
+      <br><strong>Apache Spark Memory Architecture & Shuffle Mechanics</strong><br>
+      <em>Distributed hash partitioning, Tungsten binary serialization, and memory buffer management.</em>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#spark-join-decision-tree">
+        <img src="assets/whiteboards/spark_join_decision_tree.webp" alt="Apache Spark Join Strategy Selection Decision Tree" width="100%" />
+      </a>
+      <br><strong>Apache Spark Join Strategy Selection Decision Tree</strong><br>
+      <em>Join algorithm selection heuristics based on table size, hints, and equivalence predicates.</em>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#open-table-formats-lakehouse">
+        <img src="assets/whiteboards/open_table_formats_lakehouse_architecture.webp" alt="Open Table Formats Blueprint: Lakehouse Storage Engines" width="100%" />
+      </a>
+      <br><strong>Open Table Formats Blueprint: Lakehouse Storage Engines</strong><br>
+      <em>Comparative architecture of Delta Lake, Apache Iceberg, and Apache Hudi storage layers.</em>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#lakehouse-acid-concurrency">
+        <img src="assets/whiteboards/lakehouse_acid_concurrency.webp" alt="Lakehouse ACID Concurrency & Write Conflict Resolution Matrix" width="100%" />
+      </a>
+      <br><strong>Lakehouse ACID Concurrency & Write Conflict Resolution Matrix</strong><br>
+      <em>Optimistic concurrency control, commit conflict detection, and write serialization protocols.</em>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#scd-types-lakehouse">
+        <img src="assets/whiteboards/scd_types_lakehouse.webp" alt="Slowly Changing Dimensions (SCD Types 1, 2, 3, 4, 6) in SQL" width="100%" />
+      </a>
+      <br><strong>Slowly Changing Dimensions (SCD Types 1, 2, 3, 4, 6) in SQL</strong><br>
+      <em>Complete SQL DDL and MERGE patterns for historical dimension tracking.</em>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/whiteboard_diagrams/README.md#delta-lake-under-the-hood">
+        <img src="assets/whiteboards/delta_lake_mechanism.webp" alt="How Delta Lake Works Under the Hood" width="100%" />
+      </a>
+      <br><strong>How Delta Lake Works Under the Hood</strong><br>
+      <em>Append-only JSON commit log, snapshot isolation, checkpoints, and time travel mechanisms.</em>
+    </td>
+  </tr>
+</table>
+
+> 🔍 **Explore all 52 blueprints with 5-persona breakdowns, failure modes, and engine internals in [docs/whiteboard_diagrams/README.md](docs/whiteboard_diagrams/README.md)**.
+
+## ⚖️ Database Systems: Relational SQL vs. NoSQL Architecture Taxonomy
+
+Modern enterprise data architectures bridge the gap between strongly consistent relational systems (ACID) and horizontally scalable distributed NoSQL systems (BASE). Choosing the correct storage engine and data model requires balancing the **CAP theorem**, the **PACELC theorem**, and the physical mechanics of disk I/O.
+
+### 1. The CAP & PACELC Theoretical Foundations
+
+```mermaid
+flowchart TD
+    subgraph PACELC["The PACELC Distributed Consensus Taxonomy"]
+        P{"Network Partition (P)?"}
+        P -->|Yes| P_Trade["Trade-Off: Availability (A) vs Consistency (C)"]
+        P_Trade --> PA["AP: Cassandra, DynamoDB, Couchbase"]
+        P_Trade --> PC["CP: MongoDB, HBase, Bigtable, Spanner"]
+
+        P -->|No| E_Trade["Normal Operation (Else - E): Latency (L) vs Consistency (C)"]
+        E_Trade --> EL["PA/EL: DynamoDB, Cassandra (Default: Sub-10ms Reads)"]
+        E_Trade --> EC["PC/EC: Spanner, CockroachDB, Bigtable (Strong Consistency)"]
+    end
+```
+
+- **The CAP Theorem (Brewer, 2000)**: Under a network partition ($P$), a distributed system must choose between **Consistency ($C$)** (every read receives the latest write or an error) or **Availability ($A$)** (every non-failing node returns a response, without guaranteeing the latest write).
+- **The PACELC Theorem (Abadi, 2012)**: Extends CAP to normal (unpartitioned) operation:
+  $$\text{If Partition (P)} \implies \text{Trade Availability (A) vs Consistency (C)}; \quad \text{Else (E)} \implies \text{Trade Latency (L) vs Consistency (C)}$$
+
+| Database Engine | Partition Mode | Normal Operation | PACELC Classification | Primary Storage & Concurrency Architecture |
+| :--- | :---: | :---: | :---: | :--- |
+| **PostgreSQL** | Single Node / CP | Consistency | **PC/EC** | Slotted Pages B+Tree, MVCC (`xmin`/`xmax`), WAL |
+| **MySQL (InnoDB)** | Single Node / CP | Consistency | **PC/EC** | Clustered Primary B+Tree, Undo Logs, Redo Logs |
+| **MongoDB** | Consistency | Consistency | **PC/EC** | WiredTiger B-Tree & MVCC, Raft-like Replica Set Oplog |
+| **Apache Cassandra** | Availability | Latency | **PA/EL** | Masterless Dynamo Ring, LSM-Tree, Tunable Quorum ($R + W > N$) |
+| **AWS DynamoDB** | Availability | Latency | **PA/EL** | Paxos Leader per Partition, SSD B-Tree/LSM, Token Bucket RCU/WCU |
+| **Redis (Cluster)** | Availability | Latency | **PA/EL** | In-Memory Single-Thread Event Loop, 16,384 Hash Slots |
+| **Neo4j** | Consistency | Consistency | **PC/EC** | Native Graph Engine, Index-Free Adjacency (IFA), Raft Consensus |
+| **Google Spanner** | Consistency | Consistency | **PC/EC** | TrueTime GPS/Atomic Clocks, Multi-Paxos per Split, 2PC |
+
+---
+
+### 2. Storage Engine Mechanics: B+Tree vs. Log-Structured Merge-Tree (LSM)
+
+The foundational trade-off in database storage engines is **In-Place Updates (Random I/O)** versus **Append-Only Logs (Sequential I/O)**.
+
+```mermaid
+flowchart LR
+    subgraph BTree["B+Tree Storage Engine (Postgres, InnoDB, WiredTiger)"]
+        direction TB
+        Root["Root Node (Page 0)"] --> Internal["Internal Routing Pages"]
+        Internal --> Leaf1["Leaf Page A (8KB/16KB)"]
+        Internal --> Leaf2["Leaf Page B (8KB/16KB)"]
+        Leaf1 <-->|Doubly Linked List| Leaf2
+    end
+
+    subgraph LSM["LSM-Tree Storage Engine (RocksDB, Cassandra, Bigtable)"]
+        direction TB
+        Write["Incoming Writes"] --> WAL["Write-Ahead Log (Disk)"]
+        Write --> MemTable["MemTable (In-Memory SkipList)"]
+        MemTable -->|Flush when full| L0["Level 0 SSTables (Disk, Unsorted)"]
+        L0 -->|Compaction| L1["Level 1 SSTables (Key-Partitioned)"]
+        L1 -->|Compaction| L2["Level 2 SSTables (10x Size)"]
+    end
+```
+
+#### Storage Amplification Metrics:
+1. **Write Amplification Factor (WAF)**:
+   $$\text{WAF} = \frac{\text{Bytes Written to Physical Storage}}{\text{Bytes Written by Application}}$$
+   - *B+Tree*: High WAF ($10\times - 100\times$). Mutating a single 32-byte column requires dirtying and flushing an entire 8KB page to disk, plus WAL overhead.
+   - *LSM-Tree*: Moderate initial WAF (sequential append to WAL + Memtable), but increases ($10\times - 30\times$) during multi-level background compaction merges.
+2. **Read Amplification Factor (RAF)**:
+   $$\text{RAF} = \frac{\text{Bytes Read from Physical Storage}}{\text{Bytes Requested by Application}}$$
+   - *B+Tree*: Low RAF ($\mathcal{O}(\log_B N)$). Point lookups traverse $3-4$ indexed levels directly to the exact target leaf page.
+   - *LSM-Tree*: Higher RAF. Must check Memtable, followed by Bloom Filters, and potentially multiple SSTable levels on disk until the key or deletion tombstone is discovered.
+3. **Space Amplification Factor (SAF)**:
+   $$\text{SAF} = \frac{\text{Disk Space Occupied by Database}}{\text{Uncompressed Logical Data Size}}$$
+   - *B+Tree*: Suffers from internal page fragmentation and 50/50 page split slack ($30\% - 50\%$ overhead).
+   - *LSM-Tree*: Highly compact due to immutability and prefix block compression, but temporarily spikes during major compactions ($2\times$ temporary footprint).
+
+---
+
+### 3. The 7 NoSQL Categories & Workload Selection Matrix
+
+| Category | Representative Engines | Primary Data Structure | Ideal Workload & Sweet Spot | Catastrophic Anti-Pattern / Gotcha |
+| :--- | :--- | :--- | :--- | :--- |
+| **Document Stores** | MongoDB, Couchbase | BSON / JSON Hierarchical Documents | CMS, User Profiles, Product Catalogs with polymorphous attributes. | **Unbounded Array Growth**: Embedding arrays inside documents that breach the 16MB BSON limit. |
+| **Key-Value / In-Memory** | Redis, RocksDB, DynamoDB | In-Memory Hash, SkipList, LSM-Tree | Caching, Rate Limiters, Session State, Real-time Leaderboards. | **Single-Thread Blocking**: Executing `KEYS *` or large `HGETALL` freezing the Redis event loop. |
+| **Wide-Column / Partitioned** | Apache Cassandra, ScyllaDB, Bigtable | Sparse Multidimensional Sorted Map | High-throughput IoT telemetry, Event Logging, Messaging feeds. | **Tombstone Read Storms**: Scanning $>100,000$ deleted rows triggering `ReadFailureException`. |
+| **Graph Databases** | Neo4j, AWS Neptune, Memgraph | Double-Linked Nodes & Edges (Index-Free Adjacency) | Fraud detection networks, Social Graphs, Identity Resolution, Knowledge Graphs. | **Supernodes**: Traversing nodes with millions of incident edges causing pointer-chasing CPU spikes. |
+| **Vector Databases** | pgvector, Milvus, Pinecone, Qdrant | High-Dimensional Proximity Graphs (HNSW, IVFFlat) | Retrieval-Augmented Generation (RAG), Semantic Search, Facial Recognition. | **Memory Exhaustion (OOM)**: Building HNSW graphs on tens of millions of vectors without dedicated RAM. |
+| **Time-Series Databases** | TimescaleDB, InfluxDB | Hypertables with Automated Time/Space Chunking | Server APM Telemetry, Financial Tick Feeds, Industrial Sensor Streams. | **Unbounded Chunks**: Retaining uncompressed historical chunks in active memory without columnar policies. |
+| **Search Engines** | Elasticsearch, OpenSearch | Inverted Index & Lucene Segment Trees | Full-text search, Log aggregation (ELK), Fuzzy text matching, Faceted navigation. | **Mapping Explosions**: Ingesting dynamic JSON with thousands of arbitrary keys causing JVM Heap OOM. |
+
+> 📖 *For comprehensive architecture diagrams, PACELC mathematical proofs, and engine internals, consult [Architecture Deep Dive 05: NoSQL Systems, Storage Engines & Trade-Offs](architectures/05_nosql_systems_storage_engines_and_tradeoffs.md).*
+
+---
+
+## ⚙️ Core Database Technologies & Engine Internals
+
+Understanding the physical internals of dominant database engines separates novice query authors from Staff Database Architects:
+
+### 1. Relational Transactional Engines (OLTP)
+- **PostgreSQL**:
+  - *MVCC Tuple Lifecycle*: Rows are immutable tuples. Updates execute as an `INSERT` of a new tuple followed by an expiration of the old tuple. Each tuple header contains `xmin` (creating transaction ID), `xmax` (expiring transaction ID), and hint bits.
+  - *Dead Tuple Bloat & VACUUM*: Dead tuples remain on disk until background `autovacuum` sweeps the page and marks space reusable.
+  - *The 32-Bit TXID Wraparound*: Postgres uses 32-bit transaction IDs. If `VACUUM FREEZE` does not advance `relfrozenxid` within 2 billion transactions, the database forcibly enters read-only shutdown.
+  - *TOAST (The Oversized-Attribute Storage Technique)*: Values exceeding 2KB are compressed and split into 2KB chunks stored in a separate hidden TOAST table.
+- **MySQL / InnoDB**:
+  - *Clustered Primary B+Tree*: Tables are physically organized by their Primary Key. Secondary indexes do not point directly to disk offsets; they store the Primary Key value, requiring a secondary lookup (bookmark lookup) to fetch row columns.
+  - *Undo Logs & Purge Threads*: Unlike Postgres, InnoDB performs in-place row updates and writes previous versions to an **Undo Log** in the rollback segment. Purge threads asynchronously deallocate undo log pages once older read views complete.
+  - *Gap Locking & Next-Key Locking*: Under Repeatable Read, InnoDB locks not just existing rows, but the "gaps" between index keys to prevent concurrent insertions (eliminating phantom reads).
+- **Microsoft SQL Server**:
+  - *Physical Organization*: Clustered Index (B-Tree data leaf pages) or Heap (unordered pages linked by PFS/IAM).
+  - *Tempdb Contention*: High-frequency temporary table creation triggers severe latch contention on allocation bitmap pages: **PFS** (Page Free Space), **GAM** (Global Allocation Map), and **SGAM** (Shared Global Allocation Map).
+  - *Query Store*: An automated flight recorder built into the database engine capturing query runtime stats, wait categories, and execution plan regressions with 1-click plan forcing (`sp_query_store_force_plan`).
+  - *Lock Escalation*: Automatically converts $>5,000$ row-level locks on a table into an exclusive Table Lock (`X`), causing severe application blocking.
+- **Oracle Database**:
+  - *Redo & Undo Architecture*: Uses dedicated Redo Log groups for durability and rollback segments in Undo Tablespaces for read consistency governed by System Commit Numbers (SCN).
+  - *AWR & ASH Diagnostics*: Automatic Workload Repository (AWR) and Active Session History (ASH) sample active sessions every second for deep forensic wait-event analysis (`db file sequential read`, `enq: TX - row lock contention`).
+- **SQLite**:
+  - *In-Process Serverless SQL*: Compiles directly into the host application process with zero network IPC overhead.
+  - *WAL Mode*: Write-Ahead Logging allows concurrent readers to operate without blocking a single writer thread (`PRAGMA journal_mode=WAL;`).
+
+### 2. Columnar & Massively Parallel Analytical Engines (OLAP)
+- **DuckDB**:
+  - *Vectorized In-Process Execution*: Executes vectorized morsels (batches of 2,048 tuples) using CPU SIMD registers, executing analytical queries orders of magnitude faster than row engines.
+  - *Zero-Copy Interop*: Integrates directly with Apache Arrow, Polars, and Pandas memory buffers without serialization.
+  - *Direct Parquet Scanning*: Uses HTTP byte-range requests to read columnar projection slices directly from cloud object stores.
+- **ClickHouse**:
+  - *MergeTree Engine Family*: Append-only storage organized into sorted, immutable parts merged asynchronously.
+  - *Sparse Primary Index*: Indexes only 1 row every 8,192 rows (1 mark), enabling index tables for billions of records to fit entirely inside RAM.
+- **Snowflake**:
+  - *Micro-Partitioning*: Automatically divides tables into 50MB–500MB compressed columnar micro-partitions. Central cloud services prune unneeded partitions using min/max metadata without touching compute nodes.
+- **Google BigQuery**:
+  - *Serverless Capacities & Slots*: Decouples execution into dynamic worker slots running on the Borg cluster querying Capacitor columnar format stored on Colossus distributed file system.
+- **Databricks SQL**:
+  - *Photon Vectorized Engine*: A native C++ execution engine that accelerates Spark SQL queries with SIMD vectorization.
+  - *Liquid Clustering (`CLUSTER BY`)*: Space-filling Z-order curves that dynamically cluster Delta Lake tables without rigid Hive directory partitioning.
+
+---
+
+## 🧰 Use-Case Specific Tooling Suite: Migrations, Profiling, Pooling & HA
+
+Production database reliability requires a specialized tooling ecosystem spanning schema migrations, telemetry, pooling, and clustering:
+
+```mermaid
+flowchart TD
+    subgraph ToolingSuite["The Production Database Tooling Ecosystem"]
+        direction TB
+        M["1. Schema Migration Engines"] --> M1["Flyway & Liquibase (Versioned GitOps)"]
+        M --> M2["pgroll & gh-ost (Zero-Downtime Expand/Contract)"]
+
+        P["2. Observability & Profiling"] --> P1["pg_stat_statements & EXPLAIN ANALYZE BUFFERS"]
+        P --> P2["SQL Server Query Store & MySQL Performance Schema"]
+
+        C["3. Connection Pooling & Traffic"] --> C1["PgBouncer (Transaction Multiplexing)"]
+        C --> C2["HikariCP (Low-Latency Application Pool)"]
+
+        H["4. High Availability & Sharding"] --> H1["Patroni (etcd DCS Postgres Failover)"]
+        H --> H2["Vitess & Citus (Distributed SQL Sharding)"]
+    end
+```
+
+### 1. Zero-Downtime Schema Evolution
+- **Flyway & Liquibase**: Version-controlled migrations running inside CI/CD deployment pipelines. Enforce strict single-process locks using metadata tables (`flyway_schema_history` and `DATABASECHANGELOGLOCK`).
+- **pgroll (PostgreSQL)**: Implements zero-downtime schema evolution natively using PostgreSQL views. Maintains Version 1 and Version 2 schema contracts simultaneously with real-time bidirectional trigger synchronization until the cutover is finalized.
+- **gh-ost (GitHub Online Schema Migrations for MySQL)**: Triggerless migration tool. Replicates existing tables into a shadow table, tails the MySQL binary log (binlog) asynchronously, and completes cutover via an atomic two-table rename:
+  ```sql
+  RENAME TABLE users TO _users_old, _users_gho TO users;
+  ```
+
+### 2. Query Profiling & Observability
+- **PostgreSQL `pg_stat_statements` & `EXPLAIN (ANALYZE, BUFFERS)`**: Discloses cumulative runtime, execution counts, shared buffer cache hits, disk reads, and memory allocations.
+- **MySQL Performance Schema & `OPTIMIZER_TRACE`**: Provides internal visibility into the cost-based optimizer's evaluation of candidate execution plans and index selectivity.
+- **SQL Server Query Store & Extended Events**: Captures historical runtime profiles and detects plan regressions caused by parameter sniffing or stale statistics.
+
+### 3. Connection Pooling & Traffic Governance
+- **PgBouncer (PostgreSQL)**:
+  - *Transaction Pooling (Production Standard)*: Assigns physical server connections only for the duration of a transaction, returning them immediately upon `COMMIT` or `ROLLBACK`.
+  - *The Formula*: Never configure database `max_connections` to thousands of connections. Size the dedicated pool using:
+    $$\text{Max DB Connections} \approx (\text{CPU Cores} \times 2) + \text{Effective Spindle Count}$$
+  - *Gotcha*: Transaction pooling breaks named prepared statements (`PREPARE stmt`). Configure unnamed/anonymous prepared statements or use PgBouncer 1.21+ with `max_prepared_statements`.
+- **HikariCP**: Fastest JVM connection pool. Features zero-allocation collections (`FastList`), micro-optimized lock-free primitives, and aggressive connection leak detection.
+
+### 4. Distributed Engines & High Availability
+- **Patroni**: Provides high availability and automated failover for PostgreSQL using distributed consensus stores (etcd, Consul, ZooKeeper). Prevents split-brain incidents via watchdog fencing (STONITH).
+- **Vitess**: Scales MySQL horizontally to millions of queries per second. Uses stateless **VTGate** query routers, **VTTablets**, and declarative **VSchema** sharding keys.
+- **Citus**: PostgreSQL extension that shards tables across a cluster using distributed foreign keys, hash-distribution columns, and co-located joins.
+
+> 📖 *For end-to-end configuration templates, pool sizing math, and architecture blueprints, consult [Architecture Deep Dive 06: Database Tooling — Migrations, Profiling, Pooling & Distributed Engines](architectures/06_database_tooling_migrations_profiling_and_pooling.md).*
+
+---
+
+## 🚀 Query Optimization, SARGability & Performance Anti-Patterns
+
+A single non-SARGable predicate or unindexed foreign key can force an in-memory B-Tree index seek ($\mathcal{O}(\log N)$) down into a full table scan ($\mathcal{O}(N)$), consuming gigabytes of I/O and exhausting database worker threads.
+
+### 1. The SARGable Predicate Remediation Matrix
+
+A predicate is **SARGable** (*Search Argument Able*) if the query engine can traverse the B-Tree index structure via an **Index Seek** rather than scanning every page in the table.
+
+| Anti-Pattern (Non-SARGable) | Root Cause of Failure | Production Surgical Fix (SARGable) |
+| :--- | :--- | :--- |
+| `WHERE YEAR(created_at) = 2024` | Scalar function wraps column; cannot traverse B-Tree index. | `WHERE created_at >= '2024-01-01' AND created_at < '2025-01-01'` |
+| `WHERE DATE(transaction_ts) = '2024-05-15'` | Truncation function strips index seek capability. | `WHERE transaction_ts >= '2024-05-15 00:00:00' AND transaction_ts < '2024-05-16 00:00:00'` |
+| `WHERE LOWER(email) = 'user@corp.com'` | String casing transformation evaluated row-by-row. | Functional Index: `CREATE INDEX idx_user_email_lower ON users (LOWER(email));` |
+| `WHERE phone_number = 1234567890` | Column is `VARCHAR`. Integer literal forces implicit `CAST(phone_number AS INT)` on every row. | Pass matching type literal: `WHERE phone_number = '1234567890'` |
+| `WHERE amount + 15 > 100` | Arithmetic expression on column prevents index seek. | Isolate column on LHS: `WHERE amount > 85` |
+| `WHERE phone LIKE '%5551234'` | Leading wildcard (`%`) cannot seek sorted B-Tree prefix. | Use Trigram Index (`pg_trgm`) or Reverse String Index: `WHERE reverse_phone LIKE '4321555%'` |
+| `WHERE ISNULL(status, 'NEW') = 'NEW'` | Wrapper function forces full table evaluation. | SARGable Disjunction: `WHERE status = 'NEW' OR status IS NULL` |
+
+---
+
+### 2. Keyset / Seek Pagination vs. The Offset Pagination Death Spiral
+
+#### The Offset Pagination Problem:
+```sql
+-- Catastrophic performance on deep pages:
+SELECT id, transaction_date, amount
+FROM ledger_transactions
+ORDER BY transaction_date DESC, id DESC
+LIMIT 50 OFFSET 10000000;
+```
+The database engine must read, sort, and discard **10,000,000 preceding rows** in memory before returning 50 rows. Response times degrade linearly ($\mathcal{O}(N)$), resulting in multi-minute queries and buffer pool churn.
+
+#### The Keyset / Seek Pagination Solution ($\mathcal{O}(1)$):
+```sql
+-- Sub-millisecond index seek regardless of page depth:
+SELECT id, transaction_date, amount
+FROM ledger_transactions
+WHERE (transaction_date, id) < (:last_seen_date, :last_seen_id)
+ORDER BY transaction_date DESC, id DESC
+LIMIT 50;
+```
+Because `(transaction_date, id)` is backed by a composite index, the database executes an exact logarithmic B-Tree seek directly to the 50 desired rows!
+
+---
+
+### 3. The N+1 Query Problem & Cascade Lock Storms
+- **The N+1 Anti-Pattern**: An application ORM queries 100 users (`SELECT * FROM users LIMIT 100;`), and then iterates over each user in application code to fire 100 separate queries: `SELECT * FROM orders WHERE user_id = :id;`. Transforms 1 network trip into 101 round trips.
+  - *Remediation*: Eager-load via `JOIN`, batch fetch using `WHERE user_id IN (...)`, or leverage `LATERAL / CROSS APPLY`.
+- **Unindexed Foreign Keys**: Deleting a parent customer row requires validating or cascading deletes on child `orders` tables. Without an index on `orders(customer_id)`, the engine acquires an exclusive table lock and performs a full sequential scan on the child table, causing cluster-wide deadlock storms.
+
+---
+
+## 📋 Production Database Pre-Flight Checklist
+
+Before applying any migration, DDL change, or parameter update in production, verify each of the following 5 operational pillars:
+
+```mermaid
+flowchart LR
+    subgraph Checklist["Production Pre-Flight Verification Pillars"]
+        direction TB
+        C1["Pillar 1: Schema Migrations (Non-blocking DDL, CONCURRENTLY)"]
+        C2["Pillar 2: Connection Sizing (Max DB Connections = 2x Cores + Spindles)"]
+        C3["Pillar 3: Defensive Timeouts (statement_timeout, lock_timeout)"]
+        C4["Pillar 4: Backup & Recovery (Continuous WAL archiving & PITR drills)"]
+        C5["Pillar 5: Observability & SLOs (Disk > 80%, Wraparound Age, Replication Lag)"]
+    end
+```
+
+1. **Pillar 1: Schema Migrations & Non-Blocking DDL**
+   - [ ] All new indexes created using `CONCURRENTLY` (PostgreSQL) or `ONLINE = ON` (SQL Server / MySQL).
+   - [ ] New columns added with non-volatile defaults (avoiding full table rewrites).
+   - [ ] Foreign keys and CHECK constraints added with `NOT VALID`, followed by non-blocking `VALIDATE CONSTRAINT`.
+2. **Pillar 2: Connection Pooling & Concurrency Sizing**
+   - [ ] Database `max_connections` sized conservatively ($\approx (\text{Cores} \times 2) + \text{Spindles}$).
+   - [ ] PgBouncer or HikariCP multiplexes thousands of application threads into a small pool (30–60) of fast connections.
+   - [ ] Client drivers configured for anonymous/unnamed prepared statements in transaction pooling mode.
+3. **Pillar 3: Defensive Timeouts**
+   - [ ] OLTP APIs enforce `statement_timeout = '15s'` to prevent rogue runaway queries.
+   - [ ] Migrations enforce `lock_timeout = '3s'` to fail fast rather than queuing behind locks.
+   - [ ] Applications enforce `idle_in_transaction_session_timeout = '30s'` to kill hanging client transactions.
+4. **Pillar 4: Backup, PITR & Disaster Recovery**
+   - [ ] Write-Ahead Logs (WAL) / Redo logs continuously streamed to immutable cloud storage.
+   - [ ] Automated monthly Point-In-Time-Recovery (PITR) test drills into an isolated staging VPC with automated assertions.
+   - [ ] Verified Recovery Point Objective ($\text{RPO} < 5\text{ min}$) and Recovery Time Objective ($\text{RTO} < 30\text{ min}$).
+5. **Pillar 5: Observability & Saturation Alerts**
+   - [ ] Alert on replication lag $> 10\text{ seconds}$ on read replicas.
+   - [ ] Alert when disk utilization exceeds $80\%$ (fail-safe emergency at $85\%$).
+   - [ ] Alert on PostgreSQL transaction wraparound age: `max(age(datfrozenxid)) > 500,000,000`.
+
+---
+
+## 💥 Top 25 Catastrophic Production Database Gotchas & Postmortems
+
+The 25 most frequent, catastrophic database design traps and runtime failures encountered in production environments:
+
+| # | Catastrophic Gotcha | Affected Systems | Root Cause & Failure Mechanism | Immediate Surgical Mitigation |
+| :---: | :--- | :--- | :--- | :--- |
+| **01** | **TXID Wraparound Emergency** | PostgreSQL | 32-bit transaction counter reaches 2 billion limit; Postgres initiates forced read-only shutdown. | Start in single-user mode (`postgres --single`) and run emergency `VACUUM FREEZE ANALYZE;`. |
+| **02** | **Unindexed Foreign Keys Deadlock Storm** | PostgreSQL, Oracle | Parent row updates/deletes lock entire child table; concurrent parent deletes form cyclic deadlocks. | Add index concurrently: `CREATE INDEX CONCURRENTLY idx_orders_customer ON orders(customer_id);`. |
+| **03** | **Offset Pagination Death Spiral** | All SQL Engines | `OFFSET 10000000` scans and discards 10 million rows in memory, driving CPU to 100%. | Switch to Keyset/Seek pagination: `WHERE (created_at, id) < (:last_ts, :last_id) LIMIT 50;`. |
+| **04** | **Implicit Type Conversion Index Loss** | MySQL, SQL Server, PG | Querying string column with integer literal forces `CAST(col AS INT)`, dropping B-Tree index. | Pass exact matching type literal: `WHERE phone_number = '1234567890'`. |
+| **05** | **`NOT IN (subquery with NULL)` Trap** | All SQL Engines | If subquery returns a single `NULL`, Three-Valued Logic evaluates whole filter to UNKNOWN, returning 0 rows. | Replace with `NOT EXISTS (SELECT 1 FROM ...)`. |
+| **06** | **Lock Escalation to Table Lock** | SQL Server | A single statement acquiring $>5,000$ row locks escalates to exclusive Table Lock (`X`), blocking all traffic. | Batch mutations in loops of $\le 2,000$ rows: `DELETE TOP (2000) FROM logs WHERE ...`. |
+| **07** | **Missing Transaction Timeouts** | PostgreSQL, MySQL | Client app opens transaction, hangs on external HTTP call, holding locks and exhausting database connections. | Enforce `idle_in_transaction_session_timeout = '30s'` and `statement_timeout = '15s'`. |
+| **08** | **MongoDB 16MB Document Cap** | MongoDB | Pushing events into an unbounded array inside a document hits 16MB BSON limit, failing all writes. | Implement the **Bucket Pattern** (separate collection with 500 events per document). |
+| **09** | **Cassandra Tombstone Read Dropouts** | Cassandra, ScyllaDB | Deleting rows writes tombstones; queries scanning $>100,000$ tombstones crash with `ReadFailureException`. | Run `nodetool flush` and `nodetool compact`, or refactor into Time Window Compaction (TWCS). |
+| **10** | **Redis Single-Thread Blocking Calls** | Redis | Running `KEYS *`, `FLUSHALL`, or large `HGETALL` blocks Redis single-threaded event loop, timing out all apps. | Replace `KEYS` with `SCAN`, rename dangerous commands in `redis.conf`, use `UNLINK` instead of `DEL`. |
+| **11** | **Autovacuum Starvation from Analytics** | PostgreSQL | Long-running analytic query blocks autovacuum from freeing dead tuples, causing severe table bloat. | Terminate idle transactions with timeouts; tune `vacuum_failsafe_age` and cost limits. |
+| **12** | **MySQL Gap Lock Phantom Deadlocks** | MySQL (InnoDB) | Concurrent `INSERT ... ON DUPLICATE KEY UPDATE` acquires adjacent gap locks, causing deadlocks. | Switch transaction isolation to **Read Committed** (`SET SESSION TX ISOLATION READ COMMITTED;`). |
+| **13** | **Prepared Statements & Pooler Mismatch** | PostgreSQL + PgBouncer | Drivers cache named prepared statements; PgBouncer transaction pooling routes exec to different connection. | Configure client driver for anonymous prepared statements or use PgBouncer 1.21+ `max_prepared_statements`. |
+| **14** | **Parameter Sniffing Bad Plan Caching** | SQL Server, PG | Stored proc compiles plan for outlier parameter (table scan), forcing slow plan on selective parameters. | Use query hints: `OPTION (RECOMPILE)` / `OPTION (OPTIMIZE FOR UNKNOWN)`. |
+| **15** | **UUIDv4 Random Key B-Tree Fragmentation** | PostgreSQL, MySQL | Inserting random UUIDv4 keys splits B-Tree leaf pages (50/50 split), doubling table size and evicting cache. | Standardize on sequentially ordered, time-sortable **UUIDv7** or **ULID**. |
+| **16** | **The Halloween Problem** | All Relational Engines | `UPDATE` modifies indexed column, advancing row forward into the cursor and mutating it repeatedly. | Modern engines insert spools/materialization fences; avoid in-flight mutating scans. |
+| **17** | **Distributed 2PC Coordinator Failure** | Citus, Distributed SQL | Coordinator crashes after `PREPARE` but before `COMMIT`, leaving in-doubt locks hanging indefinitely. | Implement modern **Raft** or **Paxos** distributed consensus protocols to replace 2PC. |
+| **18** | **Stale Cardinality Statistics Disaster** | All SQL Engines | Bulk insert of 10M rows without `ANALYZE` causes optimizer to pick Nested Loop Join, freezing query. | Run `ANALYZE table_name;` immediately after bulk ingestion; tune autovacuum analyze scale factor. |
+| **19** | **DynamoDB Partition Key Hotspotting** | AWS DynamoDB | Low-cardinality partition key (e.g. `status = 'ACTIVE'`) funnels traffic to 1 partition, generating 429 errors. | Implement synthetic key salting: `PK = "ACTIVE#" + random(0, 10)` and scatter-gather queries. |
+| **20** | **Sequence / SERIAL Exhaustion** | PostgreSQL, MySQL | Primary key defined as `SERIAL` / `INT4` (max $+2.14\text{B}$). Reaching ceiling fails all subsequent inserts. | Proactively migrate primary and foreign keys to `BIGINT` ($9.22 \times 10^{18}$ ceiling). |
+| **21** | **Unlogged Tables Crash Data Loss** | PostgreSQL | `UNLOGGED` tables bypass WAL for speed. On system crash or power outage, table is truncated to empty. | Never use `UNLOGGED` tables for persistent production data; restrict strictly to disposable caches. |
+| **22** | **Multi-Region Replication Overwrite** | DynamoDB, Couchbase | Multi-master replication resolves writes via Last-Write-Wins (LWW); clock skew causes silent data loss. | Use Conflict-Free Replicated Data Types (CRDTs) or route customer writes to designated primary region. |
+| **23** | **Elasticsearch Mapping Explosion** | Elasticsearch | Dynamic JSON with thousands of arbitrary keys causes Lucene field proliferation and JVM heap OOM. | Set `index.mapping.total_fields.limit = 1000` and disable dynamic mapping on payload fields. |
+| **24** | **DECIMAL Rounding Precision Loss** | All SQL Engines | Financial values defined with inadequate scale (`DECIMAL(10,2)`); compound math causes cumulative drift. | Standardize on high-precision fixed point (`DECIMAL(28,8)`) or store micro-units (integer cents). |
+| **25** | **Vector Search Index HNSW OOM Killer** | PostgreSQL (`pgvector`) | Building HNSW index on 10M vectors consumes 30GB RAM, exhausting `maintenance_work_mem` and OOMing host. | Size memory correctly ($\approx \text{Vectors} \times \text{Dims} \times 4\text{B} \times 1.5$), or use dedicated vector engines (Milvus). |
+
+> 📖 *For complete forensic postmortems, root causes, and reproduction code, consult [Production Runbook 08: Pre-Flight Checklist & Top 25 Production Database Gotchas](runbooks/08_production_database_preflight_checklist_and_gotchas.md).*
+
+---
+
+## 📚 Master Curriculum Map
+
+This curriculum spans **10 structured modules** encompassing foundational syntax through Staff Data Architect production triage:
+
+```mermaid
+mindmap
+  root((The SQL Handbook))
+    01 Fundamentals
+      Execution Order
+      Three-Valued Logic
+      SARGability
+      Safe Casting
+      Idempotent DDL
+    02 Joins & Sets
+      Semi-Joins EXISTS
+      Anti-Joins
+      Full Outer Recon
+      Non-Equi Ranges
+      Lateral / Apply
+    03 Aggregations
+      Count Semantics
+      Filtered Aggregates
+      OLAP ROLLUP
+      OLAP CUBE
+      Dynamic Pivoting
+    04 Window Functions
+      Ranking with Ties
+      Offset LAG / LEAD
+      Sliding Frames
+      Gaps & Islands
+      Cohort Retention
+    05 Recursive CTEs
+      Org Hierarchies
+      BOM Part Explosion
+      Graph Shortest Path
+      Calendar Spines
+      Duplicate Deletion
+    06 Data Modeling
+      Kimball Star Schema
+      SCD Types 1-6
+      Data Vault 2.0
+      Bridge Tables
+      Surrogate Hashes
+    07 Query Optimization
+      B-Tree Index Seek
+      Composite Prefix Rule
+      Covering Indexes
+      Cardinality Stats
+      Join Algorithms
+    08 Transactions
+      ACID Savepoints
+      Isolation Anomalies
+      Write Skew
+      MVCC Internals
+      Deadlock Ordering
+    09 MPP Distributed
+      Micro-Partitioning
+      Hash Distributions
+      Liquid Clustering
+      Key Salting
+      Delta MERGE
+    10 Incident Triage
+      99% Straggler Skew
+      Deadlock Storms
+      CDC Timeline Repair
+      TempDB Cartesian
+      Data Quality Suite
+```
+
+---
+
+## 📂 Detailed Exercises & Code Matrix
+
+> **Dialect Portability**: All 105 exercises are written in standard ANSI SQL and verified to execute natively on **PostgreSQL**, **DuckDB**, **Databricks Spark SQL**, **Snowflake**, **Google BigQuery**, and **SQLite**.
+
+### 🗺️ Curriculum Track Overview
+
+| Track & Module | Range | Level | Core Architecture & Skills |
+| :--- | :---: | :---: | :--- |
+| 📦 **[01. Core SQL Fundamentals](#module-01-core-sql-fundamentals)** | `001 – 010` | 🟢<br>Beginner | Execution order, Three-Valued Logic, SARGability, type casting, idempotent DDL |
+| 🔗 **[02. Joins & Set Operations](#module-02-joins-and-set-operations)** | `011 – 020` | 🟡<br>Intermediate | Semi-joins (EXISTS), anti-joins, full outer reconciliations, non-equi joins, set ops |
+| 📊 **[03. Aggregations & Grouping](#module-03-aggregations-and-grouping)** | `021 – 030` | 🟡<br>Intermediate | COUNT semantics, conditional sums, multidimensional ROLLUP/CUBE, dynamic pivoting |
+| 🪟 **[04. Window Functions Mastery](#module-04-window-functions-mastery)** | `031 – 045` | 🔴<br>Advanced | Ranking ties, value offsets (LAG/LEAD), sliding frames, Gaps & Islands, retention |
+| 🌲 **[05. Subqueries & Recursive CTEs](#module-05-subqueries-and-recursive-ctes)** | `046 – 055` | 🔴<br>Advanced | Recursive hierarchies, Bill of Materials (BOM), flight paths, calendar spines, deduplication |
+| 📐 **[06. Data Modeling & SCD](#module-06-data-modeling-and-scd)** | `056 – 065` | 🔴<br>Advanced | Kimball star schemas, SCD Types 1-6, Data Vault 2.0, bridge tables, surrogate hashing |
+| ⚡ **[07. Indexing & Query Optimization](#module-07-indexing-and-query-optimization)** | `066 – 075` | 🔴<br>Advanced | B-Tree seek vs scan, composite prefix rule, covering indexes, join algorithms, stats |
+| 🔒 **[08. Transactions, Concurrency & Locks](#module-08-transactions-concurrency-and-locks)** | `076 – 085` | 🔴<br>Advanced | ACID savepoints, isolation anomalies, write skew, MVCC internals, deadlock ordering |
+| ☁️ **[09. MPP & Cloud Warehouses](#module-09-mpp-and-cloud-warehouses)** | `086 – 095` | 🟣<br>Architect | Snowflake micro-partitions, hash distributions, Liquid Clustering, key salting, MERGE |
+| 🚨 **[10. Production Incidents & Triage](#module-10-production-incidents-and-triage)** | `096 – 105` | 🟣<br>Architect | 99% straggler skew, deadlock storms, out-of-order CDC recovery, data quality suites |
+
+---
+
+<a id="module-01-core-sql-fundamentals"></a>
+### 📦 Module: 01. Core SQL Fundamentals
+
+| # | Exercise Topic & Code | Level | Practical Scenario |
+| :---: | :--- | :---: | :--- |
+| `001` | [Logical Query Execution Order](exercises/01_core_sql_fundamentals/001_logical_query_execution_order.sql) | 🟢<br>Beginner | Enterprise Multi-Tenant SaaS Billing & Margin Reconciliation Engine. |
+| `002` | [Three Valued Logic & NULL Traps](exercises/01_core_sql_fundamentals/002_three_valued_logic_and_null_traps.sql) | 🟢<br>Beginner | Enterprise Compliance & Multi-Jurisdiction Privacy Consent Engine (GDPR & CCPA). |
+| `003` | [SARGability & Predicate Rewriting](exercises/01_core_sql_fundamentals/003_sargability_and_predicate_rewriting.sql) | 🟡<br>Intermediate | An auditing job queries an invoice table with 20 million rows daily to find all invoices generated during the year 2024. |
+| `004` | [Relational Constraints & Cascade Rules](exercises/01_core_sql_fundamentals/004_relational_constraints_and_cascade_rules.sql) | 🟢<br>Beginner | Multi-Tenant Identity & Access Management (IAM) and RBAC Security Boundary. |
+| `005` | [Safe Type Casting & Numeric Precision](exercises/01_core_sql_fundamentals/005_safe_type_casting_and_numeric_precision.sql) | 🟡<br>Intermediate | Cross-Border Foreign Exchange & Digital Asset Settlement Clearinghouse. |
+| `006` | [String Manipulation & Pattern Extraction](exercises/01_core_sql_fundamentals/006_string_manipulation_and_pattern_extraction.sql) | 🟢<br>Beginner | Security Information & Event Management (SIEM) Ingress Pipeline. |
+| `007` | [Temporal & Timestamp Arithmetic](exercises/01_core_sql_fundamentals/007_temporal_and_timestamp_arithmetic.sql) | 🟡<br>Intermediate | Global Supply Chain & Freight Consignment Tracking Engine. |
+| `008` | [Conditional CASE Logic & NULLIF COALESCE](exercises/01_core_sql_fundamentals/008_conditional_case_logic_and_nullif_coalesce.sql) | 🟢<br>Beginner | Direct-to-Consumer (D2C) E-Commerce Promotional Waterfall & Return Analytics. |
+| `009` | [Filtering Edge Cases NOT EXISTS vs NOT IN](exercises/01_core_sql_fundamentals/009_filtering_edge_cases_not_exists_vs_not_in.sql) | 🟢<br>Beginner | International Wire Transfer Anti-Money Laundering (AML) Compliance Engine. |
+| `010` | [Idempotent DDL & Safe Schema Migrations](exercises/01_core_sql_fundamentals/010_idempotent_ddl_and_safe_schema_migrations.sql) | 🟢<br>Beginner | Zero-Downtime Blue/Green Database Schema Migration Engine. |
+
+<a id="module-02-joins-and-set-operations"></a>
+### 🔗 Module: 02. Joins & Set Operations
+
+| # | Exercise Topic & Code | Level | Practical Scenario |
+| :---: | :--- | :---: | :--- |
+| `011` | [Inner Left Right Full Outer Joins](exercises/02_joins_and_set_operations/011_inner_left_right_full_outer_joins.sql) | 🟡<br>Intermediate | Enterprise CRM & Revenue Attribution Mart (Salesforce & ERP Integration). |
+| `012` | [Semi Joins & Duplicate Multiplier Prevention](exercises/02_joins_and_set_operations/012_semi_joins_and_duplicate_multiplier_prevention.sql) | 🟡<br>Intermediate | E-Commerce Order Management & Fulfillment Reconciliation Mart. |
+| `013` | [Anti Joins For Missing Record Detection](exercises/02_joins_and_set_operations/013_anti_joins_for_missing_record_detection.sql) | 🟡<br>Intermediate | Enterprise Lakehouse Reconciliation & Pipeline Data Loss Sentinel. |
+| `014` | [Full Outer Joins For Reconciliation](exercises/02_joins_and_set_operations/014_full_outer_joins_for_reconciliation.sql) | 🟡<br>Intermediate | Automated Financial General Ledger & Bank Settlement Reconciliation Engine. |
+| `015` | [Cross Joins & Cartesian Grid Generation](exercises/02_joins_and_set_operations/015_cross_joins_and_cartesian_grid_generation.sql) | 🟢<br>Beginner | Retail Machine Learning Demand Forecasting Feature Store. |
+| `016` | [Non Equi Joins & Effective Date Matching](exercises/02_joins_and_set_operations/016_non_equi_joins_and_effective_date_matching.sql) | 🔴<br>Advanced | Multi-Currency Algorithmic Trading & As-Of Rate Conversion Engine. |
+| `017` | [Lateral Joins & Cross Apply Expansions](exercises/02_joins_and_set_operations/017_lateral_joins_and_cross_apply_expansions.sql) | 🔴<br>Advanced | Customer 360 & Top-N Recent Purchase Attribution Engine. |
+| `018` | [UNION vs UNION ALL Internals](exercises/02_joins_and_set_operations/018_union_vs_union_all_internals.sql) | 🟢<br>Beginner | Omnichannel Event Stream Consolidation (Web, Mobile App & IoT Gateways). |
+| `019` | [INTERSECT & EXCEPT Data Audits](exercises/02_joins_and_set_operations/019_intersect_and_except_data_audits.sql) | 🟡<br>Intermediate | Legacy On-Prem Data Warehouse to Modern Cloud Lakehouse Migration. |
+| `020` | [Self Joins For Sequential Event Pairs](exercises/02_joins_and_set_operations/020_self_joins_for_sequential_event_pairs.sql) | 🔴<br>Advanced | User Clickstream Funnel Pathing & Checkout Drop-Off Velocity Analytics. |
+
+<a id="module-03-aggregations-and-grouping"></a>
+### 📊 Module: 03. Aggregations & Grouping
+
+| # | Exercise Topic & Code | Level | Practical Scenario |
+| :---: | :--- | :---: | :--- |
+| `021` | [COUNT Semantics Star One Column](exercises/03_aggregations_and_grouping/021_count_semantics_star_one_column.sql) | 🟢<br>Beginner | Enterprise Customer Master Data Management (MDM) & KYC Profiling Engine. |
+| `022` | [Multi Column Group By & Grain Integrity](exercises/03_aggregations_and_grouping/022_multi_column_group_by_and_grain_integrity.sql) | 🟡<br>Intermediate | Multi-Entity Global General Ledger Financial Consolidation. |
+| `023` | [Where Pre Filtering vs Having Post Aggregation](exercises/03_aggregations_and_grouping/023_where_pre_filtering_vs_having_post_aggregation.sql) | 🟢<br>Beginner | Multi-Cloud FinOps Infrastructure Spend Attribution & Outlier Detection. |
+| `024` | [Conditional Aggregation Filtered Metrics](exercises/03_aggregations_and_grouping/024_conditional_aggregation_filtered_metrics.sql) | 🟡<br>Intermediate | Executive B2B SaaS Recurring Revenue & Retention Metrics Engine. |
+| `025` | [Multidimensional Olap ROLLUP Subtotals](exercises/03_aggregations_and_grouping/025_multidimensional_olap_rollup_subtotals.sql) | 🟡<br>Intermediate | Enterprise Retail Executive Reporting & Hierarchical Rollup Engine. |
+| `026` | [Multidimensional Olap CUBE Combinations](exercises/03_aggregations_and_grouping/026_multidimensional_olap_cube_combinations.sql) | 🟡<br>Intermediate | Multi-Dimensional Inventory Position & Warehouse Logistics Matrix. |
+| `027` | [GROUPING SETS For Targeted Cubes](exercises/03_aggregations_and_grouping/027_grouping_sets_for_targeted_cubes.sql) | 🔴<br>Advanced | High-Performance BI Cube Materialization & Pre-Aggregation Pipeline. |
+| `028` | [Relational Pivoting Rows To Columns](exercises/03_aggregations_and_grouping/028_relational_pivoting_rows_to_columns.sql) | 🟡<br>Intermediate | Quarterly Executive Income Statement & Financial P&L Matrix. |
+| `029` | [Relational Unpivoting Columns To Rows](exercises/03_aggregations_and_grouping/029_relational_unpivoting_columns_to_rows.sql) | 🟡<br>Intermediate | Enterprise Financial Planning & Analysis (FP&A) Ingestion Mart. |
+| `030` | [Statistical Aggregations Median & Percentiles](exercises/03_aggregations_and_grouping/030_statistical_aggregations_median_and_percentiles.sql) | 🔴<br>Advanced | Microservice API Gateway SLA & Latency Percentile Benchmarking. |
+
+<a id="module-04-window-functions-mastery"></a>
+### 🪟 Module: 04. Window Functions Mastery
+
+| # | Exercise Topic & Code | Level | Practical Scenario |
+| :---: | :--- | :---: | :--- |
+| `031` | [Ranking Functions ROW_NUMBER RANK DENSE_RANK](exercises/04_window_functions_mastery/031_ranking_functions_row_number_rank_dense_rank.sql) | 🔴<br>Advanced | Enterprise Performance Bonus & Sales Commission Allocation Engine. |
+| `032` | [Quantile Distribution NTILE Bucketing](exercises/04_window_functions_mastery/032_quantile_distribution_ntile_bucketing.sql) | 🔴<br>Advanced | Automated Consumer Lending Underwriting & Risk Decile Segmentation. |
+| `033` | [Value Offsets LAG LEAD Period Over Period](exercises/04_window_functions_mastery/033_value_offsets_lag_lead_period_over_period.sql) | 🔴<br>Advanced | SaaS Monthly Recurring Revenue (MRR) Period-over-Period Variance Engine. |
+| `034` | [Navigation Functions FIRST_VALUE, LAST_VALUE & NTH_VALUE](exercises/04_window_functions_mastery/034_navigation_functions_first_last_nth_value.sql) | 🔴<br>Advanced | Intensive Care Unit (ICU) Patient Vital Signs & Sepsis Progression Monitoring. |
+| `035` | [Cumulative & Running Totals](exercises/04_window_functions_mastery/035_cumulative_and_running_totals.sql) | 🔴<br>Advanced | Core Banking General Ledger & Real-Time Balance Tracker. |
+| `036` | [Moving Averages & Rolling Windows](exercises/04_window_functions_mastery/036_moving_averages_and_rolling_windows.sql) | 🟡<br>Intermediate | Telemetry anomaly detection requires computing a 3-day trailing moving average of server CPU load to filter out transient micro-spikes. |
+| `037` | [Physical vs Logical Frames ROWS vs RANGE](exercises/04_window_functions_mastery/037_physical_vs_logical_frames_rows_vs_range.sql) | 🔴<br>Advanced | When computing running totals over duplicate order dates, the default frame RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW groups peer rows together, producing duplicate running totals on the same date!. |
+| `038` | [Gaps & Islands Consecutive Streaks](exercises/04_window_functions_mastery/038_gaps_and_islands_consecutive_streaks.sql) | 🔴<br>Advanced | SaaS & Gaming Daily Active User (DAU) Engagement Streak Engine. |
+| `039` | [Gaps & Islands Threshold Sessionization](exercises/04_window_functions_mastery/039_gaps_and_islands_threshold_sessionization.sql) | 🔴<br>Advanced | Web & Mobile Clickstream User Sessionization Engine. |
+| `040` | [Gaps & Islands Overlapping Interval Merging](exercises/04_window_functions_mastery/040_gaps_and_islands_overlapping_interval_merging.sql) | 🔴<br>Advanced | Multi-Node Virtual Machine Active Uptime Consolidation. |
+| `041` | [Running Peak & Maximum Drawdown](exercises/04_window_functions_mastery/041_running_peak_and_maximum_drawdown.sql) | 🔴<br>Advanced | Quantitative Hedge Fund Portfolio Risk & Peak Drawdown Engine. |
+| `042` | [Year Over Year & Month Over Month Growth](exercises/04_window_functions_mastery/042_year_over_year_and_month_over_month_growth.sql) | 🔴<br>Advanced | Enterprise Multi-Year Seasonal Revenue Comparison Engine. |
+| `043` | [Customer Retention Cohort Curves](exercises/04_window_functions_mastery/043_customer_retention_cohort_curves.sql) | 🔴<br>Advanced | SaaS Customer Retention Cohort Triangle Engine. |
+| `044` | [Top-N Per Category Deterministic Ties](exercises/04_window_functions_mastery/044_top_n_per_category_deterministic_ties.sql) | 🔴<br>Advanced | Top-N per Category with Strict Determinism & Tie-Breaking. |
+| `045` | [Windowed Aggregates Without Group By](exercises/04_window_functions_mastery/045_windowed_aggregates_without_group_by.sql) | 🟢<br>Beginner | Executive Compensation Transparency & Departmental Proportion Distribution. |
+
+<a id="module-05-subqueries-and-recursive-ctes"></a>
+### 🌲 Module: 05. Subqueries & Recursive CTEs
+
+| # | Exercise Topic & Code | Level | Practical Scenario |
+| :---: | :--- | :---: | :--- |
+| `046` | [Scalar & Multi Row Subqueries](exercises/05_subqueries_and_recursive_ctes/046_scalar_and_multi_row_subqueries.sql) | 🟢<br>Beginner | Executive Compensation Governance & Equity Benchmarking Mart. |
+| `047` | [Correlated Subqueries & Decorrelation](exercises/05_subqueries_and_recursive_ctes/047_correlated_subqueries_and_decorrelation.sql) | 🟡<br>Intermediate | E-Commerce Customer Lifetime Value & Order Frequency Engine. |
+| `048` | [CTEs vs Temp Tables vs Subqueries](exercises/05_subqueries_and_recursive_ctes/048_ctes_vs_temp_tables_vs_subqueries.sql) | 🟡<br>Intermediate | Multi-Stage ETL Data Pipeline Architecture. |
+| `049` | [Recursive CTE Organizational Hierarchy](exercises/05_subqueries_and_recursive_ctes/049_recursive_cte_organizational_hierarchy.sql) | 🔴<br>Advanced | Enterprise Human Resources Management (HCM) Management Hierarchy Tree. |
+| `050` | [Recursive CTE Bill Of Materials Explosion](exercises/05_subqueries_and_recursive_ctes/050_recursive_cte_bill_of_materials_explosion.sql) | 🔴<br>Advanced | Automotive & High-Tech Manufacturing Bill of Materials (BOM) Parts Explosion. |
+| `051` | [Recursive CTE Graph Shortest Path Cycle Detection](exercises/05_subqueries_and_recursive_ctes/051_recursive_cte_graph_shortest_path_cycle_detection.sql) | 🔴<br>Advanced | Airline Route Network & Shortest Connection Path Finder with Cycle Detection. |
+| `052` | [Recursive CTE Calendar Dimension Spine](exercises/05_subqueries_and_recursive_ctes/052_recursive_cte_calendar_dimension_spine.sql) | 🔴<br>Advanced | Enterprise Fiscal Calendar Dimension Spine Generation. |
+| `053` | [Binary Tree Node Classification](exercises/05_subqueries_and_recursive_ctes/053_binary_tree_node_classification.sql) | 🔴<br>Advanced | Binary Tree Node Structural Classification. |
+| `054` | [Materialized vs Inlined CTEs](exercises/05_subqueries_and_recursive_ctes/054_materialized_vs_inlined_ctes.sql) | 🔴<br>Advanced | CTE Materialization vs Inlining Optimization. |
+| `055` | [Deterministic Duplicate Deletion](exercises/05_subqueries_and_recursive_ctes/055_deterministic_duplicate_deletion.sql) | 🔴<br>Advanced | Production Streaming Deduplication & Table Cleaning. |
+
+<a id="module-06-data-modeling-and-scd"></a>
+### 📐 Module: 06. Data Modeling & SCD
+
+| # | Exercise Topic & Code | Level | Practical Scenario |
+| :---: | :--- | :---: | :--- |
+| `056` | [Kimball Star Schema Fact Dimension Design](exercises/06_data_modeling_and_scd/056_kimball_star_schema_fact_dimension_design.sql) | 🟢<br>Beginner | Enterprise Retail Omnichannel Sales Data Mart. |
+| `057` | [Slowly Changing Dimension Type 1 Overwrite](exercises/06_data_modeling_and_scd/057_slowly_changing_dimension_type_1_overwrite.sql) | 🟡<br>Intermediate | SCD Type 1 (In-Place Overwrite): When correcting spelling errors or non-historical attributes (e.g. |
+| `058` | [Slowly Changing Dimension Type 2 Historical](exercises/06_data_modeling_and_scd/058_slowly_changing_dimension_type_2_historical.sql) | 🔴<br>Advanced | SCD Type 2 (Historical Tracking): When customer address changes, previous address must be preserved for historical sales tax audit compliance. |
+| `059` | [Slowly Changing Dimension Type 3 Previous Value](exercises/06_data_modeling_and_scd/059_slowly_changing_dimension_type_3_previous_value.sql) | 🟡<br>Intermediate | SCD Type 3 (Prior Value Column): Sales territory realignment requires tracking both the Current Sales Territory and the Previous Sales Territory side-by-side without adding new table rows. |
+| `060` | [Slowly Changing Dimension Type 4 Mini Dimensions](exercises/06_data_modeling_and_scd/060_slowly_changing_dimension_type_4_mini_dimensions.sql) | 🔴<br>Advanced | SCD Type 4 (Mini-Dimensions): High-frequency changing customer attributes (credit score band, annual income tier, age group) would cause an SCD Type 2 table to explode to billions of rows. |
+| `061` | [Slowly Changing Dimension Type 6 Hybrid Implementation](exercises/06_data_modeling_and_scd/061_slowly_changing_dimension_type_6_hybrid_implementation.sql) | 🔴<br>Advanced | SCD Type 6 Hybrid Implementation (Type 1 + Type 2 + Type 3). |
+| `062` | [Data Vault 2 0 Hubs Links Satellites](exercises/06_data_modeling_and_scd/062_data_vault_2_0_hubs_links_satellites.sql) | 🔴<br>Advanced | Data Vault 2.0 Core Banking Enterprise Raw Vault. |
+| `063` | [Bridge Tables For Many To Many Relationships](exercises/06_data_modeling_and_scd/063_bridge_tables_for_many_to_many_relationships.sql) | 🔴<br>Advanced | Healthcare & Clinical Outcomes Many-to-Many Bridge Table Architecture. |
+| `064` | [Accumulating Snapshot Fact Tables](exercises/06_data_modeling_and_scd/064_accumulating_snapshot_fact_tables.sql) | 🔴<br>Advanced | E-Commerce Order Fulfillment Accumulating Snapshot Fact Table. |
+| `065` | [Deterministic Surrogate Key Generation](exercises/06_data_modeling_and_scd/065_deterministic_surrogate_key_generation.sql) | 🔴<br>Advanced | Distributed Lakehouse Hash-Based Surrogate Key Generation. |
+
+<a id="module-07-indexing-and-query-optimization"></a>
+### ⚡ Module: 07. Indexing & Query Optimization
+
+| # | Exercise Topic & Code | Level | Practical Scenario |
+| :---: | :--- | :---: | :--- |
+| `066` | [B-Tree Index Seek vs Index Scan](exercises/07_indexing_and_query_optimization/066_btree_index_seek_vs_index_scan.sql) | 🔴<br>Advanced | High-Throughput Order Ingestion Engine & Execution Plan Optimization. |
+| `067` | [Composite Index Column Ordering Left Prefix](exercises/07_indexing_and_query_optimization/067_composite_index_column_ordering_left_prefix.sql) | 🔴<br>Advanced | Composite Index Design & The Left-Prefix Rule. |
+| `068` | [Covering Indexes & Index Only Scans](exercises/07_indexing_and_query_optimization/068_covering_indexes_and_index_only_scans.sql) | 🔴<br>Advanced | Microservice High-Throughput Read Path & Index-Only Scans. |
+| `069` | [Filtered & Partial Indexes](exercises/07_indexing_and_query_optimization/069_filtered_and_partial_indexes.sql) | 🔴<br>Advanced | High-Scale Asynchronous Task Dispatch Queue. |
+| `070` | [Cardinality Estimation & Statistics](exercises/07_indexing_and_query_optimization/070_cardinality_estimation_and_statistics.sql) | 🔴<br>Advanced | Cost-Based Optimizer (CBO) Cardinality Estimation & Statistics Drift. |
+| `071` | [Clustered vs Non Clustered Index Layout](exercises/07_indexing_and_query_optimization/071_clustered_vs_non_clustered_index_layout.sql) | 🔴<br>Advanced | Physical Storage Layout: Clustered vs Non-Clustered Indexes. |
+| `072` | [Join Algorithms Nested Loop Hash Merge](exercises/07_indexing_and_query_optimization/072_join_algorithms_nested_loop_hash_merge.sql) | 🔴<br>Advanced | Relational Join Algorithms Deep Dive: 1. |
+| `073` | [Preventing Accidental Cartesian Products](exercises/07_indexing_and_query_optimization/073_preventing_accidental_cartesian_products.sql) | 🟢<br>Beginner | Accidental Cartesian Product Prevention & TempDB Protection. |
+| `074` | [Sargable Date Range Predicates](exercises/07_indexing_and_query_optimization/074_sargable_date_range_predicates.sql) | 🔴<br>Advanced | High-Volume Log Auditing SARGable Date Range Predicates. |
+| `075` | [Index Bloat & Fragmentation Maintenance](exercises/07_indexing_and_query_optimization/075_index_bloat_and_fragmentation_maintenance.sql) | 🔴<br>Advanced | B-Tree Index Page Fragmentation & Bloat Maintenance. |
+
+<a id="module-08-transactions-concurrency-and-locks"></a>
+### 🔒 Module: 08. Transactions, Concurrency & Locks
+
+| # | Exercise Topic & Code | Level | Practical Scenario |
+| :---: | :--- | :---: | :--- |
+| `076` | [Acid Atomicity & Savepoints](exercises/08_transactions_concurrency_and_locks/076_acid_atomicity_and_savepoints.sql) | 🟡<br>Intermediate | Distributed E-Commerce Checkout Pipeline & Transaction Boundaries. |
+| `077` | [Dirty Read Anomaly Read Uncommitted](exercises/08_transactions_concurrency_and_locks/077_dirty_read_anomaly_read_uncommitted.sql) | 🔴<br>Advanced | Core Banking Settlement Ledger & ANSI SQL Transaction Isolation Levels. |
+| `078` | [Non Repeatable Read Anomaly](exercises/08_transactions_concurrency_and_locks/078_non_repeatable_read_anomaly.sql) | 🔴<br>Advanced | Multi-Tier Inventory Rebalancing & Warehouse Allocation Service. |
+| `079` | [Phantom Read Anomaly Range Locks](exercises/08_transactions_concurrency_and_locks/079_phantom_read_anomaly_range_locks.sql) | 🔴<br>Advanced | Commercial Underwriting Exposure Management & Range Lock Semantics. |
+| `080` | [Write Skew Anomaly Under Snapshot Isolation](exercises/08_transactions_concurrency_and_locks/080_write_skew_anomaly_under_snapshot_isolation.sql) | 🟣<br>Architect | Hospital Emergency Room On-Call Roster & Snapshot Isolation Invariants. |
+| `081` | [MVCC Internals & Version Visibility](exercises/08_transactions_concurrency_and_locks/081_mvcc_internals_and_version_visibility.sql) | 🔴<br>Advanced | PostgreSQL & Distributed Storage Engine MVCC Internals. |
+| `082` | [Optimistic Concurrency Control Version Checks](exercises/08_transactions_concurrency_and_locks/082_optimistic_concurrency_control_version_checks.sql) | 🟡<br>Intermediate | High-Concurrency Flash-Sale Inventory Engine & Compare-And-Swap (CAS). |
+| `083` | [Deadlock Reproduction & Inverse Locking](exercises/08_transactions_concurrency_and_locks/083_deadlock_reproduction_and_inverse_locking.sql) | 🔴<br>Advanced | Core Banking Multi-Account Wire Settlement & Distributed Lock Graphs. |
+| `084` | [Pessimistic Locking FOR UPDATE](exercises/08_transactions_concurrency_and_locks/084_pessimistic_locking_for_update.sql) | 🔴<br>Advanced | High-Throughput Distributed Task Processing Queue & Pessimistic Locks. |
+| `085` | [Double Entry Ledger Atomic Transfer](exercises/08_transactions_concurrency_and_locks/085_double_entry_ledger_atomic_transfer.sql) | 🟣<br>Architect | Core Banking General Ledger (GL) & Financial Invariant Enforcement. |
+
+<a id="module-09-mpp-and-cloud-warehouses"></a>
+### ☁️ Module: 09. MPP & Cloud Warehouses
+
+| # | Exercise Topic & Code | Level | Practical Scenario |
+| :---: | :--- | :---: | :--- |
+| `086` | [Snowflake Micropartition Pruning](exercises/09_mpp_and_cloud_warehouses/086_snowflake_micropartition_pruning.sql) | 🔴<br>Advanced | Petabyte-Scale Cloud Data Warehouse & Micro-Partition Metadata Pruning. |
+| `087` | [MPP Table Distribution Hash Replicated Roundrobin](exercises/09_mpp_and_cloud_warehouses/087_mpp_table_distribution_hash_replicated_roundrobin.sql) | 🟣<br>Architect | Massively Parallel Processing (MPP) Architecture & Storage Topologies. |
+| `088` | [Liquid Clustering vs Hive Partitioning](exercises/09_mpp_and_cloud_warehouses/088_liquid_clustering_vs_hive_partitioning.sql) | 🔴<br>Advanced | Modern Delta Lake Liquid Clustering vs Legacy Hive Physical Directory Layouts. |
+| `089` | [Detecting Distribution Skew In Parallel Shards](exercises/09_mpp_and_cloud_warehouses/089_detecting_distribution_skew_in_parallel_shards.sql) | 🔴<br>Advanced | Distributed Data Shard Telemetry & Straggler Task Diagnostics. |
+| `090` | [Distributed Key Salting For Skewed Joins](exercises/09_mpp_and_cloud_warehouses/090_distributed_key_salting_for_skewed_joins.sql) | 🟣<br>Architect | Distributed Join Skew Mitigation & Two-Phase Key Salting Pattern. |
+| `091` | [Broadcast vs Shuffle Join Thresholds](exercises/09_mpp_and_cloud_warehouses/091_broadcast_vs_shuffle_join_thresholds.sql) | 🟡<br>Intermediate | Distributed Query Planner & Physical Join Strategy Selection. |
+| `092` | [Partition Pruning & Dynamic Partition Elimination](exercises/09_mpp_and_cloud_warehouses/092_partition_pruning_and_dynamic_partition_elimination.sql) | 🔴<br>Advanced | Dynamic Partition Pruning (DPP) & Runtime Partition Elimination in MPP Engines. |
+| `093` | [Delta MERGE INTO Multi Condition Matching](exercises/09_mpp_and_cloud_warehouses/093_delta_merge_into_multi_condition_matching.sql) | 🔴<br>Advanced | Modern Lakehouse ACID Ingestion & ANSI SQL MERGE INTO Mechanics. |
+| `094` | [Query Memory Spill Mitigation](exercises/09_mpp_and_cloud_warehouses/094_query_memory_spill_mitigation.sql) | 🟡<br>Intermediate | Apache Spark Project Tungsten & Cloud DW Memory Management. |
+| `095` | [Serverless Sql Querying External Files](exercises/09_mpp_and_cloud_warehouses/095_serverless_sql_querying_external_files.sql) | 🟡<br>Intermediate | Zero-Copy External Lake Querying & Serverless SQL Query Engines. |
+
+<a id="module-10-production-incidents-and-triage"></a>
+### 🚨 Module: 10. Production Incidents & Triage
+
+| # | Exercise Topic & Code | Level | Practical Scenario |
+| :---: | :--- | :---: | :--- |
+| `096` | [Incident: The 99 Percent Straggler Task Disaster](exercises/10_production_incidents_and_triage/096_incident_the_99_percent_straggler_task_disaster.sql) | 🟣<br>Architect | PRODUCTION INCIDENT POSTMORTEM: The 99% Complete Straggler Task Disaster. |
+| `097` | [Incident: Payment Gateway Deadlock Storm](exercises/10_production_incidents_and_triage/097_incident_payment_gateway_deadlock_storm.sql) | 🔴<br>Advanced | PRODUCTION INCIDENT POSTMORTEM: Deadlock Storm in Payment Clearing. |
+| `098` | [Incident: Out Of Order CDC Timeline Corruption](exercises/10_production_incidents_and_triage/098_incident_out_of_order_cdc_timeline_corruption.sql) | 🟣<br>Architect | PRODUCTION INCIDENT POSTMORTEM: Out-of-Order CDC Timeline Corruption. |
+| `099` | [Incident: Accidental Cartesian TempDB Exhaustion](exercises/10_production_incidents_and_triage/099_incident_accidental_cartesian_tempdb_exhaustion.sql) | 🔴<br>Advanced | PRODUCTION INCIDENT POSTMORTEM: Accidental Cartesian TempDB Storage Exhaustion. |
+| `100` | [Incident: Silent Schema Drift BI Refresh Failure](exercises/10_production_incidents_and_triage/100_incident_silent_schema_drift_bi_refresh_failure.sql) | 🟡<br>Intermediate | PRODUCTION INCIDENT POSTMORTEM: Silent Schema Drift Breaking Executive BI Dashboards. |
+| `101` | [Incident: Parameter Sniffing Query Timeout](exercises/10_production_incidents_and_triage/101_incident_parameter_sniffing_query_timeout.sql) | 🔴<br>Advanced | PRODUCTION INCIDENT POSTMORTEM: Parameter Sniffing Sudden Query Timeouts. |
+| `102` | [Incident: Phantom Read Financial Ledger Double Spend](exercises/10_production_incidents_and_triage/102_incident_phantom_read_financial_ledger_double_spend.sql) | 🔴<br>Advanced | PRODUCTION INCIDENT POSTMORTEM: Financial Ledger Double-Spend Breach Under Read Committed. |
+| `103` | [Incident: Unindexed Foreign Key Table Lock Cascade](exercises/10_production_incidents_and_triage/103_incident_unindexed_foreign_key_table_lock_cascade.sql) | 🔴<br>Advanced | PRODUCTION INCIDENT POSTMORTEM: Unindexed Foreign Key Table-Lock Cascade. |
+| `104` | [Incident: Delta Lake Concurrent Append Conflict](exercises/10_production_incidents_and_triage/104_incident_delta_lake_concurrent_append_conflict.sql) | 🔴<br>Advanced | PRODUCTION INCIDENT POSTMORTEM: Delta Lake Concurrent Append Write Conflict. |
+| `105` | [Master Enterprise Data Quality Reconciliation Suite](exercises/10_production_incidents_and_triage/105_master_enterprise_data_quality_reconciliation_suite.sql) | 🟣<br>Architect | Enterprise Data Quality & Automated CI/CD Production Gatekeeper. |
+
+---
+
+## 🏛️ Architectural Deep Dives
+
+In-depth technical architecture whitepapers:
+
+- **[01. Logical vs. Physical Query Execution](architectures/01_logical_vs_physical_query_execution.md)**: Relational algebra, AST parsing, predicate pushdown, and Cost-Based Optimizer physical join selection.
+- **[02. MPP Distributed SQL & Data Movement](architectures/02_mpp_distributed_sql_and_data_movement.md)**: Shared-nothing architecture, Colocated vs Broadcast vs Shuffle joins, and network interconnect bottlenecks.
+- **[03. Storage Engines — Row-Store, Columnar & Lakehouse Formats](architectures/03_storage_engines_row_columnar_and_lakehouse.md)**: 8KB B-Tree pages vs Parquet columnar row groups, dictionary encoding, Delta Lake ACID logs, and Liquid Clustering.
+- **[04. Concurrency Control, MVCC & Distributed Consensus](architectures/04_concurrency_control_mvcc_and_distributed_consensus.md)**: The 5 concurrency anomalies, PostgreSQL tuple visibility (`xmin`/`xmax`), Two-Phase Locking, and Google Spanner TrueTime / HLC consensus.
+- **[05. NoSQL Systems, Storage Engines & Trade-Offs](architectures/05_nosql_systems_storage_engines_and_tradeoffs.md)**: CAP & PACELC theorems, B+Tree vs LSM storage amplification (WAF/RAF/SAF), Document, Key-Value, Wide-Column, Graph, Vector, and Time-Series paradigms.
+- **[06. Database Tooling — Migrations, Profiling, Pooling & Distributed Engines](architectures/06_database_tooling_migrations_profiling_and_pooling.md)**: Zero-downtime schema evolution (Flyway, Liquibase, pgroll, gh-ost), query profiling (`pg_stat_statements`, Query Store), connection pooling (PgBouncer, HikariCP), and distributed SQL engines (Citus, Vitess, DuckDB, ClickHouse).
+
+---
+
+## 🚨 Battle-Tested Production Runbooks
+
+The repository includes enterprise-grade operational runbooks for production incident response:
+
+| Runbook | Title | Critical Failure Mode Addressed |
+| :--- | :--- | :--- |
+| **[Runbook 01](runbooks/01_deadlock_and_lock_contention_triage.md)** | **Deadlock & Lock Contention Emergency Triage** | Application 504 pool exhaustion, Error 1205, locking tree identification, canonical key ordering. |
+| **[Runbook 02](runbooks/02_query_performance_and_execution_plan_tuning.md)** | **Query Performance & Execution Plan Tuning** | Non-SARGable functions, index scan vs seek, cardinality estimation drift, parameter sniffing. |
+| **[Runbook 03](runbooks/03_mpp_skew_spill_and_broadcast_failures.md)** | **MPP Skew, Memory Spill & Broadcast Failures** | 99% straggler tasks, Tungsten disk spill, Snowflake remote storage spill, two-phase key salting. |
+| **[Runbook 04](runbooks/04_scd_and_cdc_reconciliation_disaster_recovery.md)** | **SCD Type 2 & CDC Reconciliation Disaster Recovery** | Out-of-order Kafka CDC events, duplicate active records (`is_current = true`), self-healing queries. |
+| **[Runbook 05](runbooks/05_cross_engine_rosetta_stone.md)** | **Cross-Engine SQL Rosetta Stone** | Syntax comparison across PostgreSQL, DuckDB, Spark SQL, Snowflake, BigQuery, and T-SQL. |
+| **[Runbook 06](runbooks/06_finops_and_warehouse_cost_optimization.md)** | **FinOps & Cloud Warehouse Cost Optimization** | Snowflake auto-suspend, BigQuery scan reduction (6.25 USD per TB), Databricks serverless rightsizing. |
+| **[Runbook 07](runbooks/07_nosql_triage_and_sharding_runbooks.md)** | **NoSQL Triage & Sharding Incidents** | Redis OOM/blocking commands, Cassandra tombstone storms, MongoDB 16MB document cap, DynamoDB hot partition throttling. |
+| **[Runbook 08](runbooks/08_production_database_preflight_checklist_and_gotchas.md)** | **Pre-Flight Checklist & Top 25 Production Database Gotchas** | Pre-flight deployment audit, PITR recovery drills, connection pool sizing, and forensic postmortems for 25 catastrophic traps. |
+
+---
+
+## 🎓 4-Tier Interview Preparation Matrix
+
+Prepare for technical coding screens from Junior Analyst to Principal Lakehouse Architect:
+
+1. **[Tier 1: Junior Analyst & Data Engineer (Foundations)](interview/01_junior_analyst_and_data_engineer.md)**: Execution order, `COUNT` semantics, `WHERE` vs `HAVING`, 3VL logic, `UNION` vs `UNION ALL`.
+2. **[Tier 2: Mid-Level Data Engineer (Analytical Mastery)](interview/02_mid_level_data_engineer.md)**: Ranking functions, Gaps & Islands streaks, duplicate deletion, binary tree node classification, query SARGability.
+3. **[Tier 3: Senior Distributed Data Engineer (Distributed Systems & Performance)](interview/03_senior_distributed_data_engineer.md)**: The 5 S's of Spark SQL tuning, SCD Types 1-6, Snowflake micro-partitions, two-phase key salting, deadlock prevention.
+4. **[Tier 4: Staff & Lakehouse Architect (System Design & Governance)](interview/04_staff_and_lakehouse_architect.md)**: Kimball vs Data Vault 2.0, Liquid Clustering internals, Delta Lake transaction log, Power BI Direct Lake mode.
+5. **[50-Card Rapid-Fire Technical Flashcard Deck](interview/05_flashcards_deck_50.md)**: Rapid-fire revision covering core SQL, analytical windows, indexes, and distributed engines.
+
+---
+
 ## 🧠 Core Curriculum Concepts & Topics (170 Topics Covered)
 
 > 💡 **Enterprise Knowledge Base Integration**: This repository implements **170 production topics** from the [Modern Data Engineering Systems Encyclopedia (921 Topics)](https://moderndataengineer.uk/concepts), grouped by **Relevant Functional Sections** and then by **Difficulty Level**. All sections are **collapsible and collapsed by default** for effortless navigation. Browse the full curriculum in [`topics/README.md`](topics/README.md).
@@ -507,791 +1292,6 @@
 </details>
 
 
-
-## 🎯 Overview & Mission
-
-Modern data engineering and analytics engineering demand far more than basic `SELECT * FROM table WHERE condition`.
-
-Enterprise workloads operate on high-concurrency transactional databases (PostgreSQL, Aurora, SQL Server) and distributed lakehouse MPP engines (Snowflake, Databricks Spark SQL, Google BigQuery) where a single non-SARGable predicate, missing index, or skewed join key can exhaust cluster memory, trigger multi-hour straggler tasks, or cause 10,000 USD cloud billing surprises.
-
-This repository provides **105 end-to-end, runnable, modular SQL coding use cases** covering:
-- **Core & Advanced Relational Fundamentals:** Logical execution order, Three-Valued Logic (3VL), SARGability, cascading integrity, and safe numeric precision.
-- **Complex Joins & Aggregations:** Semi-joins (`EXISTS`), anti-joins, full outer reconciliations, non-equi joins, multidimensional `ROLLUP`/`CUBE`, and dynamic pivoting.
-- **Analytical Window Functions Mastery:** Ranking with ties, lead/lag offsets, sliding frames (`ROWS` vs. `RANGE`), Gaps and Islands (consecutive streaks & sessionization), and portfolio drawdowns.
-- **Hierarchical Trees & Graph Traversal:** Recursive Common Table Expressions (`WITH RECURSIVE`) for organizational charts, Bill of Materials (BOM) part explosions, flight path cycle detection, and calendar spines.
-- **Data Modeling & Lakehouse Formats:** Kimball star schemas, Slowly Changing Dimensions (SCD Types 1, 2, 3, 4, 6), Data Vault 2.0 (Hubs/Links/Satellites), and deterministic hash surrogate keys.
-- **Storage Engines & Physical Optimization:** B-Tree index traversal, composite index left-prefix rule, covering indexes, partial/filtered indexes, join algorithms, and cardinality estimation tuning.
-- **Transactions, MVCC & Concurrency Control:** ACID savepoints, isolation levels (Read Committed, Repeatable Read, Serializable), write skew anomalies, MVCC tuple lifecycles, and deadlock-free canonical resource ordering.
-- **MPP Distributed Engines & Big Data SQL:** Snowflake micro-partition pruning, table distributions (Hash/Replicated), Liquid Clustering (`CLUSTER BY`), two-phase key salting for join skew, and multi-condition `MERGE INTO`.
-- **Production Incidents & Disaster Postmortems:** 10 real-world production postmortems with forensic analysis and surgical recovery queries (the 99% straggler task, deadlock storms, out-of-order CDC corruption, and automated data quality test suites).
-
----
-
-## 🏛️ Logical Query Architecture
-
-Understanding the discrepancy between **syntax order** and **logical execution order** is the foundation of SQL mastery:
-
-```mermaid
-flowchart TD
-    Step1["1. FROM & JOINs (Table access, Cartesian products & ON predicates)"] --> Step2["2. WHERE (Row-level predicate filtering before aggregation)"]
-    Step2 --> Step3["3. GROUP BY (Hash table bucketing across dimensions)"]
-    Step3 --> Step4["4. HAVING (Filtering aggregated summary buckets)"]
-    Step4 --> Step5["5. WINDOW FUNCTIONS (ROW_NUMBER, RANK, LAG, LEAD, SUM OVER)"]
-    Step5 --> Step6["6. SELECT (Projection, Scalar expressions, Aliasing)"]
-    Step6 --> Step7["7. DISTINCT (Duplicate tuple elimination across projected columns)"]
-    Step7 --> Step8["8. SET OPERATIONS (UNION, INTERSECT, EXCEPT)"]
-    Step8 --> Step9["9. ORDER BY (Sorting output rows using projected columns/aliases)"]
-    Step9 --> Step10["10. LIMIT / OFFSET / TOP (Result set truncation & pagination)"]
-```
-
----
-
-## ⚖️ Database Systems: Relational SQL vs. NoSQL Architecture Taxonomy
-
-Modern enterprise data architectures bridge the gap between strongly consistent relational systems (ACID) and horizontally scalable distributed NoSQL systems (BASE). Choosing the correct storage engine and data model requires balancing the **CAP theorem**, the **PACELC theorem**, and the physical mechanics of disk I/O.
-
-### 1. The CAP & PACELC Theoretical Foundations
-
-```mermaid
-flowchart TD
-    subgraph PACELC["The PACELC Distributed Consensus Taxonomy"]
-        P{"Network Partition (P)?"}
-        P -->|Yes| P_Trade["Trade-Off: Availability (A) vs Consistency (C)"]
-        P_Trade --> PA["AP: Cassandra, DynamoDB, Couchbase"]
-        P_Trade --> PC["CP: MongoDB, HBase, Bigtable, Spanner"]
-
-        P -->|No| E_Trade["Normal Operation (Else - E): Latency (L) vs Consistency (C)"]
-        E_Trade --> EL["PA/EL: DynamoDB, Cassandra (Default: Sub-10ms Reads)"]
-        E_Trade --> EC["PC/EC: Spanner, CockroachDB, Bigtable (Strong Consistency)"]
-    end
-```
-
-- **The CAP Theorem (Brewer, 2000)**: Under a network partition ($P$), a distributed system must choose between **Consistency ($C$)** (every read receives the latest write or an error) or **Availability ($A$)** (every non-failing node returns a response, without guaranteeing the latest write).
-- **The PACELC Theorem (Abadi, 2012)**: Extends CAP to normal (unpartitioned) operation:
-  $$\text{If Partition (P)} \implies \text{Trade Availability (A) vs Consistency (C)}; \quad \text{Else (E)} \implies \text{Trade Latency (L) vs Consistency (C)}$$
-
-| Database Engine | Partition Mode | Normal Operation | PACELC Classification | Primary Storage & Concurrency Architecture |
-| :--- | :---: | :---: | :---: | :--- |
-| **PostgreSQL** | Single Node / CP | Consistency | **PC/EC** | Slotted Pages B+Tree, MVCC (`xmin`/`xmax`), WAL |
-| **MySQL (InnoDB)** | Single Node / CP | Consistency | **PC/EC** | Clustered Primary B+Tree, Undo Logs, Redo Logs |
-| **MongoDB** | Consistency | Consistency | **PC/EC** | WiredTiger B-Tree & MVCC, Raft-like Replica Set Oplog |
-| **Apache Cassandra** | Availability | Latency | **PA/EL** | Masterless Dynamo Ring, LSM-Tree, Tunable Quorum ($R + W > N$) |
-| **AWS DynamoDB** | Availability | Latency | **PA/EL** | Paxos Leader per Partition, SSD B-Tree/LSM, Token Bucket RCU/WCU |
-| **Redis (Cluster)** | Availability | Latency | **PA/EL** | In-Memory Single-Thread Event Loop, 16,384 Hash Slots |
-| **Neo4j** | Consistency | Consistency | **PC/EC** | Native Graph Engine, Index-Free Adjacency (IFA), Raft Consensus |
-| **Google Spanner** | Consistency | Consistency | **PC/EC** | TrueTime GPS/Atomic Clocks, Multi-Paxos per Split, 2PC |
-
----
-
-### 2. Storage Engine Mechanics: B+Tree vs. Log-Structured Merge-Tree (LSM)
-
-The foundational trade-off in database storage engines is **In-Place Updates (Random I/O)** versus **Append-Only Logs (Sequential I/O)**.
-
-```mermaid
-flowchart LR
-    subgraph BTree["B+Tree Storage Engine (Postgres, InnoDB, WiredTiger)"]
-        direction TB
-        Root["Root Node (Page 0)"] --> Internal["Internal Routing Pages"]
-        Internal --> Leaf1["Leaf Page A (8KB/16KB)"]
-        Internal --> Leaf2["Leaf Page B (8KB/16KB)"]
-        Leaf1 <-->|Doubly Linked List| Leaf2
-    end
-
-    subgraph LSM["LSM-Tree Storage Engine (RocksDB, Cassandra, Bigtable)"]
-        direction TB
-        Write["Incoming Writes"] --> WAL["Write-Ahead Log (Disk)"]
-        Write --> MemTable["MemTable (In-Memory SkipList)"]
-        MemTable -->|Flush when full| L0["Level 0 SSTables (Disk, Unsorted)"]
-        L0 -->|Compaction| L1["Level 1 SSTables (Key-Partitioned)"]
-        L1 -->|Compaction| L2["Level 2 SSTables (10x Size)"]
-    end
-```
-
-#### Storage Amplification Metrics:
-1. **Write Amplification Factor (WAF)**:
-   $$\text{WAF} = \frac{\text{Bytes Written to Physical Storage}}{\text{Bytes Written by Application}}$$
-   - *B+Tree*: High WAF ($10\times - 100\times$). Mutating a single 32-byte column requires dirtying and flushing an entire 8KB page to disk, plus WAL overhead.
-   - *LSM-Tree*: Moderate initial WAF (sequential append to WAL + Memtable), but increases ($10\times - 30\times$) during multi-level background compaction merges.
-2. **Read Amplification Factor (RAF)**:
-   $$\text{RAF} = \frac{\text{Bytes Read from Physical Storage}}{\text{Bytes Requested by Application}}$$
-   - *B+Tree*: Low RAF ($\mathcal{O}(\log_B N)$). Point lookups traverse $3-4$ indexed levels directly to the exact target leaf page.
-   - *LSM-Tree*: Higher RAF. Must check Memtable, followed by Bloom Filters, and potentially multiple SSTable levels on disk until the key or deletion tombstone is discovered.
-3. **Space Amplification Factor (SAF)**:
-   $$\text{SAF} = \frac{\text{Disk Space Occupied by Database}}{\text{Uncompressed Logical Data Size}}$$
-   - *B+Tree*: Suffers from internal page fragmentation and 50/50 page split slack ($30\% - 50\%$ overhead).
-   - *LSM-Tree*: Highly compact due to immutability and prefix block compression, but temporarily spikes during major compactions ($2\times$ temporary footprint).
-
----
-
-### 3. The 7 NoSQL Categories & Workload Selection Matrix
-
-| Category | Representative Engines | Primary Data Structure | Ideal Workload & Sweet Spot | Catastrophic Anti-Pattern / Gotcha |
-| :--- | :--- | :--- | :--- | :--- |
-| **Document Stores** | MongoDB, Couchbase | BSON / JSON Hierarchical Documents | CMS, User Profiles, Product Catalogs with polymorphous attributes. | **Unbounded Array Growth**: Embedding arrays inside documents that breach the 16MB BSON limit. |
-| **Key-Value / In-Memory** | Redis, RocksDB, DynamoDB | In-Memory Hash, SkipList, LSM-Tree | Caching, Rate Limiters, Session State, Real-time Leaderboards. | **Single-Thread Blocking**: Executing `KEYS *` or large `HGETALL` freezing the Redis event loop. |
-| **Wide-Column / Partitioned** | Apache Cassandra, ScyllaDB, Bigtable | Sparse Multidimensional Sorted Map | High-throughput IoT telemetry, Event Logging, Messaging feeds. | **Tombstone Read Storms**: Scanning $>100,000$ deleted rows triggering `ReadFailureException`. |
-| **Graph Databases** | Neo4j, AWS Neptune, Memgraph | Double-Linked Nodes & Edges (Index-Free Adjacency) | Fraud detection networks, Social Graphs, Identity Resolution, Knowledge Graphs. | **Supernodes**: Traversing nodes with millions of incident edges causing pointer-chasing CPU spikes. |
-| **Vector Databases** | pgvector, Milvus, Pinecone, Qdrant | High-Dimensional Proximity Graphs (HNSW, IVFFlat) | Retrieval-Augmented Generation (RAG), Semantic Search, Facial Recognition. | **Memory Exhaustion (OOM)**: Building HNSW graphs on tens of millions of vectors without dedicated RAM. |
-| **Time-Series Databases** | TimescaleDB, InfluxDB | Hypertables with Automated Time/Space Chunking | Server APM Telemetry, Financial Tick Feeds, Industrial Sensor Streams. | **Unbounded Chunks**: Retaining uncompressed historical chunks in active memory without columnar policies. |
-| **Search Engines** | Elasticsearch, OpenSearch | Inverted Index & Lucene Segment Trees | Full-text search, Log aggregation (ELK), Fuzzy text matching, Faceted navigation. | **Mapping Explosions**: Ingesting dynamic JSON with thousands of arbitrary keys causing JVM Heap OOM. |
-
-> 📖 *For comprehensive architecture diagrams, PACELC mathematical proofs, and engine internals, consult [Architecture Deep Dive 05: NoSQL Systems, Storage Engines & Trade-Offs](architectures/05_nosql_systems_storage_engines_and_tradeoffs.md).*
-
----
-
-## ⚙️ Core Database Technologies & Engine Internals
-
-Understanding the physical internals of dominant database engines separates novice query authors from Staff Database Architects:
-
-### 1. Relational Transactional Engines (OLTP)
-- **PostgreSQL**:
-  - *MVCC Tuple Lifecycle*: Rows are immutable tuples. Updates execute as an `INSERT` of a new tuple followed by an expiration of the old tuple. Each tuple header contains `xmin` (creating transaction ID), `xmax` (expiring transaction ID), and hint bits.
-  - *Dead Tuple Bloat & VACUUM*: Dead tuples remain on disk until background `autovacuum` sweeps the page and marks space reusable.
-  - *The 32-Bit TXID Wraparound*: Postgres uses 32-bit transaction IDs. If `VACUUM FREEZE` does not advance `relfrozenxid` within 2 billion transactions, the database forcibly enters read-only shutdown.
-  - *TOAST (The Oversized-Attribute Storage Technique)*: Values exceeding 2KB are compressed and split into 2KB chunks stored in a separate hidden TOAST table.
-- **MySQL / InnoDB**:
-  - *Clustered Primary B+Tree*: Tables are physically organized by their Primary Key. Secondary indexes do not point directly to disk offsets; they store the Primary Key value, requiring a secondary lookup (bookmark lookup) to fetch row columns.
-  - *Undo Logs & Purge Threads*: Unlike Postgres, InnoDB performs in-place row updates and writes previous versions to an **Undo Log** in the rollback segment. Purge threads asynchronously deallocate undo log pages once older read views complete.
-  - *Gap Locking & Next-Key Locking*: Under Repeatable Read, InnoDB locks not just existing rows, but the "gaps" between index keys to prevent concurrent insertions (eliminating phantom reads).
-- **Microsoft SQL Server**:
-  - *Physical Organization*: Clustered Index (B-Tree data leaf pages) or Heap (unordered pages linked by PFS/IAM).
-  - *Tempdb Contention*: High-frequency temporary table creation triggers severe latch contention on allocation bitmap pages: **PFS** (Page Free Space), **GAM** (Global Allocation Map), and **SGAM** (Shared Global Allocation Map).
-  - *Query Store*: An automated flight recorder built into the database engine capturing query runtime stats, wait categories, and execution plan regressions with 1-click plan forcing (`sp_query_store_force_plan`).
-  - *Lock Escalation*: Automatically converts $>5,000$ row-level locks on a table into an exclusive Table Lock (`X`), causing severe application blocking.
-- **Oracle Database**:
-  - *Redo & Undo Architecture*: Uses dedicated Redo Log groups for durability and rollback segments in Undo Tablespaces for read consistency governed by System Commit Numbers (SCN).
-  - *AWR & ASH Diagnostics*: Automatic Workload Repository (AWR) and Active Session History (ASH) sample active sessions every second for deep forensic wait-event analysis (`db file sequential read`, `enq: TX - row lock contention`).
-- **SQLite**:
-  - *In-Process Serverless SQL*: Compiles directly into the host application process with zero network IPC overhead.
-  - *WAL Mode*: Write-Ahead Logging allows concurrent readers to operate without blocking a single writer thread (`PRAGMA journal_mode=WAL;`).
-
-### 2. Columnar & Massively Parallel Analytical Engines (OLAP)
-- **DuckDB**:
-  - *Vectorized In-Process Execution*: Executes vectorized morsels (batches of 2,048 tuples) using CPU SIMD registers, executing analytical queries orders of magnitude faster than row engines.
-  - *Zero-Copy Interop*: Integrates directly with Apache Arrow, Polars, and Pandas memory buffers without serialization.
-  - *Direct Parquet Scanning*: Uses HTTP byte-range requests to read columnar projection slices directly from cloud object stores.
-- **ClickHouse**:
-  - *MergeTree Engine Family*: Append-only storage organized into sorted, immutable parts merged asynchronously.
-  - *Sparse Primary Index*: Indexes only 1 row every 8,192 rows (1 mark), enabling index tables for billions of records to fit entirely inside RAM.
-- **Snowflake**:
-  - *Micro-Partitioning*: Automatically divides tables into 50MB–500MB compressed columnar micro-partitions. Central cloud services prune unneeded partitions using min/max metadata without touching compute nodes.
-- **Google BigQuery**:
-  - *Serverless Capacities & Slots*: Decouples execution into dynamic worker slots running on the Borg cluster querying Capacitor columnar format stored on Colossus distributed file system.
-- **Databricks SQL**:
-  - *Photon Vectorized Engine*: A native C++ execution engine that accelerates Spark SQL queries with SIMD vectorization.
-  - *Liquid Clustering (`CLUSTER BY`)*: Space-filling Z-order curves that dynamically cluster Delta Lake tables without rigid Hive directory partitioning.
-
----
-
-## 🧰 Use-Case Specific Tooling Suite: Migrations, Profiling, Pooling & HA
-
-Production database reliability requires a specialized tooling ecosystem spanning schema migrations, telemetry, pooling, and clustering:
-
-```mermaid
-flowchart TD
-    subgraph ToolingSuite["The Production Database Tooling Ecosystem"]
-        direction TB
-        M["1. Schema Migration Engines"] --> M1["Flyway & Liquibase (Versioned GitOps)"]
-        M --> M2["pgroll & gh-ost (Zero-Downtime Expand/Contract)"]
-
-        P["2. Observability & Profiling"] --> P1["pg_stat_statements & EXPLAIN ANALYZE BUFFERS"]
-        P --> P2["SQL Server Query Store & MySQL Performance Schema"]
-
-        C["3. Connection Pooling & Traffic"] --> C1["PgBouncer (Transaction Multiplexing)"]
-        C --> C2["HikariCP (Low-Latency Application Pool)"]
-
-        H["4. High Availability & Sharding"] --> H1["Patroni (etcd DCS Postgres Failover)"]
-        H --> H2["Vitess & Citus (Distributed SQL Sharding)"]
-    end
-```
-
-### 1. Zero-Downtime Schema Evolution
-- **Flyway & Liquibase**: Version-controlled migrations running inside CI/CD deployment pipelines. Enforce strict single-process locks using metadata tables (`flyway_schema_history` and `DATABASECHANGELOGLOCK`).
-- **pgroll (PostgreSQL)**: Implements zero-downtime schema evolution natively using PostgreSQL views. Maintains Version 1 and Version 2 schema contracts simultaneously with real-time bidirectional trigger synchronization until the cutover is finalized.
-- **gh-ost (GitHub Online Schema Migrations for MySQL)**: Triggerless migration tool. Replicates existing tables into a shadow table, tails the MySQL binary log (binlog) asynchronously, and completes cutover via an atomic two-table rename:
-  ```sql
-  RENAME TABLE users TO _users_old, _users_gho TO users;
-  ```
-
-### 2. Query Profiling & Observability
-- **PostgreSQL `pg_stat_statements` & `EXPLAIN (ANALYZE, BUFFERS)`**: Discloses cumulative runtime, execution counts, shared buffer cache hits, disk reads, and memory allocations.
-- **MySQL Performance Schema & `OPTIMIZER_TRACE`**: Provides internal visibility into the cost-based optimizer's evaluation of candidate execution plans and index selectivity.
-- **SQL Server Query Store & Extended Events**: Captures historical runtime profiles and detects plan regressions caused by parameter sniffing or stale statistics.
-
-### 3. Connection Pooling & Traffic Governance
-- **PgBouncer (PostgreSQL)**:
-  - *Transaction Pooling (Production Standard)*: Assigns physical server connections only for the duration of a transaction, returning them immediately upon `COMMIT` or `ROLLBACK`.
-  - *The Formula*: Never configure database `max_connections` to thousands of connections. Size the dedicated pool using:
-    $$\text{Max DB Connections} \approx (\text{CPU Cores} \times 2) + \text{Effective Spindle Count}$$
-  - *Gotcha*: Transaction pooling breaks named prepared statements (`PREPARE stmt`). Configure unnamed/anonymous prepared statements or use PgBouncer 1.21+ with `max_prepared_statements`.
-- **HikariCP**: Fastest JVM connection pool. Features zero-allocation collections (`FastList`), micro-optimized lock-free primitives, and aggressive connection leak detection.
-
-### 4. Distributed Engines & High Availability
-- **Patroni**: Provides high availability and automated failover for PostgreSQL using distributed consensus stores (etcd, Consul, ZooKeeper). Prevents split-brain incidents via watchdog fencing (STONITH).
-- **Vitess**: Scales MySQL horizontally to millions of queries per second. Uses stateless **VTGate** query routers, **VTTablets**, and declarative **VSchema** sharding keys.
-- **Citus**: PostgreSQL extension that shards tables across a cluster using distributed foreign keys, hash-distribution columns, and co-located joins.
-
-> 📖 *For end-to-end configuration templates, pool sizing math, and architecture blueprints, consult [Architecture Deep Dive 06: Database Tooling — Migrations, Profiling, Pooling & Distributed Engines](architectures/06_database_tooling_migrations_profiling_and_pooling.md).*
-
----
-
-## 🚀 Query Optimization, SARGability & Performance Anti-Patterns
-
-A single non-SARGable predicate or unindexed foreign key can force an in-memory B-Tree index seek ($\mathcal{O}(\log N)$) down into a full table scan ($\mathcal{O}(N)$), consuming gigabytes of I/O and exhausting database worker threads.
-
-### 1. The SARGable Predicate Remediation Matrix
-
-A predicate is **SARGable** (*Search Argument Able*) if the query engine can traverse the B-Tree index structure via an **Index Seek** rather than scanning every page in the table.
-
-| Anti-Pattern (Non-SARGable) | Root Cause of Failure | Production Surgical Fix (SARGable) |
-| :--- | :--- | :--- |
-| `WHERE YEAR(created_at) = 2024` | Scalar function wraps column; cannot traverse B-Tree index. | `WHERE created_at >= '2024-01-01' AND created_at < '2025-01-01'` |
-| `WHERE DATE(transaction_ts) = '2024-05-15'` | Truncation function strips index seek capability. | `WHERE transaction_ts >= '2024-05-15 00:00:00' AND transaction_ts < '2024-05-16 00:00:00'` |
-| `WHERE LOWER(email) = 'user@corp.com'` | String casing transformation evaluated row-by-row. | Functional Index: `CREATE INDEX idx_user_email_lower ON users (LOWER(email));` |
-| `WHERE phone_number = 1234567890` | Column is `VARCHAR`. Integer literal forces implicit `CAST(phone_number AS INT)` on every row. | Pass matching type literal: `WHERE phone_number = '1234567890'` |
-| `WHERE amount + 15 > 100` | Arithmetic expression on column prevents index seek. | Isolate column on LHS: `WHERE amount > 85` |
-| `WHERE phone LIKE '%5551234'` | Leading wildcard (`%`) cannot seek sorted B-Tree prefix. | Use Trigram Index (`pg_trgm`) or Reverse String Index: `WHERE reverse_phone LIKE '4321555%'` |
-| `WHERE ISNULL(status, 'NEW') = 'NEW'` | Wrapper function forces full table evaluation. | SARGable Disjunction: `WHERE status = 'NEW' OR status IS NULL` |
-
----
-
-### 2. Keyset / Seek Pagination vs. The Offset Pagination Death Spiral
-
-#### The Offset Pagination Problem:
-```sql
--- Catastrophic performance on deep pages:
-SELECT id, transaction_date, amount
-FROM ledger_transactions
-ORDER BY transaction_date DESC, id DESC
-LIMIT 50 OFFSET 10000000;
-```
-The database engine must read, sort, and discard **10,000,000 preceding rows** in memory before returning 50 rows. Response times degrade linearly ($\mathcal{O}(N)$), resulting in multi-minute queries and buffer pool churn.
-
-#### The Keyset / Seek Pagination Solution ($\mathcal{O}(1)$):
-```sql
--- Sub-millisecond index seek regardless of page depth:
-SELECT id, transaction_date, amount
-FROM ledger_transactions
-WHERE (transaction_date, id) < (:last_seen_date, :last_seen_id)
-ORDER BY transaction_date DESC, id DESC
-LIMIT 50;
-```
-Because `(transaction_date, id)` is backed by a composite index, the database executes an exact logarithmic B-Tree seek directly to the 50 desired rows!
-
----
-
-### 3. The N+1 Query Problem & Cascade Lock Storms
-- **The N+1 Anti-Pattern**: An application ORM queries 100 users (`SELECT * FROM users LIMIT 100;`), and then iterates over each user in application code to fire 100 separate queries: `SELECT * FROM orders WHERE user_id = :id;`. Transforms 1 network trip into 101 round trips.
-  - *Remediation*: Eager-load via `JOIN`, batch fetch using `WHERE user_id IN (...)`, or leverage `LATERAL / CROSS APPLY`.
-- **Unindexed Foreign Keys**: Deleting a parent customer row requires validating or cascading deletes on child `orders` tables. Without an index on `orders(customer_id)`, the engine acquires an exclusive table lock and performs a full sequential scan on the child table, causing cluster-wide deadlock storms.
-
----
-
-## 📋 Production Database Pre-Flight Checklist
-
-Before applying any migration, DDL change, or parameter update in production, verify each of the following 5 operational pillars:
-
-```mermaid
-flowchart LR
-    subgraph Checklist["Production Pre-Flight Verification Pillars"]
-        direction TB
-        C1["Pillar 1: Schema Migrations (Non-blocking DDL, CONCURRENTLY)"]
-        C2["Pillar 2: Connection Sizing (Max DB Connections = 2x Cores + Spindles)"]
-        C3["Pillar 3: Defensive Timeouts (statement_timeout, lock_timeout)"]
-        C4["Pillar 4: Backup & Recovery (Continuous WAL archiving & PITR drills)"]
-        C5["Pillar 5: Observability & SLOs (Disk > 80%, Wraparound Age, Replication Lag)"]
-    end
-```
-
-1. **Pillar 1: Schema Migrations & Non-Blocking DDL**
-   - [ ] All new indexes created using `CONCURRENTLY` (PostgreSQL) or `ONLINE = ON` (SQL Server / MySQL).
-   - [ ] New columns added with non-volatile defaults (avoiding full table rewrites).
-   - [ ] Foreign keys and CHECK constraints added with `NOT VALID`, followed by non-blocking `VALIDATE CONSTRAINT`.
-2. **Pillar 2: Connection Pooling & Concurrency Sizing**
-   - [ ] Database `max_connections` sized conservatively ($\approx (\text{Cores} \times 2) + \text{Spindles}$).
-   - [ ] PgBouncer or HikariCP multiplexes thousands of application threads into a small pool (30–60) of fast connections.
-   - [ ] Client drivers configured for anonymous/unnamed prepared statements in transaction pooling mode.
-3. **Pillar 3: Defensive Timeouts**
-   - [ ] OLTP APIs enforce `statement_timeout = '15s'` to prevent rogue runaway queries.
-   - [ ] Migrations enforce `lock_timeout = '3s'` to fail fast rather than queuing behind locks.
-   - [ ] Applications enforce `idle_in_transaction_session_timeout = '30s'` to kill hanging client transactions.
-4. **Pillar 4: Backup, PITR & Disaster Recovery**
-   - [ ] Write-Ahead Logs (WAL) / Redo logs continuously streamed to immutable cloud storage.
-   - [ ] Automated monthly Point-In-Time-Recovery (PITR) test drills into an isolated staging VPC with automated assertions.
-   - [ ] Verified Recovery Point Objective ($\text{RPO} < 5\text{ min}$) and Recovery Time Objective ($\text{RTO} < 30\text{ min}$).
-5. **Pillar 5: Observability & Saturation Alerts**
-   - [ ] Alert on replication lag $> 10\text{ seconds}$ on read replicas.
-   - [ ] Alert when disk utilization exceeds $80\%$ (fail-safe emergency at $85\%$).
-   - [ ] Alert on PostgreSQL transaction wraparound age: `max(age(datfrozenxid)) > 500,000,000`.
-
----
-
-## 💥 Top 25 Catastrophic Production Database Gotchas & Postmortems
-
-The 25 most frequent, catastrophic database design traps and runtime failures encountered in production environments:
-
-| # | Catastrophic Gotcha | Affected Systems | Root Cause & Failure Mechanism | Immediate Surgical Mitigation |
-| :---: | :--- | :--- | :--- | :--- |
-| **01** | **TXID Wraparound Emergency** | PostgreSQL | 32-bit transaction counter reaches 2 billion limit; Postgres initiates forced read-only shutdown. | Start in single-user mode (`postgres --single`) and run emergency `VACUUM FREEZE ANALYZE;`. |
-| **02** | **Unindexed Foreign Keys Deadlock Storm** | PostgreSQL, Oracle | Parent row updates/deletes lock entire child table; concurrent parent deletes form cyclic deadlocks. | Add index concurrently: `CREATE INDEX CONCURRENTLY idx_orders_customer ON orders(customer_id);`. |
-| **03** | **Offset Pagination Death Spiral** | All SQL Engines | `OFFSET 10000000` scans and discards 10 million rows in memory, driving CPU to 100%. | Switch to Keyset/Seek pagination: `WHERE (created_at, id) < (:last_ts, :last_id) LIMIT 50;`. |
-| **04** | **Implicit Type Conversion Index Loss** | MySQL, SQL Server, PG | Querying string column with integer literal forces `CAST(col AS INT)`, dropping B-Tree index. | Pass exact matching type literal: `WHERE phone_number = '1234567890'`. |
-| **05** | **`NOT IN (subquery with NULL)` Trap** | All SQL Engines | If subquery returns a single `NULL`, Three-Valued Logic evaluates whole filter to UNKNOWN, returning 0 rows. | Replace with `NOT EXISTS (SELECT 1 FROM ...)`. |
-| **06** | **Lock Escalation to Table Lock** | SQL Server | A single statement acquiring $>5,000$ row locks escalates to exclusive Table Lock (`X`), blocking all traffic. | Batch mutations in loops of $\le 2,000$ rows: `DELETE TOP (2000) FROM logs WHERE ...`. |
-| **07** | **Missing Transaction Timeouts** | PostgreSQL, MySQL | Client app opens transaction, hangs on external HTTP call, holding locks and exhausting database connections. | Enforce `idle_in_transaction_session_timeout = '30s'` and `statement_timeout = '15s'`. |
-| **08** | **MongoDB 16MB Document Cap** | MongoDB | Pushing events into an unbounded array inside a document hits 16MB BSON limit, failing all writes. | Implement the **Bucket Pattern** (separate collection with 500 events per document). |
-| **09** | **Cassandra Tombstone Read Dropouts** | Cassandra, ScyllaDB | Deleting rows writes tombstones; queries scanning $>100,000$ tombstones crash with `ReadFailureException`. | Run `nodetool flush` and `nodetool compact`, or refactor into Time Window Compaction (TWCS). |
-| **10** | **Redis Single-Thread Blocking Calls** | Redis | Running `KEYS *`, `FLUSHALL`, or large `HGETALL` blocks Redis single-threaded event loop, timing out all apps. | Replace `KEYS` with `SCAN`, rename dangerous commands in `redis.conf`, use `UNLINK` instead of `DEL`. |
-| **11** | **Autovacuum Starvation from Analytics** | PostgreSQL | Long-running analytic query blocks autovacuum from freeing dead tuples, causing severe table bloat. | Terminate idle transactions with timeouts; tune `vacuum_failsafe_age` and cost limits. |
-| **12** | **MySQL Gap Lock Phantom Deadlocks** | MySQL (InnoDB) | Concurrent `INSERT ... ON DUPLICATE KEY UPDATE` acquires adjacent gap locks, causing deadlocks. | Switch transaction isolation to **Read Committed** (`SET SESSION TX ISOLATION READ COMMITTED;`). |
-| **13** | **Prepared Statements & Pooler Mismatch** | PostgreSQL + PgBouncer | Drivers cache named prepared statements; PgBouncer transaction pooling routes exec to different connection. | Configure client driver for anonymous prepared statements or use PgBouncer 1.21+ `max_prepared_statements`. |
-| **14** | **Parameter Sniffing Bad Plan Caching** | SQL Server, PG | Stored proc compiles plan for outlier parameter (table scan), forcing slow plan on selective parameters. | Use query hints: `OPTION (RECOMPILE)` / `OPTION (OPTIMIZE FOR UNKNOWN)`. |
-| **15** | **UUIDv4 Random Key B-Tree Fragmentation** | PostgreSQL, MySQL | Inserting random UUIDv4 keys splits B-Tree leaf pages (50/50 split), doubling table size and evicting cache. | Standardize on sequentially ordered, time-sortable **UUIDv7** or **ULID**. |
-| **16** | **The Halloween Problem** | All Relational Engines | `UPDATE` modifies indexed column, advancing row forward into the cursor and mutating it repeatedly. | Modern engines insert spools/materialization fences; avoid in-flight mutating scans. |
-| **17** | **Distributed 2PC Coordinator Failure** | Citus, Distributed SQL | Coordinator crashes after `PREPARE` but before `COMMIT`, leaving in-doubt locks hanging indefinitely. | Implement modern **Raft** or **Paxos** distributed consensus protocols to replace 2PC. |
-| **18** | **Stale Cardinality Statistics Disaster** | All SQL Engines | Bulk insert of 10M rows without `ANALYZE` causes optimizer to pick Nested Loop Join, freezing query. | Run `ANALYZE table_name;` immediately after bulk ingestion; tune autovacuum analyze scale factor. |
-| **19** | **DynamoDB Partition Key Hotspotting** | AWS DynamoDB | Low-cardinality partition key (e.g. `status = 'ACTIVE'`) funnels traffic to 1 partition, generating 429 errors. | Implement synthetic key salting: `PK = "ACTIVE#" + random(0, 10)` and scatter-gather queries. |
-| **20** | **Sequence / SERIAL Exhaustion** | PostgreSQL, MySQL | Primary key defined as `SERIAL` / `INT4` (max $+2.14\text{B}$). Reaching ceiling fails all subsequent inserts. | Proactively migrate primary and foreign keys to `BIGINT` ($9.22 \times 10^{18}$ ceiling). |
-| **21** | **Unlogged Tables Crash Data Loss** | PostgreSQL | `UNLOGGED` tables bypass WAL for speed. On system crash or power outage, table is truncated to empty. | Never use `UNLOGGED` tables for persistent production data; restrict strictly to disposable caches. |
-| **22** | **Multi-Region Replication Overwrite** | DynamoDB, Couchbase | Multi-master replication resolves writes via Last-Write-Wins (LWW); clock skew causes silent data loss. | Use Conflict-Free Replicated Data Types (CRDTs) or route customer writes to designated primary region. |
-| **23** | **Elasticsearch Mapping Explosion** | Elasticsearch | Dynamic JSON with thousands of arbitrary keys causes Lucene field proliferation and JVM heap OOM. | Set `index.mapping.total_fields.limit = 1000` and disable dynamic mapping on payload fields. |
-| **24** | **DECIMAL Rounding Precision Loss** | All SQL Engines | Financial values defined with inadequate scale (`DECIMAL(10,2)`); compound math causes cumulative drift. | Standardize on high-precision fixed point (`DECIMAL(28,8)`) or store micro-units (integer cents). |
-| **25** | **Vector Search Index HNSW OOM Killer** | PostgreSQL (`pgvector`) | Building HNSW index on 10M vectors consumes 30GB RAM, exhausting `maintenance_work_mem` and OOMing host. | Size memory correctly ($\approx \text{Vectors} \times \text{Dims} \times 4\text{B} \times 1.5$), or use dedicated vector engines (Milvus). |
-
-> 📖 *For complete forensic postmortems, root causes, and reproduction code, consult [Production Runbook 08: Pre-Flight Checklist & Top 25 Production Database Gotchas](runbooks/08_production_database_preflight_checklist_and_gotchas.md).*
-
----
-
-## 🚀 Quickstart & Interactive Sandbox
-
-All 105 exercises are **100% self-contained** and executable locally using Python's standard library with zero external dependencies!
-
-### 1. Clone & Verify Installation
-```bash
-git clone https://github.com/santoshjammi29/sql-handbook.git
-cd sql-handbook
-```
-
-### 2. Run the Full Automated Test Suite (105 Exercises in < 1 Second)
-```bash
-python scripts/run_all_exercises.py
-```
-
-### 3. Open Any Problem in the Interactive SQL REPL
-Practice queries against pre-seeded in-memory databases with instant feedback:
-
-```bash
-# Load Exercise 038: Gaps and Islands Login Streaks
-python scripts/interactive_shell.py 038
-
-# Load Exercise 090: Distributed Key Salting for Skewed Joins
-python scripts/interactive_shell.py 090
-```
-
-Inside the interactive shell:
-- Inspect schemas and test datasets with standard SQL queries (`SELECT * FROM player_logins;`).
-- Type `.solution` to inspect the battle-tested reference answer.
-- Type `exit` to return to your terminal.
-
----
-
-## 📚 Master Curriculum Map
-
-This curriculum spans **10 structured modules** encompassing foundational syntax through Staff Data Architect production triage:
-
-```mermaid
-mindmap
-  root((The SQL Handbook))
-    01 Fundamentals
-      Execution Order
-      Three-Valued Logic
-      SARGability
-      Safe Casting
-      Idempotent DDL
-    02 Joins & Sets
-      Semi-Joins EXISTS
-      Anti-Joins
-      Full Outer Recon
-      Non-Equi Ranges
-      Lateral / Apply
-    03 Aggregations
-      Count Semantics
-      Filtered Aggregates
-      OLAP ROLLUP
-      OLAP CUBE
-      Dynamic Pivoting
-    04 Window Functions
-      Ranking with Ties
-      Offset LAG / LEAD
-      Sliding Frames
-      Gaps & Islands
-      Cohort Retention
-    05 Recursive CTEs
-      Org Hierarchies
-      BOM Part Explosion
-      Graph Shortest Path
-      Calendar Spines
-      Duplicate Deletion
-    06 Data Modeling
-      Kimball Star Schema
-      SCD Types 1-6
-      Data Vault 2.0
-      Bridge Tables
-      Surrogate Hashes
-    07 Query Optimization
-      B-Tree Index Seek
-      Composite Prefix Rule
-      Covering Indexes
-      Cardinality Stats
-      Join Algorithms
-    08 Transactions
-      ACID Savepoints
-      Isolation Anomalies
-      Write Skew
-      MVCC Internals
-      Deadlock Ordering
-    09 MPP Distributed
-      Micro-Partitioning
-      Hash Distributions
-      Liquid Clustering
-      Key Salting
-      Delta MERGE
-    10 Incident Triage
-      99% Straggler Skew
-      Deadlock Storms
-      CDC Timeline Repair
-      TempDB Cartesian
-      Data Quality Suite
-```
-
----
-
-## 📂 Detailed Exercises & Code Matrix
-
-> **Dialect Portability**: All 105 exercises are written in standard ANSI SQL and verified to execute natively on **PostgreSQL**, **DuckDB**, **Databricks Spark SQL**, **Snowflake**, **Google BigQuery**, and **SQLite**.
-
-### 🗺️ Curriculum Track Overview
-
-| Track & Module | Range | Level | Core Architecture & Skills |
-| :--- | :---: | :---: | :--- |
-| 📦 **[01. Core SQL Fundamentals](#module-01-core-sql-fundamentals)** | `001 – 010` | 🟢<br>Beginner | Execution order, Three-Valued Logic, SARGability, type casting, idempotent DDL |
-| 🔗 **[02. Joins & Set Operations](#module-02-joins-and-set-operations)** | `011 – 020` | 🟡<br>Intermediate | Semi-joins (EXISTS), anti-joins, full outer reconciliations, non-equi joins, set ops |
-| 📊 **[03. Aggregations & Grouping](#module-03-aggregations-and-grouping)** | `021 – 030` | 🟡<br>Intermediate | COUNT semantics, conditional sums, multidimensional ROLLUP/CUBE, dynamic pivoting |
-| 🪟 **[04. Window Functions Mastery](#module-04-window-functions-mastery)** | `031 – 045` | 🔴<br>Advanced | Ranking ties, value offsets (LAG/LEAD), sliding frames, Gaps & Islands, retention |
-| 🌲 **[05. Subqueries & Recursive CTEs](#module-05-subqueries-and-recursive-ctes)** | `046 – 055` | 🔴<br>Advanced | Recursive hierarchies, Bill of Materials (BOM), flight paths, calendar spines, deduplication |
-| 📐 **[06. Data Modeling & SCD](#module-06-data-modeling-and-scd)** | `056 – 065` | 🔴<br>Advanced | Kimball star schemas, SCD Types 1-6, Data Vault 2.0, bridge tables, surrogate hashing |
-| ⚡ **[07. Indexing & Query Optimization](#module-07-indexing-and-query-optimization)** | `066 – 075` | 🔴<br>Advanced | B-Tree seek vs scan, composite prefix rule, covering indexes, join algorithms, stats |
-| 🔒 **[08. Transactions, Concurrency & Locks](#module-08-transactions-concurrency-and-locks)** | `076 – 085` | 🔴<br>Advanced | ACID savepoints, isolation anomalies, write skew, MVCC internals, deadlock ordering |
-| ☁️ **[09. MPP & Cloud Warehouses](#module-09-mpp-and-cloud-warehouses)** | `086 – 095` | 🟣<br>Architect | Snowflake micro-partitions, hash distributions, Liquid Clustering, key salting, MERGE |
-| 🚨 **[10. Production Incidents & Triage](#module-10-production-incidents-and-triage)** | `096 – 105` | 🟣<br>Architect | 99% straggler skew, deadlock storms, out-of-order CDC recovery, data quality suites |
-
----
-
-<a id="module-01-core-sql-fundamentals"></a>
-### 📦 Module: 01. Core SQL Fundamentals
-
-| # | Exercise Topic & Code | Level | Practical Scenario |
-| :---: | :--- | :---: | :--- |
-| `001` | [Logical Query Execution Order](exercises/01_core_sql_fundamentals/001_logical_query_execution_order.sql) | 🟢<br>Beginner | Enterprise Multi-Tenant SaaS Billing & Margin Reconciliation Engine. |
-| `002` | [Three Valued Logic & NULL Traps](exercises/01_core_sql_fundamentals/002_three_valued_logic_and_null_traps.sql) | 🟢<br>Beginner | Enterprise Compliance & Multi-Jurisdiction Privacy Consent Engine (GDPR & CCPA). |
-| `003` | [SARGability & Predicate Rewriting](exercises/01_core_sql_fundamentals/003_sargability_and_predicate_rewriting.sql) | 🟡<br>Intermediate | An auditing job queries an invoice table with 20 million rows daily to find all invoices generated during the year 2024. |
-| `004` | [Relational Constraints & Cascade Rules](exercises/01_core_sql_fundamentals/004_relational_constraints_and_cascade_rules.sql) | 🟢<br>Beginner | Multi-Tenant Identity & Access Management (IAM) and RBAC Security Boundary. |
-| `005` | [Safe Type Casting & Numeric Precision](exercises/01_core_sql_fundamentals/005_safe_type_casting_and_numeric_precision.sql) | 🟡<br>Intermediate | Cross-Border Foreign Exchange & Digital Asset Settlement Clearinghouse. |
-| `006` | [String Manipulation & Pattern Extraction](exercises/01_core_sql_fundamentals/006_string_manipulation_and_pattern_extraction.sql) | 🟢<br>Beginner | Security Information & Event Management (SIEM) Ingress Pipeline. |
-| `007` | [Temporal & Timestamp Arithmetic](exercises/01_core_sql_fundamentals/007_temporal_and_timestamp_arithmetic.sql) | 🟡<br>Intermediate | Global Supply Chain & Freight Consignment Tracking Engine. |
-| `008` | [Conditional CASE Logic & NULLIF COALESCE](exercises/01_core_sql_fundamentals/008_conditional_case_logic_and_nullif_coalesce.sql) | 🟢<br>Beginner | Direct-to-Consumer (D2C) E-Commerce Promotional Waterfall & Return Analytics. |
-| `009` | [Filtering Edge Cases NOT EXISTS vs NOT IN](exercises/01_core_sql_fundamentals/009_filtering_edge_cases_not_exists_vs_not_in.sql) | 🟢<br>Beginner | International Wire Transfer Anti-Money Laundering (AML) Compliance Engine. |
-| `010` | [Idempotent DDL & Safe Schema Migrations](exercises/01_core_sql_fundamentals/010_idempotent_ddl_and_safe_schema_migrations.sql) | 🟢<br>Beginner | Zero-Downtime Blue/Green Database Schema Migration Engine. |
-
-<a id="module-02-joins-and-set-operations"></a>
-### 🔗 Module: 02. Joins & Set Operations
-
-| # | Exercise Topic & Code | Level | Practical Scenario |
-| :---: | :--- | :---: | :--- |
-| `011` | [Inner Left Right Full Outer Joins](exercises/02_joins_and_set_operations/011_inner_left_right_full_outer_joins.sql) | 🟡<br>Intermediate | Enterprise CRM & Revenue Attribution Mart (Salesforce & ERP Integration). |
-| `012` | [Semi Joins & Duplicate Multiplier Prevention](exercises/02_joins_and_set_operations/012_semi_joins_and_duplicate_multiplier_prevention.sql) | 🟡<br>Intermediate | E-Commerce Order Management & Fulfillment Reconciliation Mart. |
-| `013` | [Anti Joins For Missing Record Detection](exercises/02_joins_and_set_operations/013_anti_joins_for_missing_record_detection.sql) | 🟡<br>Intermediate | Enterprise Lakehouse Reconciliation & Pipeline Data Loss Sentinel. |
-| `014` | [Full Outer Joins For Reconciliation](exercises/02_joins_and_set_operations/014_full_outer_joins_for_reconciliation.sql) | 🟡<br>Intermediate | Automated Financial General Ledger & Bank Settlement Reconciliation Engine. |
-| `015` | [Cross Joins & Cartesian Grid Generation](exercises/02_joins_and_set_operations/015_cross_joins_and_cartesian_grid_generation.sql) | 🟢<br>Beginner | Retail Machine Learning Demand Forecasting Feature Store. |
-| `016` | [Non Equi Joins & Effective Date Matching](exercises/02_joins_and_set_operations/016_non_equi_joins_and_effective_date_matching.sql) | 🔴<br>Advanced | Multi-Currency Algorithmic Trading & As-Of Rate Conversion Engine. |
-| `017` | [Lateral Joins & Cross Apply Expansions](exercises/02_joins_and_set_operations/017_lateral_joins_and_cross_apply_expansions.sql) | 🔴<br>Advanced | Customer 360 & Top-N Recent Purchase Attribution Engine. |
-| `018` | [UNION vs UNION ALL Internals](exercises/02_joins_and_set_operations/018_union_vs_union_all_internals.sql) | 🟢<br>Beginner | Omnichannel Event Stream Consolidation (Web, Mobile App & IoT Gateways). |
-| `019` | [INTERSECT & EXCEPT Data Audits](exercises/02_joins_and_set_operations/019_intersect_and_except_data_audits.sql) | 🟡<br>Intermediate | Legacy On-Prem Data Warehouse to Modern Cloud Lakehouse Migration. |
-| `020` | [Self Joins For Sequential Event Pairs](exercises/02_joins_and_set_operations/020_self_joins_for_sequential_event_pairs.sql) | 🔴<br>Advanced | User Clickstream Funnel Pathing & Checkout Drop-Off Velocity Analytics. |
-
-<a id="module-03-aggregations-and-grouping"></a>
-### 📊 Module: 03. Aggregations & Grouping
-
-| # | Exercise Topic & Code | Level | Practical Scenario |
-| :---: | :--- | :---: | :--- |
-| `021` | [COUNT Semantics Star One Column](exercises/03_aggregations_and_grouping/021_count_semantics_star_one_column.sql) | 🟢<br>Beginner | Enterprise Customer Master Data Management (MDM) & KYC Profiling Engine. |
-| `022` | [Multi Column Group By & Grain Integrity](exercises/03_aggregations_and_grouping/022_multi_column_group_by_and_grain_integrity.sql) | 🟡<br>Intermediate | Multi-Entity Global General Ledger Financial Consolidation. |
-| `023` | [Where Pre Filtering vs Having Post Aggregation](exercises/03_aggregations_and_grouping/023_where_pre_filtering_vs_having_post_aggregation.sql) | 🟢<br>Beginner | Multi-Cloud FinOps Infrastructure Spend Attribution & Outlier Detection. |
-| `024` | [Conditional Aggregation Filtered Metrics](exercises/03_aggregations_and_grouping/024_conditional_aggregation_filtered_metrics.sql) | 🟡<br>Intermediate | Executive B2B SaaS Recurring Revenue & Retention Metrics Engine. |
-| `025` | [Multidimensional Olap ROLLUP Subtotals](exercises/03_aggregations_and_grouping/025_multidimensional_olap_rollup_subtotals.sql) | 🟡<br>Intermediate | Enterprise Retail Executive Reporting & Hierarchical Rollup Engine. |
-| `026` | [Multidimensional Olap CUBE Combinations](exercises/03_aggregations_and_grouping/026_multidimensional_olap_cube_combinations.sql) | 🟡<br>Intermediate | Multi-Dimensional Inventory Position & Warehouse Logistics Matrix. |
-| `027` | [GROUPING SETS For Targeted Cubes](exercises/03_aggregations_and_grouping/027_grouping_sets_for_targeted_cubes.sql) | 🔴<br>Advanced | High-Performance BI Cube Materialization & Pre-Aggregation Pipeline. |
-| `028` | [Relational Pivoting Rows To Columns](exercises/03_aggregations_and_grouping/028_relational_pivoting_rows_to_columns.sql) | 🟡<br>Intermediate | Quarterly Executive Income Statement & Financial P&L Matrix. |
-| `029` | [Relational Unpivoting Columns To Rows](exercises/03_aggregations_and_grouping/029_relational_unpivoting_columns_to_rows.sql) | 🟡<br>Intermediate | Enterprise Financial Planning & Analysis (FP&A) Ingestion Mart. |
-| `030` | [Statistical Aggregations Median & Percentiles](exercises/03_aggregations_and_grouping/030_statistical_aggregations_median_and_percentiles.sql) | 🔴<br>Advanced | Microservice API Gateway SLA & Latency Percentile Benchmarking. |
-
-<a id="module-04-window-functions-mastery"></a>
-### 🪟 Module: 04. Window Functions Mastery
-
-| # | Exercise Topic & Code | Level | Practical Scenario |
-| :---: | :--- | :---: | :--- |
-| `031` | [Ranking Functions ROW_NUMBER RANK DENSE_RANK](exercises/04_window_functions_mastery/031_ranking_functions_row_number_rank_dense_rank.sql) | 🔴<br>Advanced | Enterprise Performance Bonus & Sales Commission Allocation Engine. |
-| `032` | [Quantile Distribution NTILE Bucketing](exercises/04_window_functions_mastery/032_quantile_distribution_ntile_bucketing.sql) | 🔴<br>Advanced | Automated Consumer Lending Underwriting & Risk Decile Segmentation. |
-| `033` | [Value Offsets LAG LEAD Period Over Period](exercises/04_window_functions_mastery/033_value_offsets_lag_lead_period_over_period.sql) | 🔴<br>Advanced | SaaS Monthly Recurring Revenue (MRR) Period-over-Period Variance Engine. |
-| `034` | [Navigation Functions FIRST_VALUE, LAST_VALUE & NTH_VALUE](exercises/04_window_functions_mastery/034_navigation_functions_first_last_nth_value.sql) | 🔴<br>Advanced | Intensive Care Unit (ICU) Patient Vital Signs & Sepsis Progression Monitoring. |
-| `035` | [Cumulative & Running Totals](exercises/04_window_functions_mastery/035_cumulative_and_running_totals.sql) | 🔴<br>Advanced | Core Banking General Ledger & Real-Time Balance Tracker. |
-| `036` | [Moving Averages & Rolling Windows](exercises/04_window_functions_mastery/036_moving_averages_and_rolling_windows.sql) | 🟡<br>Intermediate | Telemetry anomaly detection requires computing a 3-day trailing moving average of server CPU load to filter out transient micro-spikes. |
-| `037` | [Physical vs Logical Frames ROWS vs RANGE](exercises/04_window_functions_mastery/037_physical_vs_logical_frames_rows_vs_range.sql) | 🔴<br>Advanced | When computing running totals over duplicate order dates, the default frame RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW groups peer rows together, producing duplicate running totals on the same date!. |
-| `038` | [Gaps & Islands Consecutive Streaks](exercises/04_window_functions_mastery/038_gaps_and_islands_consecutive_streaks.sql) | 🔴<br>Advanced | SaaS & Gaming Daily Active User (DAU) Engagement Streak Engine. |
-| `039` | [Gaps & Islands Threshold Sessionization](exercises/04_window_functions_mastery/039_gaps_and_islands_threshold_sessionization.sql) | 🔴<br>Advanced | Web & Mobile Clickstream User Sessionization Engine. |
-| `040` | [Gaps & Islands Overlapping Interval Merging](exercises/04_window_functions_mastery/040_gaps_and_islands_overlapping_interval_merging.sql) | 🔴<br>Advanced | Multi-Node Virtual Machine Active Uptime Consolidation. |
-| `041` | [Running Peak & Maximum Drawdown](exercises/04_window_functions_mastery/041_running_peak_and_maximum_drawdown.sql) | 🔴<br>Advanced | Quantitative Hedge Fund Portfolio Risk & Peak Drawdown Engine. |
-| `042` | [Year Over Year & Month Over Month Growth](exercises/04_window_functions_mastery/042_year_over_year_and_month_over_month_growth.sql) | 🔴<br>Advanced | Enterprise Multi-Year Seasonal Revenue Comparison Engine. |
-| `043` | [Customer Retention Cohort Curves](exercises/04_window_functions_mastery/043_customer_retention_cohort_curves.sql) | 🔴<br>Advanced | SaaS Customer Retention Cohort Triangle Engine. |
-| `044` | [Top-N Per Category Deterministic Ties](exercises/04_window_functions_mastery/044_top_n_per_category_deterministic_ties.sql) | 🔴<br>Advanced | Top-N per Category with Strict Determinism & Tie-Breaking. |
-| `045` | [Windowed Aggregates Without Group By](exercises/04_window_functions_mastery/045_windowed_aggregates_without_group_by.sql) | 🟢<br>Beginner | Executive Compensation Transparency & Departmental Proportion Distribution. |
-
-<a id="module-05-subqueries-and-recursive-ctes"></a>
-### 🌲 Module: 05. Subqueries & Recursive CTEs
-
-| # | Exercise Topic & Code | Level | Practical Scenario |
-| :---: | :--- | :---: | :--- |
-| `046` | [Scalar & Multi Row Subqueries](exercises/05_subqueries_and_recursive_ctes/046_scalar_and_multi_row_subqueries.sql) | 🟢<br>Beginner | Executive Compensation Governance & Equity Benchmarking Mart. |
-| `047` | [Correlated Subqueries & Decorrelation](exercises/05_subqueries_and_recursive_ctes/047_correlated_subqueries_and_decorrelation.sql) | 🟡<br>Intermediate | E-Commerce Customer Lifetime Value & Order Frequency Engine. |
-| `048` | [CTEs vs Temp Tables vs Subqueries](exercises/05_subqueries_and_recursive_ctes/048_ctes_vs_temp_tables_vs_subqueries.sql) | 🟡<br>Intermediate | Multi-Stage ETL Data Pipeline Architecture. |
-| `049` | [Recursive CTE Organizational Hierarchy](exercises/05_subqueries_and_recursive_ctes/049_recursive_cte_organizational_hierarchy.sql) | 🔴<br>Advanced | Enterprise Human Resources Management (HCM) Management Hierarchy Tree. |
-| `050` | [Recursive CTE Bill Of Materials Explosion](exercises/05_subqueries_and_recursive_ctes/050_recursive_cte_bill_of_materials_explosion.sql) | 🔴<br>Advanced | Automotive & High-Tech Manufacturing Bill of Materials (BOM) Parts Explosion. |
-| `051` | [Recursive CTE Graph Shortest Path Cycle Detection](exercises/05_subqueries_and_recursive_ctes/051_recursive_cte_graph_shortest_path_cycle_detection.sql) | 🔴<br>Advanced | Airline Route Network & Shortest Connection Path Finder with Cycle Detection. |
-| `052` | [Recursive CTE Calendar Dimension Spine](exercises/05_subqueries_and_recursive_ctes/052_recursive_cte_calendar_dimension_spine.sql) | 🔴<br>Advanced | Enterprise Fiscal Calendar Dimension Spine Generation. |
-| `053` | [Binary Tree Node Classification](exercises/05_subqueries_and_recursive_ctes/053_binary_tree_node_classification.sql) | 🔴<br>Advanced | Binary Tree Node Structural Classification. |
-| `054` | [Materialized vs Inlined CTEs](exercises/05_subqueries_and_recursive_ctes/054_materialized_vs_inlined_ctes.sql) | 🔴<br>Advanced | CTE Materialization vs Inlining Optimization. |
-| `055` | [Deterministic Duplicate Deletion](exercises/05_subqueries_and_recursive_ctes/055_deterministic_duplicate_deletion.sql) | 🔴<br>Advanced | Production Streaming Deduplication & Table Cleaning. |
-
-<a id="module-06-data-modeling-and-scd"></a>
-### 📐 Module: 06. Data Modeling & SCD
-
-| # | Exercise Topic & Code | Level | Practical Scenario |
-| :---: | :--- | :---: | :--- |
-| `056` | [Kimball Star Schema Fact Dimension Design](exercises/06_data_modeling_and_scd/056_kimball_star_schema_fact_dimension_design.sql) | 🟢<br>Beginner | Enterprise Retail Omnichannel Sales Data Mart. |
-| `057` | [Slowly Changing Dimension Type 1 Overwrite](exercises/06_data_modeling_and_scd/057_slowly_changing_dimension_type_1_overwrite.sql) | 🟡<br>Intermediate | SCD Type 1 (In-Place Overwrite): When correcting spelling errors or non-historical attributes (e.g. |
-| `058` | [Slowly Changing Dimension Type 2 Historical](exercises/06_data_modeling_and_scd/058_slowly_changing_dimension_type_2_historical.sql) | 🔴<br>Advanced | SCD Type 2 (Historical Tracking): When customer address changes, previous address must be preserved for historical sales tax audit compliance. |
-| `059` | [Slowly Changing Dimension Type 3 Previous Value](exercises/06_data_modeling_and_scd/059_slowly_changing_dimension_type_3_previous_value.sql) | 🟡<br>Intermediate | SCD Type 3 (Prior Value Column): Sales territory realignment requires tracking both the Current Sales Territory and the Previous Sales Territory side-by-side without adding new table rows. |
-| `060` | [Slowly Changing Dimension Type 4 Mini Dimensions](exercises/06_data_modeling_and_scd/060_slowly_changing_dimension_type_4_mini_dimensions.sql) | 🔴<br>Advanced | SCD Type 4 (Mini-Dimensions): High-frequency changing customer attributes (credit score band, annual income tier, age group) would cause an SCD Type 2 table to explode to billions of rows. |
-| `061` | [Slowly Changing Dimension Type 6 Hybrid Implementation](exercises/06_data_modeling_and_scd/061_slowly_changing_dimension_type_6_hybrid_implementation.sql) | 🔴<br>Advanced | SCD Type 6 Hybrid Implementation (Type 1 + Type 2 + Type 3). |
-| `062` | [Data Vault 2 0 Hubs Links Satellites](exercises/06_data_modeling_and_scd/062_data_vault_2_0_hubs_links_satellites.sql) | 🔴<br>Advanced | Data Vault 2.0 Core Banking Enterprise Raw Vault. |
-| `063` | [Bridge Tables For Many To Many Relationships](exercises/06_data_modeling_and_scd/063_bridge_tables_for_many_to_many_relationships.sql) | 🔴<br>Advanced | Healthcare & Clinical Outcomes Many-to-Many Bridge Table Architecture. |
-| `064` | [Accumulating Snapshot Fact Tables](exercises/06_data_modeling_and_scd/064_accumulating_snapshot_fact_tables.sql) | 🔴<br>Advanced | E-Commerce Order Fulfillment Accumulating Snapshot Fact Table. |
-| `065` | [Deterministic Surrogate Key Generation](exercises/06_data_modeling_and_scd/065_deterministic_surrogate_key_generation.sql) | 🔴<br>Advanced | Distributed Lakehouse Hash-Based Surrogate Key Generation. |
-
-<a id="module-07-indexing-and-query-optimization"></a>
-### ⚡ Module: 07. Indexing & Query Optimization
-
-| # | Exercise Topic & Code | Level | Practical Scenario |
-| :---: | :--- | :---: | :--- |
-| `066` | [B-Tree Index Seek vs Index Scan](exercises/07_indexing_and_query_optimization/066_btree_index_seek_vs_index_scan.sql) | 🔴<br>Advanced | High-Throughput Order Ingestion Engine & Execution Plan Optimization. |
-| `067` | [Composite Index Column Ordering Left Prefix](exercises/07_indexing_and_query_optimization/067_composite_index_column_ordering_left_prefix.sql) | 🔴<br>Advanced | Composite Index Design & The Left-Prefix Rule. |
-| `068` | [Covering Indexes & Index Only Scans](exercises/07_indexing_and_query_optimization/068_covering_indexes_and_index_only_scans.sql) | 🔴<br>Advanced | Microservice High-Throughput Read Path & Index-Only Scans. |
-| `069` | [Filtered & Partial Indexes](exercises/07_indexing_and_query_optimization/069_filtered_and_partial_indexes.sql) | 🔴<br>Advanced | High-Scale Asynchronous Task Dispatch Queue. |
-| `070` | [Cardinality Estimation & Statistics](exercises/07_indexing_and_query_optimization/070_cardinality_estimation_and_statistics.sql) | 🔴<br>Advanced | Cost-Based Optimizer (CBO) Cardinality Estimation & Statistics Drift. |
-| `071` | [Clustered vs Non Clustered Index Layout](exercises/07_indexing_and_query_optimization/071_clustered_vs_non_clustered_index_layout.sql) | 🔴<br>Advanced | Physical Storage Layout: Clustered vs Non-Clustered Indexes. |
-| `072` | [Join Algorithms Nested Loop Hash Merge](exercises/07_indexing_and_query_optimization/072_join_algorithms_nested_loop_hash_merge.sql) | 🔴<br>Advanced | Relational Join Algorithms Deep Dive: 1. |
-| `073` | [Preventing Accidental Cartesian Products](exercises/07_indexing_and_query_optimization/073_preventing_accidental_cartesian_products.sql) | 🟢<br>Beginner | Accidental Cartesian Product Prevention & TempDB Protection. |
-| `074` | [Sargable Date Range Predicates](exercises/07_indexing_and_query_optimization/074_sargable_date_range_predicates.sql) | 🔴<br>Advanced | High-Volume Log Auditing SARGable Date Range Predicates. |
-| `075` | [Index Bloat & Fragmentation Maintenance](exercises/07_indexing_and_query_optimization/075_index_bloat_and_fragmentation_maintenance.sql) | 🔴<br>Advanced | B-Tree Index Page Fragmentation & Bloat Maintenance. |
-
-<a id="module-08-transactions-concurrency-and-locks"></a>
-### 🔒 Module: 08. Transactions, Concurrency & Locks
-
-| # | Exercise Topic & Code | Level | Practical Scenario |
-| :---: | :--- | :---: | :--- |
-| `076` | [Acid Atomicity & Savepoints](exercises/08_transactions_concurrency_and_locks/076_acid_atomicity_and_savepoints.sql) | 🟡<br>Intermediate | Distributed E-Commerce Checkout Pipeline & Transaction Boundaries. |
-| `077` | [Dirty Read Anomaly Read Uncommitted](exercises/08_transactions_concurrency_and_locks/077_dirty_read_anomaly_read_uncommitted.sql) | 🔴<br>Advanced | Core Banking Settlement Ledger & ANSI SQL Transaction Isolation Levels. |
-| `078` | [Non Repeatable Read Anomaly](exercises/08_transactions_concurrency_and_locks/078_non_repeatable_read_anomaly.sql) | 🔴<br>Advanced | Multi-Tier Inventory Rebalancing & Warehouse Allocation Service. |
-| `079` | [Phantom Read Anomaly Range Locks](exercises/08_transactions_concurrency_and_locks/079_phantom_read_anomaly_range_locks.sql) | 🔴<br>Advanced | Commercial Underwriting Exposure Management & Range Lock Semantics. |
-| `080` | [Write Skew Anomaly Under Snapshot Isolation](exercises/08_transactions_concurrency_and_locks/080_write_skew_anomaly_under_snapshot_isolation.sql) | 🟣<br>Architect | Hospital Emergency Room On-Call Roster & Snapshot Isolation Invariants. |
-| `081` | [MVCC Internals & Version Visibility](exercises/08_transactions_concurrency_and_locks/081_mvcc_internals_and_version_visibility.sql) | 🔴<br>Advanced | PostgreSQL & Distributed Storage Engine MVCC Internals. |
-| `082` | [Optimistic Concurrency Control Version Checks](exercises/08_transactions_concurrency_and_locks/082_optimistic_concurrency_control_version_checks.sql) | 🟡<br>Intermediate | High-Concurrency Flash-Sale Inventory Engine & Compare-And-Swap (CAS). |
-| `083` | [Deadlock Reproduction & Inverse Locking](exercises/08_transactions_concurrency_and_locks/083_deadlock_reproduction_and_inverse_locking.sql) | 🔴<br>Advanced | Core Banking Multi-Account Wire Settlement & Distributed Lock Graphs. |
-| `084` | [Pessimistic Locking FOR UPDATE](exercises/08_transactions_concurrency_and_locks/084_pessimistic_locking_for_update.sql) | 🔴<br>Advanced | High-Throughput Distributed Task Processing Queue & Pessimistic Locks. |
-| `085` | [Double Entry Ledger Atomic Transfer](exercises/08_transactions_concurrency_and_locks/085_double_entry_ledger_atomic_transfer.sql) | 🟣<br>Architect | Core Banking General Ledger (GL) & Financial Invariant Enforcement. |
-
-<a id="module-09-mpp-and-cloud-warehouses"></a>
-### ☁️ Module: 09. MPP & Cloud Warehouses
-
-| # | Exercise Topic & Code | Level | Practical Scenario |
-| :---: | :--- | :---: | :--- |
-| `086` | [Snowflake Micropartition Pruning](exercises/09_mpp_and_cloud_warehouses/086_snowflake_micropartition_pruning.sql) | 🔴<br>Advanced | Petabyte-Scale Cloud Data Warehouse & Micro-Partition Metadata Pruning. |
-| `087` | [MPP Table Distribution Hash Replicated Roundrobin](exercises/09_mpp_and_cloud_warehouses/087_mpp_table_distribution_hash_replicated_roundrobin.sql) | 🟣<br>Architect | Massively Parallel Processing (MPP) Architecture & Storage Topologies. |
-| `088` | [Liquid Clustering vs Hive Partitioning](exercises/09_mpp_and_cloud_warehouses/088_liquid_clustering_vs_hive_partitioning.sql) | 🔴<br>Advanced | Modern Delta Lake Liquid Clustering vs Legacy Hive Physical Directory Layouts. |
-| `089` | [Detecting Distribution Skew In Parallel Shards](exercises/09_mpp_and_cloud_warehouses/089_detecting_distribution_skew_in_parallel_shards.sql) | 🔴<br>Advanced | Distributed Data Shard Telemetry & Straggler Task Diagnostics. |
-| `090` | [Distributed Key Salting For Skewed Joins](exercises/09_mpp_and_cloud_warehouses/090_distributed_key_salting_for_skewed_joins.sql) | 🟣<br>Architect | Distributed Join Skew Mitigation & Two-Phase Key Salting Pattern. |
-| `091` | [Broadcast vs Shuffle Join Thresholds](exercises/09_mpp_and_cloud_warehouses/091_broadcast_vs_shuffle_join_thresholds.sql) | 🟡<br>Intermediate | Distributed Query Planner & Physical Join Strategy Selection. |
-| `092` | [Partition Pruning & Dynamic Partition Elimination](exercises/09_mpp_and_cloud_warehouses/092_partition_pruning_and_dynamic_partition_elimination.sql) | 🔴<br>Advanced | Dynamic Partition Pruning (DPP) & Runtime Partition Elimination in MPP Engines. |
-| `093` | [Delta MERGE INTO Multi Condition Matching](exercises/09_mpp_and_cloud_warehouses/093_delta_merge_into_multi_condition_matching.sql) | 🔴<br>Advanced | Modern Lakehouse ACID Ingestion & ANSI SQL MERGE INTO Mechanics. |
-| `094` | [Query Memory Spill Mitigation](exercises/09_mpp_and_cloud_warehouses/094_query_memory_spill_mitigation.sql) | 🟡<br>Intermediate | Apache Spark Project Tungsten & Cloud DW Memory Management. |
-| `095` | [Serverless Sql Querying External Files](exercises/09_mpp_and_cloud_warehouses/095_serverless_sql_querying_external_files.sql) | 🟡<br>Intermediate | Zero-Copy External Lake Querying & Serverless SQL Query Engines. |
-
-<a id="module-10-production-incidents-and-triage"></a>
-### 🚨 Module: 10. Production Incidents & Triage
-
-| # | Exercise Topic & Code | Level | Practical Scenario |
-| :---: | :--- | :---: | :--- |
-| `096` | [Incident: The 99 Percent Straggler Task Disaster](exercises/10_production_incidents_and_triage/096_incident_the_99_percent_straggler_task_disaster.sql) | 🟣<br>Architect | PRODUCTION INCIDENT POSTMORTEM: The 99% Complete Straggler Task Disaster. |
-| `097` | [Incident: Payment Gateway Deadlock Storm](exercises/10_production_incidents_and_triage/097_incident_payment_gateway_deadlock_storm.sql) | 🔴<br>Advanced | PRODUCTION INCIDENT POSTMORTEM: Deadlock Storm in Payment Clearing. |
-| `098` | [Incident: Out Of Order CDC Timeline Corruption](exercises/10_production_incidents_and_triage/098_incident_out_of_order_cdc_timeline_corruption.sql) | 🟣<br>Architect | PRODUCTION INCIDENT POSTMORTEM: Out-of-Order CDC Timeline Corruption. |
-| `099` | [Incident: Accidental Cartesian TempDB Exhaustion](exercises/10_production_incidents_and_triage/099_incident_accidental_cartesian_tempdb_exhaustion.sql) | 🔴<br>Advanced | PRODUCTION INCIDENT POSTMORTEM: Accidental Cartesian TempDB Storage Exhaustion. |
-| `100` | [Incident: Silent Schema Drift BI Refresh Failure](exercises/10_production_incidents_and_triage/100_incident_silent_schema_drift_bi_refresh_failure.sql) | 🟡<br>Intermediate | PRODUCTION INCIDENT POSTMORTEM: Silent Schema Drift Breaking Executive BI Dashboards. |
-| `101` | [Incident: Parameter Sniffing Query Timeout](exercises/10_production_incidents_and_triage/101_incident_parameter_sniffing_query_timeout.sql) | 🔴<br>Advanced | PRODUCTION INCIDENT POSTMORTEM: Parameter Sniffing Sudden Query Timeouts. |
-| `102` | [Incident: Phantom Read Financial Ledger Double Spend](exercises/10_production_incidents_and_triage/102_incident_phantom_read_financial_ledger_double_spend.sql) | 🔴<br>Advanced | PRODUCTION INCIDENT POSTMORTEM: Financial Ledger Double-Spend Breach Under Read Committed. |
-| `103` | [Incident: Unindexed Foreign Key Table Lock Cascade](exercises/10_production_incidents_and_triage/103_incident_unindexed_foreign_key_table_lock_cascade.sql) | 🔴<br>Advanced | PRODUCTION INCIDENT POSTMORTEM: Unindexed Foreign Key Table-Lock Cascade. |
-| `104` | [Incident: Delta Lake Concurrent Append Conflict](exercises/10_production_incidents_and_triage/104_incident_delta_lake_concurrent_append_conflict.sql) | 🔴<br>Advanced | PRODUCTION INCIDENT POSTMORTEM: Delta Lake Concurrent Append Write Conflict. |
-| `105` | [Master Enterprise Data Quality Reconciliation Suite](exercises/10_production_incidents_and_triage/105_master_enterprise_data_quality_reconciliation_suite.sql) | 🟣<br>Architect | Enterprise Data Quality & Automated CI/CD Production Gatekeeper. |
-
----
-
-## 🚨 Battle-Tested Production Runbooks
-
-The repository includes enterprise-grade operational runbooks for production incident response:
-
-| Runbook | Title | Critical Failure Mode Addressed |
-| :--- | :--- | :--- |
-| **[Runbook 01](runbooks/01_deadlock_and_lock_contention_triage.md)** | **Deadlock & Lock Contention Emergency Triage** | Application 504 pool exhaustion, Error 1205, locking tree identification, canonical key ordering. |
-| **[Runbook 02](runbooks/02_query_performance_and_execution_plan_tuning.md)** | **Query Performance & Execution Plan Tuning** | Non-SARGable functions, index scan vs seek, cardinality estimation drift, parameter sniffing. |
-| **[Runbook 03](runbooks/03_mpp_skew_spill_and_broadcast_failures.md)** | **MPP Skew, Memory Spill & Broadcast Failures** | 99% straggler tasks, Tungsten disk spill, Snowflake remote storage spill, two-phase key salting. |
-| **[Runbook 04](runbooks/04_scd_and_cdc_reconciliation_disaster_recovery.md)** | **SCD Type 2 & CDC Reconciliation Disaster Recovery** | Out-of-order Kafka CDC events, duplicate active records (`is_current = true`), self-healing queries. |
-| **[Runbook 05](runbooks/05_cross_engine_rosetta_stone.md)** | **Cross-Engine SQL Rosetta Stone** | Syntax comparison across PostgreSQL, DuckDB, Spark SQL, Snowflake, BigQuery, and T-SQL. |
-| **[Runbook 06](runbooks/06_finops_and_warehouse_cost_optimization.md)** | **FinOps & Cloud Warehouse Cost Optimization** | Snowflake auto-suspend, BigQuery scan reduction (6.25 USD per TB), Databricks serverless rightsizing. |
-| **[Runbook 07](runbooks/07_nosql_triage_and_sharding_runbooks.md)** | **NoSQL Triage & Sharding Incidents** | Redis OOM/blocking commands, Cassandra tombstone storms, MongoDB 16MB document cap, DynamoDB hot partition throttling. |
-| **[Runbook 08](runbooks/08_production_database_preflight_checklist_and_gotchas.md)** | **Pre-Flight Checklist & Top 25 Production Database Gotchas** | Pre-flight deployment audit, PITR recovery drills, connection pool sizing, and forensic postmortems for 25 catastrophic traps. |
-
----
-
-## 🎓 4-Tier Interview Preparation Matrix
-
-Prepare for technical coding screens from Junior Analyst to Principal Lakehouse Architect:
-
-1. **[Tier 1: Junior Analyst & Data Engineer (Foundations)](interview/01_junior_analyst_and_data_engineer.md)**: Execution order, `COUNT` semantics, `WHERE` vs `HAVING`, 3VL logic, `UNION` vs `UNION ALL`.
-2. **[Tier 2: Mid-Level Data Engineer (Analytical Mastery)](interview/02_mid_level_data_engineer.md)**: Ranking functions, Gaps & Islands streaks, duplicate deletion, binary tree node classification, query SARGability.
-3. **[Tier 3: Senior Distributed Data Engineer (Distributed Systems & Performance)](interview/03_senior_distributed_data_engineer.md)**: The 5 S's of Spark SQL tuning, SCD Types 1-6, Snowflake micro-partitions, two-phase key salting, deadlock prevention.
-4. **[Tier 4: Staff & Lakehouse Architect (System Design & Governance)](interview/04_staff_and_lakehouse_architect.md)**: Kimball vs Data Vault 2.0, Liquid Clustering internals, Delta Lake transaction log, Power BI Direct Lake mode.
-5. **[50-Card Rapid-Fire Technical Flashcard Deck](interview/05_flashcards_deck_50.md)**: Rapid-fire revision covering core SQL, analytical windows, indexes, and distributed engines.
-
----
-
-## 🖼️ Master Whiteboard Architecture Blueprints
-
-The repository includes **52 publication-grade architectural whiteboard blueprints** mirrored under [`assets/whiteboards/`](assets/whiteboards) and cataloged with comprehensive multi-persona breakdowns, failure modes, and engine internals in [`docs/whiteboard_diagrams/README.md`](docs/whiteboard_diagrams/README.md).
-
-- 🖼️ **[Master Whiteboard Blueprints Hub](docs/whiteboard_diagrams/handbook_whiteboard_blueprints.md)**: Complete whiteboard architecture blueprints with storage vs. compute, control vs. data planes, memory tiers, and failure modes.
-- 📊 **[Spark Architecture & Tuning Cheatsheet](assets/whiteboards/spark_architecture_catalyst_cheatsheet.jpg)**: High-resolution visual cheatsheet covering cluster topology, Catalyst compiler phases, and memory tiers.
-- 🔀 **[Join Strategies Decision Matrix](assets/whiteboards/spark_join_strategies_decision_matrix.jpg)**: Visual flowchart and decision tree for distributed joins and broadcast thresholds.
-- ⚡ **[Skew & Memory Spill Triage](assets/whiteboards/spark_performance_skew_spill_triage.jpg)**: Step-by-step diagnostic workflow for data skew, spill to disk, and OOM triage.
-
-### 📐 Visual Blueprints Showcase
-
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="docs/whiteboard_diagrams/README.md#sql-server-query-engine-optimization">
-        <img src="assets/whiteboards/sql_server_query_engine_optimization.webp" alt="SQL Server & Relational Query Engine Architecture" width="100%" />
-      </a>
-      <br><strong>SQL Server & Relational Query Engine Architecture</strong><br>
-      <em>Query compilation, Cardinality Estimator, memo space search, and execution operators.</em>
-    </td>
-    <td width="50%" valign="top">
-      <a href="docs/whiteboard_diagrams/README.md#spark-catalyst-photon-engine">
-        <img src="assets/whiteboards/catalyst_photon_engine.webp" alt="Databricks Compute: Catalyst Optimizer, AQE & Photon" width="100%" />
-      </a>
-      <br><strong>Databricks Compute: Catalyst Optimizer, AQE & Photon</strong><br>
-      <em>Multi-stage relational optimization from parsed AST to native machine instructions.</em>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="docs/whiteboard_diagrams/README.md#spark-shuffle-memory-execution">
-        <img src="assets/whiteboards/spark_shuffle_memory_execution.webp" alt="Apache Spark Memory Architecture & Shuffle Mechanics" width="100%" />
-      </a>
-      <br><strong>Apache Spark Memory Architecture & Shuffle Mechanics</strong><br>
-      <em>Distributed hash partitioning, Tungsten binary serialization, and memory buffer management.</em>
-    </td>
-    <td width="50%" valign="top">
-      <a href="docs/whiteboard_diagrams/README.md#spark-join-decision-tree">
-        <img src="assets/whiteboards/spark_join_decision_tree.webp" alt="Apache Spark Join Strategy Selection Decision Tree" width="100%" />
-      </a>
-      <br><strong>Apache Spark Join Strategy Selection Decision Tree</strong><br>
-      <em>Join algorithm selection heuristics based on table size, hints, and equivalence predicates.</em>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="docs/whiteboard_diagrams/README.md#open-table-formats-lakehouse">
-        <img src="assets/whiteboards/open_table_formats_lakehouse_architecture.webp" alt="Open Table Formats Blueprint: Lakehouse Storage Engines" width="100%" />
-      </a>
-      <br><strong>Open Table Formats Blueprint: Lakehouse Storage Engines</strong><br>
-      <em>Comparative architecture of Delta Lake, Apache Iceberg, and Apache Hudi storage layers.</em>
-    </td>
-    <td width="50%" valign="top">
-      <a href="docs/whiteboard_diagrams/README.md#lakehouse-acid-concurrency">
-        <img src="assets/whiteboards/lakehouse_acid_concurrency.webp" alt="Lakehouse ACID Concurrency & Write Conflict Resolution Matrix" width="100%" />
-      </a>
-      <br><strong>Lakehouse ACID Concurrency & Write Conflict Resolution Matrix</strong><br>
-      <em>Optimistic concurrency control, commit conflict detection, and write serialization protocols.</em>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="docs/whiteboard_diagrams/README.md#scd-types-lakehouse">
-        <img src="assets/whiteboards/scd_types_lakehouse.webp" alt="Slowly Changing Dimensions (SCD Types 1, 2, 3, 4, 6) in SQL" width="100%" />
-      </a>
-      <br><strong>Slowly Changing Dimensions (SCD Types 1, 2, 3, 4, 6) in SQL</strong><br>
-      <em>Complete SQL DDL and MERGE patterns for historical dimension tracking.</em>
-    </td>
-    <td width="50%" valign="top">
-      <a href="docs/whiteboard_diagrams/README.md#delta-lake-under-the-hood">
-        <img src="assets/whiteboards/delta_lake_mechanism.webp" alt="How Delta Lake Works Under the Hood" width="100%" />
-      </a>
-      <br><strong>How Delta Lake Works Under the Hood</strong><br>
-      <em>Append-only JSON commit log, snapshot isolation, checkpoints, and time travel mechanisms.</em>
-    </td>
-  </tr>
-</table>
-
-> 🔍 **Explore all 52 blueprints with 5-persona breakdowns, failure modes, and engine internals in [docs/whiteboard_diagrams/README.md](docs/whiteboard_diagrams/README.md)**.
-
-## 💻 Interactive CLI Explorer
-
-Explore exercises, run SQL queries in an in-memory database sandbox, inspect incident runbooks, and study interview guides directly from your terminal:
-
-```bash
-# Run interactive in-memory SQL sandbox REPL
-python scripts/interactive_shell.py
-
-# Benchmark and validate all 105 exercises
-python scripts/run_all_exercises.py
-
-# Run complete test suite
-python scripts/run_tests.py
-```
-
----
-
-## 🏛️ Architectural Deep Dives
-
-In-depth technical architecture whitepapers:
-
-- **[01. Logical vs. Physical Query Execution](architectures/01_logical_vs_physical_query_execution.md)**: Relational algebra, AST parsing, predicate pushdown, and Cost-Based Optimizer physical join selection.
-- **[02. MPP Distributed SQL & Data Movement](architectures/02_mpp_distributed_sql_and_data_movement.md)**: Shared-nothing architecture, Colocated vs Broadcast vs Shuffle joins, and network interconnect bottlenecks.
-- **[03. Storage Engines — Row-Store, Columnar & Lakehouse Formats](architectures/03_storage_engines_row_columnar_and_lakehouse.md)**: 8KB B-Tree pages vs Parquet columnar row groups, dictionary encoding, Delta Lake ACID logs, and Liquid Clustering.
-- **[04. Concurrency Control, MVCC & Distributed Consensus](architectures/04_concurrency_control_mvcc_and_distributed_consensus.md)**: The 5 concurrency anomalies, PostgreSQL tuple visibility (`xmin`/`xmax`), Two-Phase Locking, and Google Spanner TrueTime / HLC consensus.
-- **[05. NoSQL Systems, Storage Engines & Trade-Offs](architectures/05_nosql_systems_storage_engines_and_tradeoffs.md)**: CAP & PACELC theorems, B+Tree vs LSM storage amplification (WAF/RAF/SAF), Document, Key-Value, Wide-Column, Graph, Vector, and Time-Series paradigms.
-- **[06. Database Tooling — Migrations, Profiling, Pooling & Distributed Engines](architectures/06_database_tooling_migrations_profiling_and_pooling.md)**: Zero-downtime schema evolution (Flyway, Liquibase, pgroll, gh-ost), query profiling (`pg_stat_statements`, Query Store), connection pooling (PgBouncer, HikariCP), and distributed SQL engines (Citus, Vitess, DuckDB, ClickHouse).
-
----
 
 ## 🛠️ Repository Structure
 
