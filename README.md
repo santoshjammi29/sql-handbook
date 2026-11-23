@@ -1297,8 +1297,6 @@ Prepare for technical coding screens from Junior Analyst to Principal Lakehouse 
 
 </details>
 
-
-
 ## 🛠️ Repository Structure
 
 ```
@@ -1366,7 +1364,6 @@ Contributions, new production incident postmortems, and dialect optimizations ar
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.  
 Created and maintained with ❤️ by [Santosh Jammi](https://github.com/santoshjammi29).
-
 
 ---
 
