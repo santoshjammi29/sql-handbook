@@ -57,15 +57,15 @@ Understanding the discrepancy between **syntax order** and **logical execution o
 
 ```mermaid
 flowchart TD
-    Step1["1. FROM & JOINs (Table access, Cartesian products & ON predicates)"] --> Step2["2. WHERE (Row-level predicate filtering before aggregation)"]
-    Step2 --> Step3["3. GROUP BY (Hash table bucketing across dimensions)"]
-    Step3 --> Step4["4. HAVING (Filtering aggregated summary buckets)"]
-    Step4 --> Step5["5. WINDOW FUNCTIONS (ROW_NUMBER, RANK, LAG, LEAD, SUM OVER)"]
-    Step5 --> Step6["6. SELECT (Projection, Scalar expressions, Aliasing)"]
-    Step6 --> Step7["7. DISTINCT (Duplicate tuple elimination across projected columns)"]
-    Step7 --> Step8["8. SET OPERATIONS (UNION, INTERSECT, EXCEPT)"]
-    Step8 --> Step9["9. ORDER BY (Sorting output rows using projected columns/aliases)"]
-    Step9 --> Step10["10. LIMIT / OFFSET / TOP (Result set truncation & pagination)"]
+    Step1["1. FROM & JOINs (Table access,<br/>Cartesian products & ON<br/>predicates)"] --> Step2["2. WHERE (Row-level predicate<br/>filtering before aggregation)"]
+    Step2 --> Step3["3. GROUP BY (Hash table bucketing<br/>across dimensions)"]
+    Step3 --> Step4["4. HAVING (Filtering aggregated<br/>summary buckets)"]
+    Step4 --> Step5["5. WINDOW FUNCTIONS (ROW_NUMBER,<br/>RANK, LAG, LEAD, SUM OVER)"]
+    Step5 --> Step6["6. SELECT (Projection, Scalar<br/>expressions, Aliasing)"]
+    Step6 --> Step7["7. DISTINCT (Duplicate tuple<br/>elimination across projected<br/>columns)"]
+    Step7 --> Step8["8. SET OPERATIONS (UNION,<br/>INTERSECT, EXCEPT)"]
+    Step8 --> Step9["9. ORDER BY (Sorting output rows<br/>using projected columns/aliases)"]
+    Step9 --> Step10["10. LIMIT / OFFSET / TOP (Result<br/>set truncation & pagination)"]
 ```
 
 ---

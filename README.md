@@ -97,15 +97,15 @@ Understanding the discrepancy between **syntax order** and **logical execution o
 
 ```mermaid
 flowchart TD
-    Step1["1. FROM & JOINs (Table access, Cartesian products & ON predicates)"] --> Step2["2. WHERE (Row-level predicate filtering before aggregation)"]
-    Step2 --> Step3["3. GROUP BY (Hash table bucketing across dimensions)"]
-    Step3 --> Step4["4. HAVING (Filtering aggregated summary buckets)"]
-    Step4 --> Step5["5. WINDOW FUNCTIONS (ROW_NUMBER, RANK, LAG, LEAD, SUM OVER)"]
-    Step5 --> Step6["6. SELECT (Projection, Scalar expressions, Aliasing)"]
-    Step6 --> Step7["7. DISTINCT (Duplicate tuple elimination across projected columns)"]
-    Step7 --> Step8["8. SET OPERATIONS (UNION, INTERSECT, EXCEPT)"]
-    Step8 --> Step9["9. ORDER BY (Sorting output rows using projected columns/aliases)"]
-    Step9 --> Step10["10. LIMIT / OFFSET / TOP (Result set truncation & pagination)"]
+    Step1["1. FROM & JOINs (Table access,<br/>Cartesian products & ON<br/>predicates)"] --> Step2["2. WHERE (Row-level predicate<br/>filtering before aggregation)"]
+    Step2 --> Step3["3. GROUP BY (Hash table bucketing<br/>across dimensions)"]
+    Step3 --> Step4["4. HAVING (Filtering aggregated<br/>summary buckets)"]
+    Step4 --> Step5["5. WINDOW FUNCTIONS (ROW_NUMBER,<br/>RANK, LAG, LEAD, SUM OVER)"]
+    Step5 --> Step6["6. SELECT (Projection, Scalar<br/>expressions, Aliasing)"]
+    Step6 --> Step7["7. DISTINCT (Duplicate tuple<br/>elimination across projected<br/>columns)"]
+    Step7 --> Step8["8. SET OPERATIONS (UNION,<br/>INTERSECT, EXCEPT)"]
+    Step8 --> Step9["9. ORDER BY (Sorting output rows<br/>using projected columns/aliases)"]
+    Step9 --> Step10["10. LIMIT / OFFSET / TOP (Result<br/>set truncation & pagination)"]
 ```
 
 ---
@@ -200,13 +200,13 @@ Modern enterprise data architectures bridge the gap between strongly consistent 
 flowchart TD
     subgraph PACELC["The PACELC Distributed Consensus Taxonomy"]
         P{"Network Partition (P)?"}
-        P -->|Yes| P_Trade["Trade-Off: Availability (A) vs Consistency (C)"]
+        P -->|Yes| P_Trade["Trade-Off: Availability (A) vs<br/>Consistency (C)"]
         P_Trade --> PA["AP: Cassandra, DynamoDB, Couchbase"]
-        P_Trade --> PC["CP: MongoDB, HBase, Bigtable, Spanner"]
+        P_Trade --> PC["CP: MongoDB, HBase, Bigtable,<br/>Spanner"]
 
-        P -->|No| E_Trade["Normal Operation (Else - E): Latency (L) vs Consistency (C)"]
-        E_Trade --> EL["PA/EL: DynamoDB, Cassandra (Default: Sub-10ms Reads)"]
-        E_Trade --> EC["PC/EC: Spanner, CockroachDB, Bigtable (Strong Consistency)"]
+        P -->|No| E_Trade["Normal Operation (Else - E):<br/>Latency (L) vs Consistency (C)"]
+        E_Trade --> EL["PA/EL: DynamoDB, Cassandra<br/>(Default: Sub-10ms Reads)"]
+        E_Trade --> EC["PC/EC: Spanner, CockroachDB,<br/>Bigtable (Strong Consistency)"]
     end
 ```
 
@@ -233,7 +233,7 @@ The foundational trade-off in database storage engines is **In-Place Updates (Ra
 
 ```mermaid
 flowchart LR
-    subgraph BTree["B+Tree Storage Engine (Postgres, InnoDB, WiredTiger)"]
+    subgraph BTree["B+Tree Storage Engine (Postgres, InnoDB,<br/>WiredTiger)"]
         direction TB
         Root["Root Node (Page 0)"] --> Internal["Internal Routing Pages"]
         Internal --> Leaf1["Leaf Page A (8KB/16KB)"]
@@ -241,7 +241,7 @@ flowchart LR
         Leaf1 <-->|Doubly Linked List| Leaf2
     end
 
-    subgraph LSM["LSM-Tree Storage Engine (RocksDB, Cassandra, Bigtable)"]
+    subgraph LSM["LSM-Tree Storage Engine (RocksDB, Cassandra,<br/>Bigtable)"]
         direction TB
         Write["Incoming Writes"] --> WAL["Write-Ahead Log (Disk)"]
         Write --> MemTable["MemTable (In-Memory SkipList)"]
@@ -335,17 +335,17 @@ Production database reliability requires a specialized tooling ecosystem spannin
 flowchart TD
     subgraph ToolingSuite["The Production Database Tooling Ecosystem"]
         direction TB
-        M["1. Schema Migration Engines"] --> M1["Flyway & Liquibase (Versioned GitOps)"]
-        M --> M2["pgroll & gh-ost (Zero-Downtime Expand/Contract)"]
+        M["1. Schema Migration Engines"] --> M1["Flyway & Liquibase (Versioned<br/>GitOps)"]
+        M --> M2["pgroll & gh-ost (Zero-Downtime<br/>Expand/Contract)"]
 
-        P["2. Observability & Profiling"] --> P1["pg_stat_statements & EXPLAIN ANALYZE BUFFERS"]
-        P --> P2["SQL Server Query Store & MySQL Performance Schema"]
+        P["2. Observability & Profiling"] --> P1["pg_stat_statements & EXPLAIN<br/>ANALYZE BUFFERS"]
+        P --> P2["SQL Server Query Store & MySQL<br/>Performance Schema"]
 
-        C["3. Connection Pooling & Traffic"] --> C1["PgBouncer (Transaction Multiplexing)"]
-        C --> C2["HikariCP (Low-Latency Application Pool)"]
+        C["3. Connection Pooling & Traffic"] --> C1["PgBouncer (Transaction<br/>Multiplexing)"]
+        C --> C2["HikariCP (Low-Latency Application<br/>Pool)"]
 
-        H["4. High Availability & Sharding"] --> H1["Patroni (etcd DCS Postgres Failover)"]
-        H --> H2["Vitess & Citus (Distributed SQL Sharding)"]
+        H["4. High Availability & Sharding"] --> H1["Patroni (etcd DCS Postgres<br/>Failover)"]
+        H --> H2["Vitess & Citus (Distributed SQL<br/>Sharding)"]
 
         M ~~~ P
         C ~~~ H
@@ -446,10 +446,10 @@ Before applying any migration, DDL change, or parameter update in production, ve
 flowchart TD
     subgraph Checklist["Production Pre-Flight Verification Pillars"]
         direction TB
-        C1["Pillar 1: Schema Migrations (Non-blocking DDL, CONCURRENTLY)"] --> C2["Pillar 2: Connection Sizing (Max DB Connections = 2x Cores + Spindles)"]
-        C2 --> C3["Pillar 3: Defensive Timeouts (statement_timeout, lock_timeout)"]
-        C3 --> C4["Pillar 4: Backup & Recovery (Continuous WAL archiving & PITR drills)"]
-        C4 --> C5["Pillar 5: Observability & SLOs (Disk > 80%, Wraparound Age, Replication Lag)"]
+        C1["Pillar 1: Schema Migrations<br/>(Non-blocking DDL, CONCURRENTLY)"] --> C2["Pillar 2: Connection Sizing (Max<br/>DB Connections = 2x Cores +<br/>Spindles)"]
+        C2 --> C3["Pillar 3: Defensive Timeouts<br/>(statement_timeout, lock_timeout)"]
+        C3 --> C4["Pillar 4: Backup & Recovery<br/>(Continuous WAL archiving & PITR<br/>drills)"]
+        C4 --> C5["Pillar 5: Observability & SLOs<br/>(Disk &gt; 80%, Wraparound Age,<br/>Replication Lag)"]
     end
 ```
 

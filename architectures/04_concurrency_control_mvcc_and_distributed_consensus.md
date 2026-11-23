@@ -55,12 +55,12 @@ Modern database engines (PostgreSQL, CockroachDB, Snowflake, MySQL InnoDB) imple
 ```mermaid
 flowchart TD
     subgraph RowEvolution["PostgreSQL MVCC Tuple Life Cycle"]
-        T1["Tuple v1: (xmin: 100, xmax: 105, balance: $1000)"]
-        T2["Tuple v2: (xmin: 105, xmax: 0,   balance: $1200)"]
+        T1["Tuple v1: (xmin: 100, xmax: 105,<br/>balance: $1000)"]
+        T2["Tuple v2: (xmin: 105, xmax: 0,<br/>balance: $1200)"]
     end
 
-    Q1["Transaction 102 Query: Sees Tuple v1 (xmin 100 <= 102 < xmax 105)"] -.-> T1
-    Q2["Transaction 108 Query: Sees Tuple v2 (xmin 105 <= 108, xmax is 0)"] -.-> T2
+    Q1["Transaction 102 Query: Sees Tuple<br/>v1 (xmin 100 &lt;= 102 &lt; xmax<br/>105)"] -.-> T1
+    Q2["Transaction 108 Query: Sees Tuple<br/>v2 (xmin 105 &lt;= 108, xmax is 0)"] -.-> T2
 ```
 
 ### PostgreSQL MVCC Mechanism:
@@ -155,18 +155,18 @@ Enterprise SQL security mandates declarative, centralized policy enforcement usi
 
 ```mermaid
 flowchart TD
-    subgraph QueryExecution["User Executes: SELECT * FROM prod_catalog.finance.payroll"]
+    subgraph QueryExecution["User Executes: SELECT * FROM<br/>prod_catalog.finance.payroll"]
         User["User Identity (OAuth JWT)"]
     end
 
     subgraph SecurityEngine["Unity Catalog Policy Enforcement Engine"]
-        TagLookup["Inspect Column Tags ('compliance' = 'confidential')"]
-        RowFilter["Evaluate Row Filter: (dept_id = current_user_dept())"]
-        ColMask["Evaluate Column Mask: sha2(ssn, 256)"]
+        TagLookup["Inspect Column Tags ('compliance'<br/>= 'confidential')"]
+        RowFilter["Evaluate Row Filter: (dept_id =<br/>current_user_dept())"]
+        ColMask["Evaluate Column Mask: sha2(ssn,<br/>256)"]
     end
 
     subgraph CleanResult["Authorized Output Stream"]
-        Output["Rows restricted to user department, SSN masked"]
+        Output["Rows restricted to user<br/>department, SSN masked"]
     end
 
     User --> TagLookup --> RowFilter --> ColMask --> CleanResult

@@ -19,13 +19,13 @@ flowchart TD
     DistPlan --> Worker3["Compute Worker 3 (Slice/Core)"]
     DistPlan --> WorkerN["Compute Worker N (Slice/Core)"]
 
-    subgraph DataExchange["Distributed Data Exchange / Interconnect (Shuffle)"]
+    subgraph DataExchange["Distributed Data Exchange / Interconnect<br/>(Shuffle)"]
         Worker1 <--> Worker2
         Worker2 <--> Worker3
         Worker3 <--> WorkerN
     end
 
-    Worker1 --> Storage["Decoupled Storage (S3 / ADLS / GCS / Colossus)"]
+    Worker1 --> Storage["Decoupled Storage (S3 / ADLS / GCS<br/>/ Colossus)"]
     Worker2 --> Storage
     Worker3 --> Storage
     WorkerN --> Storage
@@ -168,13 +168,13 @@ flowchart TD
 
     subgraph IWMManager["Intelligent Workload Management (IWM)"]
         Router["Cost-Aware Predictive Query Router"]
-        Autoscale["Sub-Second Multi-Cluster Autoscaler"]
+        Autoscale["Sub-Second Multi-Cluster<br/>Autoscaler"]
     end
 
     subgraph ComputeClusters["Serverless SQL Warehouse Instances"]
-        C1["Cluster 1 (Interactive P95 Latency < 200ms)"]
-        C2["Cluster 2 (Burst Autoscaled Instance)"]
-        C3["Cluster 3 (Batch Heavy Transform Instance)"]
+        C1["Cluster 1 (Interactive P95 Latency<br/>&lt; 200ms)"]
+        C2["Cluster 2 (Burst Autoscaled<br/>Instance)"]
+        C3["Cluster 3 (Batch Heavy Transform<br/>Instance)"]
     end
 
     Ingress --> Router --> Autoscale --> ComputeClusters

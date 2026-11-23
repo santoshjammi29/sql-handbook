@@ -9,17 +9,17 @@
 
 ```mermaid
 flowchart TD
-    CostAlert["🚨 Cloud Warehouse Billing Anomaly Alert: Budget Threshold Exceeded"] --> CheckPlatform{"Identify Cloud Platform"}
+    CostAlert["🚨 Cloud Warehouse Billing Anomaly<br/>Alert: Budget Threshold Exceeded"] --> CheckPlatform{"Identify Cloud Platform"}
 
-    CheckPlatform -->|"Snowflake"| SnowflakeTriage["Check Active Warehouses<br/>Inspect WAREHOUSE_METERING_HISTORY for idle running clusters"]
-    CheckPlatform -->|"BigQuery"| BigQueryTriage["Check INFORMATION_SCHEMA.JOBS_BY_PROJECT<br/>Find queries scanning >1TB with SELECT *"]
-    CheckPlatform -->|"Databricks SQL"| DatabricksTriage["Inspect system.billing.usage<br/>Check for non-serverless SQL warehouses without auto-stop"]
-    CheckPlatform -->|"Azure Synapse"| SynapseTriage["Check Dedicated SQL Pool DWU status<br/>Identify un-paused weekend compute"]
+    CheckPlatform -->|"Snowflake"| SnowflakeTriage["Check Active Warehouses<br/>Inspect WAREHOUSE_METERING_HISTORY<br/>for idle running clusters"]
+    CheckPlatform -->|"BigQuery"| BigQueryTriage["Check<br/>INFORMATION_SCHEMA.JOBS_BY_PROJECT<br/>Find queries scanning &gt;1TB with<br/>SELECT *"]
+    CheckPlatform -->|"Databricks SQL"| DatabricksTriage["Inspect system.billing.usage<br/>Check for non-serverless SQL<br/>warehouses without auto-stop"]
+    CheckPlatform -->|"Azure Synapse"| SynapseTriage["Check Dedicated SQL Pool DWU<br/>status<br/>Identify un-paused weekend compute"]
 
-    SnowflakeTriage --> FixSnowflake["Remediation: Set AUTO_SUSPEND = 60, statement_timeout_in_seconds"]
-    BigQueryTriage --> FixBigQuery["Remediation: Enforce Partition Filters & maximum_bytes_billed"]
-    DatabricksTriage --> FixDatabricks["Remediation: Switch to Serverless SQL with 5min Auto-Stop"]
-    SynapseTriage --> FixSynapse["Remediation: Automate Pause/Resume via Azure Automation"]
+    SnowflakeTriage --> FixSnowflake["Remediation: Set AUTO_SUSPEND =<br/>60, statement_timeout_in_seconds"]
+    BigQueryTriage --> FixBigQuery["Remediation: Enforce Partition<br/>Filters & maximum_bytes_billed"]
+    DatabricksTriage --> FixDatabricks["Remediation: Switch to Serverless<br/>SQL with 5min Auto-Stop"]
+    SynapseTriage --> FixSynapse["Remediation: Automate Pause/Resume<br/>via Azure Automation"]
 ```
 
 ---
@@ -112,11 +112,11 @@ Maximize zero-cost cache hits before scaling compute:
 
 ```mermaid
 flowchart TD
-    Q["Incoming SQL Query"] --> C1{"Exact SQL & Underlying Data Unchanged?"}
-    C1 -->|Yes| Hit1["Result Cache (Zero Compute Cost / Sub-second)"]
+    Q["Incoming SQL Query"] --> C1{"Exact SQL & Underlying Data<br/>Unchanged?"}
+    C1 -->|Yes| Hit1["Result Cache (Zero Compute Cost /<br/>Sub-second)"]
     C1 -->|No| C2{"SSD Local Worker Cache Warm?"}
-    C2 -->|Yes| Hit2["Local Warehouse SSD Cache (High Speed)"]
-    C2 -->|No| Remote["Remote Object Storage Scan (S3 / ADLS / Colossus)"]
+    C2 -->|Yes| Hit2["Local Warehouse SSD Cache (High<br/>Speed)"]
+    C2 -->|No| Remote["Remote Object Storage Scan (S3 /<br/>ADLS / Colossus)"]
 ```
 
 ### Best Practices to Maximize Cache Hits:

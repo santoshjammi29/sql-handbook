@@ -10,14 +10,14 @@
 
 ```mermaid
 flowchart TD
-    MPPAlert["🚨 Distributed Query Stalled / Straggler Task Hanging at 99%"] --> CheckMetrics["Check Query Profile / Spark UI Metrics"]
+    MPPAlert["🚨 Distributed Query Stalled /<br/>Straggler Task Hanging at 99%"] --> CheckMetrics["Check Query Profile / Spark UI<br/>Metrics"]
 
-    CheckMetrics --> CheckSpill{"Is Spill to Disk / TempDB Non-Zero?"}
-    CheckSpill -->|"Yes, Massive Spill"| SpillTriage["Partition Size Exceeds Worker RAM<br/>Remediation: Increase shuffle partition count & enable AQE"]
-    CheckSpill -->|"No, Zero Spill"| CheckSkew{"Is Single Task Row Count > 10x Median?"}
+    CheckMetrics --> CheckSpill{"Is Spill to Disk / TempDB<br/>Non-Zero?"}
+    CheckSpill -->|"Yes, Massive Spill"| SpillTriage["Partition Size Exceeds Worker RAM<br/>Remediation: Increase shuffle<br/>partition count & enable AQE"]
+    CheckSpill -->|"No, Zero Spill"| CheckSkew{"Is Single Task Row Count &gt; 10x<br/>Median?"}
 
-    CheckSkew -->|"Yes, Hot Key Skew"| SkewTriage["Severe Data Skew on Join Key<br/>Remediation: Implement Key Salting or Filter NULLs"]
-    CheckSkew -->|"No, Broadcast Failure"| BroadcastTriage["Broadcast Buffer OOM Crash<br/>Remediation: Disable Broadcast Hint & Fall Back to Sort-Merge Join"]
+    CheckSkew -->|"Yes, Hot Key Skew"| SkewTriage["Severe Data Skew on Join Key<br/>Remediation: Implement Key Salting<br/>or Filter NULLs"]
+    CheckSkew -->|"No, Broadcast Failure"| BroadcastTriage["Broadcast Buffer OOM Crash<br/>Remediation: Disable Broadcast<br/>Hint & Fall Back to Sort-Merge<br/>Join"]
 ```
 
 ---

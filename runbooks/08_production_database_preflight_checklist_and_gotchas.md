@@ -10,22 +10,22 @@
 
 ```mermaid
 flowchart TD
-    Alert["Production Database Incident Detected"] --> Classify{"Incident Classification"}
+    Alert["Production Database Incident<br/>Detected"] --> Classify{"Incident Classification"}
 
-    Classify -->|Immediate Outage / Panic| Sev1{"Severity 1 Root Cause?"}
-    Sev1 -->|TXID Wraparound Shutdown| FixTXID["Run Emergency VACUUM FREEZE in Single-User Mode"]
-    Sev1 -->|Deadlock Cascade on FK Delete| FixFK["Identify Missing FK Indexes; Cancel Blocking Queries"]
-    Sev1 -->|Lock Escalation / Table Lock| FixLock["Kill Long-Running Lock Holder via pg_terminate_backend / KILL"]
+    Classify -->|"Immediate Outage / Panic"| Sev1{"Severity 1 Root Cause?"}
+    Sev1 -->|TXID Wraparound Shutdown| FixTXID["Run Emergency VACUUM FREEZE in<br/>Single-User Mode"]
+    Sev1 -->|Deadlock Cascade on FK Delete| FixFK["Identify Missing FK Indexes;<br/>Cancel Blocking Queries"]
+    Sev1 -->|"Lock Escalation / Table Lock"| FixLock["Kill Long-Running Lock Holder via<br/>pg_terminate_backend / KILL"]
 
-    Classify -->|Performance Degradation / Latency Spike| Perf{"Bottleneck Type?"}
-    Perf -->|Unindexed Foreign Key / Seq Scan| AddIdx["Create Index Concurrently (Postgres) / Online (MySQL/MSSQL)"]
-    Perf -->|High CPU / Missing SARGability| FixQuery["Eliminate Column Wrapping Scalar Functions & Implicit Casts"]
-    Perf -->|Connection Pool Saturation 100%| FixPool["Scale PgBouncer / Adjust Max Connections & Set Statement Timeout"]
+    Classify -->|"Performance Degradation /<br/>Latency Spike"| Perf{"Bottleneck Type?"}
+    Perf -->|"Unindexed Foreign Key / Seq<br/>Scan"| AddIdx["Create Index Concurrently<br/>(Postgres) / Online (MySQL/MSSQL)"]
+    Perf -->|"High CPU / Missing SARGability"| FixQuery["Eliminate Column Wrapping Scalar<br/>Functions & Implicit Casts"]
+    Perf -->|"Connection Pool Saturation<br/>100%"| FixPool["Scale PgBouncer / Adjust Max<br/>Connections & Set Statement<br/>Timeout"]
 
-    Classify -->|Pre-Flight Release Audit| Audit["Execute Production Pre-Flight Checklist"]
-    Audit --> DDLCheck["Verify Non-Blocking DDL & Zero-Downtime Migration"]
-    Audit --> BackupCheck["Verify Automated PITR Snapshot & Restoration Drill"]
-    Audit --> TimeoutCheck["Verify statement_timeout, lock_timeout & idle_in_transaction"]
+    Classify -->|Pre-Flight Release Audit| Audit["Execute Production Pre-Flight<br/>Checklist"]
+    Audit --> DDLCheck["Verify Non-Blocking DDL &<br/>Zero-Downtime Migration"]
+    Audit --> BackupCheck["Verify Automated PITR Snapshot &<br/>Restoration Drill"]
+    Audit --> TimeoutCheck["Verify statement_timeout,<br/>lock_timeout & idle_in_transaction"]
 ```
 
 ---

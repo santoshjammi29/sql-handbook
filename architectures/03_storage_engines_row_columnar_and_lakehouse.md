@@ -15,16 +15,16 @@ Database storage architecture determines I/O efficiency, cache locality, and com
 
 ```mermaid
 flowchart TD
-    subgraph RowStore["Row-Oriented Storage (OLTP - PostgreSQL, MySQL, SQL Server)"]
-        R1["Page 1: [ID: 1, Name: 'Alice', Age: 30, Salary: 90k, Active: true]"]
-        R2["Page 2: [ID: 2, Name: 'Bob',   Age: 45, Salary: 120k, Active: false]"]
+    subgraph RowStore["Row-Oriented Storage (OLTP - PostgreSQL,<br/>MySQL, SQL Server)"]
+        R1["Page 1: [ID: 1, Name: 'Alice',<br/>Age: 30, Salary: 90k, Active:<br/>true]"]
+        R2["Page 2: [ID: 2, Name: 'Bob',<br/>Age: 45, Salary: 120k, Active:<br/>false]"]
     end
 
-    subgraph ColStore["Columnar Storage (OLAP - Parquet, ClickHouse, VertiPaq)"]
-        C1["Column 'ID': [1, 2, 3, 4, ...] (Bit-packed)"]
-        C2["Column 'Age': [30, 45, 28, 52, ...] (Delta-encoded)"]
-        C3["Column 'Salary': [90k, 120k, 85k, ...] (Dictionary-encoded)"]
-        C4["Column 'Active': [1, 0, 1, 1, ...] (Run-Length Encoded / RLE)"]
+    subgraph ColStore["Columnar Storage (OLAP - Parquet, ClickHouse,<br/>VertiPaq)"]
+        C1["Column 'ID': [1, 2, 3, 4, ...]<br/>(Bit-packed)"]
+        C2["Column 'Age': [30, 45, 28, 52,<br/>...] (Delta-encoded)"]
+        C3["Column 'Salary': [90k, 120k, 85k,<br/>...] (Dictionary-encoded)"]
+        C4["Column 'Active': [1, 0, 1, 1, ...]<br/>(Run-Length Encoded / RLE)"]
     end
 ```
 
@@ -64,16 +64,16 @@ flowchart TD
     subgraph ParquetFile["Parquet File Anatomy"]
         H["Header: Magic 'PAR1'"]
         subgraph RG1["Row Group 1 (~128MB - 512MB)"]
-            CC1["Column Chunk 1: CustomerID (Data Pages + Dictionary)"]
-            CC2["Column Chunk 2: OrderDate (Data Pages + Min/Max Stats)"]
-            CC3["Column Chunk 3: Amount (Data Pages + Bloom Filter)"]
+            CC1["Column Chunk 1: CustomerID (Data<br/>Pages + Dictionary)"]
+            CC2["Column Chunk 2: OrderDate (Data<br/>Pages + Min/Max Stats)"]
+            CC3["Column Chunk 3: Amount (Data Pages<br/>+ Bloom Filter)"]
         end
         subgraph RG2["Row Group 2 (~128MB - 512MB)"]
             CC4["Column Chunk 1: CustomerID"]
             CC5["Column Chunk 2: OrderDate"]
             CC6["Column Chunk 3: Amount"]
         end
-        Footer["File Footer: Schema Metadata + Row Group Pointers + Column Stats (Min/Max, Null Counts)"]
+        Footer["File Footer: Schema Metadata + Row<br/>Group Pointers + Column Stats<br/>(Min/Max, Null Counts)"]
     end
 ```
 
@@ -129,13 +129,13 @@ Modern Lakehouse SQL integrates semantic vector indexing directly into the relat
 ```mermaid
 flowchart LR
     subgraph SQLClient["Relational SQL Query"]
-        JoinQuery["SELECT * FROM orders JOIN vector_search(...)"]
+        JoinQuery["SELECT * FROM orders JOIN<br/>vector_search(...)"]
     end
 
     subgraph VectorEngine["Mosaic AI Vector Index (HNSW / Delta Sync)"]
-        Embedding["Dense Query Embedding Vector (1536-dim)"]
-        Index["HNSW Graph Traversal (Sub-10ms Approximate NN)"]
-        Filters["Relational Metadata Pre-Filtering (Catalog ACLs)"]
+        Embedding["Dense Query Embedding Vector<br/>(1536-dim)"]
+        Index["HNSW Graph Traversal (Sub-10ms<br/>Approximate NN)"]
+        Filters["Relational Metadata Pre-Filtering<br/>(Catalog ACLs)"]
     end
 
     subgraph DeltaStorage["Persistent Delta Tables"]

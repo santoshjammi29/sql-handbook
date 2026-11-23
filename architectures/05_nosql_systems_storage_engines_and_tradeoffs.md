@@ -26,13 +26,13 @@ The CAP theorem only describes behavior **during** a network partition. The PACE
 flowchart TD
     subgraph PACELC["PACELC Distributed Taxonomy"]
         P{"Network Partition (P)?"}
-        P -->|Yes| P_Trade["Trade-Off: Availability (A) vs Consistency (C)"]
+        P -->|Yes| P_Trade["Trade-Off: Availability (A) vs<br/>Consistency (C)"]
         P_Trade --> PA["AP: Cassandra, DynamoDB, Couchbase"]
-        P_Trade --> PC["CP: MongoDB, HBase, Bigtable, Spanner"]
+        P_Trade --> PC["CP: MongoDB, HBase, Bigtable,<br/>Spanner"]
 
-        P -->|No| E_Trade["Normal Operation (Else - E): Latency (L) vs Consistency (C)"]
-        E_Trade --> EL["PA/EL: DynamoDB, Cassandra (Default: Low Latency)"]
-        E_Trade --> EC["PC/EC: Spanner, CockroachDB, Bigtable (Strong Consistency)"]
+        P -->|No| E_Trade["Normal Operation (Else - E):<br/>Latency (L) vs Consistency (C)"]
+        E_Trade --> EL["PA/EL: DynamoDB, Cassandra<br/>(Default: Low Latency)"]
+        E_Trade --> EC["PC/EC: Spanner, CockroachDB,<br/>Bigtable (Strong Consistency)"]
     end
 ```
 
@@ -54,16 +54,16 @@ The fundamental performance trade-off in modern databases comes down to disk acc
 
 ```mermaid
 flowchart LR
-    subgraph BTree["B+Tree Storage Engine (Postgres, InnoDB, WiredTiger)"]
+    subgraph BTree["B+Tree Storage Engine (Postgres, InnoDB,<br/>WiredTiger)"]
         Root["Root Node (Page 0)"] --> Internal["Internal Routing Pages"]
         Internal --> Leaf1["Leaf Page A (8KB/16KB)"]
         Internal --> Leaf2["Leaf Page B (8KB/16KB)"]
         Leaf1 <-->|Doubly Linked List| Leaf2
     end
 
-    subgraph LSM["LSM-Tree Storage Engine (RocksDB, Cassandra, Bigtable)"]
+    subgraph LSM["LSM-Tree Storage Engine (RocksDB, Cassandra,<br/>Bigtable)"]
         Write["Incoming Writes"] --> WAL["Write-Ahead Log (Disk)"]
-        Write --> MemTable["MemTable (In-Memory SkipList / RB-Tree)"]
+        Write --> MemTable["MemTable (In-Memory SkipList /<br/>RB-Tree)"]
         MemTable -->|Flush when full| L0["Level 0 SSTables (Disk, Unsorted)"]
         L0 -->|Compaction| L1["Level 1 SSTables (Key-Partitioned)"]
         L1 -->|Compaction| L2["Level 2 SSTables (10x Size)"]

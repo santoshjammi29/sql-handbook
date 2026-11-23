@@ -10,23 +10,23 @@
 
 ```mermaid
 flowchart TD
-    Alert["NoSQL Production Alert / P99 Latency Spike"] --> Engine{"Database Type?"}
+    Alert["NoSQL Production Alert / P99<br/>Latency Spike"] --> Engine{"Database Type?"}
 
     Engine -->|Redis| RedisCheck{"OOM or High CPU?"}
-    RedisCheck -->|High CPU - 100% Core| RedisCmd["Run SLOWLOG GET / Check for KEYS * or large SMEMBERS"]
-    RedisCheck -->|OOM / Eviction Alert| RedisMem["Check maxmemory-policy & Memory Usage per Key via MEMORY USAGE"]
+    RedisCheck -->|High CPU - 100% Core| RedisCmd["Run SLOWLOG GET / Check for KEYS *<br/>or large SMEMBERS"]
+    RedisCheck -->|"OOM / Eviction Alert"| RedisMem["Check maxmemory-policy & Memory<br/>Usage per Key via MEMORY USAGE"]
 
-    Engine -->|Cassandra / ScyllaDB| CassCheck{"ReadTimeout / Tombstone Warning?"}
-    CassCheck -->|ReadFailureException: 100k+ Tombstones| CassTomb["Identify Anti-Pattern Deletions; Run nodetool flush & nodetool compact"]
-    CassCheck -->|Replication Lag / Hints Spooling| CassRep["Run nodetool repair -pr & Check Disk Space on SSTables"]
+    Engine -->|"Cassandra / ScyllaDB"| CassCheck{"ReadTimeout / Tombstone Warning?"}
+    CassCheck -->|"ReadFailureException: 100k+<br/>Tombstones"| CassTomb["Identify Anti-Pattern Deletions;<br/>Run nodetool flush & nodetool<br/>compact"]
+    CassCheck -->|"Replication Lag / Hints<br/>Spooling"| CassRep["Run nodetool repair -pr & Check<br/>Disk Space on SSTables"]
 
-    Engine -->|MongoDB| MongoCheck{"WiredTiger Tickets Depleted or 16MB Cap?"}
-    MongoCheck -->|WiredTiger Cache Eviction Contention| MongoLock["Check currentOp for unindexed collscans; Scale dirty cache target"]
-    MongoCheck -->|Document Exceeds 16MB BSON Limit| MongoArray["Split Unbounded Array into Sub-Collection / Bucket Pattern"]
+    Engine -->|MongoDB| MongoCheck{"WiredTiger Tickets Depleted or<br/>16MB Cap?"}
+    MongoCheck -->|"WiredTiger Cache Eviction<br/>Contention"| MongoLock["Check currentOp for unindexed<br/>collscans; Scale dirty cache<br/>target"]
+    MongoCheck -->|"Document Exceeds 16MB BSON<br/>Limit"| MongoArray["Split Unbounded Array into<br/>Sub-Collection / Bucket Pattern"]
 
     Engine -->|DynamoDB| DynamoCheck{"ProvisionedThroughputExceeded 429?"}
-    DynamoCheck -->|Hot Partition Key| DynamoSalt["Implement Random/Hash Suffix Salting on PK"]
-    DynamoCheck -->|Unthrottled Table with 429s| DynamoGSI["Check GSI Provisioned Capacity & Backpressure"]
+    DynamoCheck -->|Hot Partition Key| DynamoSalt["Implement Random/Hash Suffix<br/>Salting on PK"]
+    DynamoCheck -->|Unthrottled Table with 429s| DynamoGSI["Check GSI Provisioned Capacity &<br/>Backpressure"]
 ```
 
 ---

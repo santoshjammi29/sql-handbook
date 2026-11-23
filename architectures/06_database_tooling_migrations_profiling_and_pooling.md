@@ -11,11 +11,11 @@ Database schema evolution is one of the highest-risk operational procedures in m
 
 ```mermaid
 flowchart TD
-    subgraph ExpandContract["The Expand and Contract (Parallel Run) Migration Pattern"]
-        V1["Phase 1: Existing Schema (Column: old_name)"] --> V2["Phase 2 (Expand): Add new_name (Nullable), Dual-Write via App or Views"]
-        V2 --> V3["Phase 3 (Backfill): Background chunked backfill: old_name -> new_name"]
-        V3 --> V4["Phase 4 (Contract): Switch App Reads to new_name, Drop Dual-Writes"]
-        V4 --> V5["Phase 5: Drop old_name Column asynchronously"]
+    subgraph ExpandContract["The Expand and Contract (Parallel Run)<br/>Migration Pattern"]
+        V1["Phase 1: Existing Schema (Column:<br/>old_name)"] --> V2["Phase 2 (Expand): Add new_name<br/>(Nullable), Dual-Write via App or<br/>Views"]
+        V2 --> V3["Phase 3 (Backfill): Background<br/>chunked backfill: old_name -><br/>new_name"]
+        V3 --> V4["Phase 4 (Contract): Switch App<br/>Reads to new_name, Drop<br/>Dual-Writes"]
+        V4 --> V5["Phase 5: Drop old_name Column<br/>asynchronously"]
     end
 ```
 
@@ -53,10 +53,10 @@ Diagnosing production database degradation requires deep visibility into query p
 ```mermaid
 flowchart LR
     subgraph Observability["Production Database Diagnostics Pipeline"]
-        Engine["Query Execution Engine"] --> Stat["Cumulative Stats (pg_stat_statements / Query Store)"]
-        Engine --> Trace["Live Session Monitoring (pg_stat_activity / sys.dm_exec_requests)"]
-        Engine --> Explain["Detailed Execution Plan (EXPLAIN ANALYZE BUFFERS / Extended Events)"]
-        Stat --> Alerts["Automated Anomaly Detection & Slow Query Alerts"]
+        Engine["Query Execution Engine"] --> Stat["Cumulative Stats<br/>(pg_stat_statements / Query Store)"]
+        Engine --> Trace["Live Session Monitoring<br/>(pg_stat_activity /<br/>sys.dm_exec_requests)"]
+        Engine --> Explain["Detailed Execution Plan (EXPLAIN<br/>ANALYZE BUFFERS / Extended Events)"]
+        Stat --> Alerts["Automated Anomaly Detection & Slow<br/>Query Alerts"]
     end
 ```
 
@@ -109,9 +109,9 @@ Exceeding 200–500 direct client connections triggers severe CPU context switch
 ```mermaid
 flowchart TD
     subgraph PoolingArch["Client Connection Multiplexing"]
-        App1["App Thread Pool (1,000 App Nodes)"] --> Pooler["Connection Pooler (PgBouncer / HikariCP)"]
-        Pooler --> Router["Traffic Router & Read/Write Splitter (ProxySQL / HAProxy)"]
-        Router --> Primary["Database Primary (Max 100 Dedicated Connections)"]
+        App1["App Thread Pool (1,000 App Nodes)"] --> Pooler["Connection Pooler (PgBouncer /<br/>HikariCP)"]
+        Pooler --> Router["Traffic Router & Read/Write<br/>Splitter (ProxySQL / HAProxy)"]
+        Router --> Primary["Database Primary (Max 100<br/>Dedicated Connections)"]
         Router --> Replica["Database Read Replica"]
     end
 ```
@@ -142,10 +142,10 @@ $$\text{Max DB Connections} \approx (\text{CPU Cores} \times 2) + \text{Effectiv
 ```mermaid
 flowchart TD
     subgraph DistributedSQL["Distributed SQL & Modern Analytical Engines"]
-        Citus["Citus (Postgres Distributed Extension)"] --> CitusCoord["Coordinator Node"] --> ShardA["Worker Shard A"] & ShardB["Worker Shard B"]
+        Citus["Citus (Postgres Distributed<br/>Extension)"] --> CitusCoord["Coordinator Node"] --> ShardA["Worker Shard A"] & ShardB["Worker Shard B"]
         Vitess["Vitess (MySQL Horizontal Sharding)"] --> VTGate["VTGate (Stateless SQL Router)"] --> VTTablet["VTTablet + MySQL Pods"]
-        DuckDB["DuckDB (In-Process Columnar OLAP)"] --> VectorEngine["Vectorized Morsel Engine (Parquet / Arrow)"]
-        ClickHouse["ClickHouse (Distributed OLAP)"] --> MergeTree["MergeTree Engine (Sparse Index Marks)"]
+        DuckDB["DuckDB (In-Process Columnar OLAP)"] --> VectorEngine["Vectorized Morsel Engine (Parquet<br/>/ Arrow)"]
+        ClickHouse["ClickHouse (Distributed OLAP)"] --> MergeTree["MergeTree Engine (Sparse Index<br/>Marks)"]
     end
 ```
 

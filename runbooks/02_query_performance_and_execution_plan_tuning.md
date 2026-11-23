@@ -10,20 +10,20 @@
 
 ```mermaid
 flowchart TD
-    Start["Query Exceeds SLA (Latency > 5s or CPU Spike)"] --> Capture["Capture Execution Plan (EXPLAIN ANALYZE / Query Profile)"]
+    Start["Query Exceeds SLA (Latency &gt; 5s<br/>or CPU Spike)"] --> Capture["Capture Execution Plan (EXPLAIN<br/>ANALYZE / Query Profile)"]
     Capture --> CheckScan{"Scan Type?"}
 
-    CheckScan -->|Seq Scan / Table Scan| CheckPred{"SARGable Predicate?"}
-    CheckPred -->|No - Function wrap or Cast| FixSarg["Rewrite Predicate: Col >= Start AND Col < End"]
+    CheckScan -->|"Seq Scan / Table Scan"| CheckPred{"SARGable Predicate?"}
+    CheckPred -->|No - Function wrap or Cast| FixSarg["Rewrite Predicate: Col &gt;= Start<br/>AND Col &lt; End"]
     CheckPred -->|Yes - SARGable| CheckIdx{"Index Exists?"}
-    CheckIdx -->|No| CreateIdx["Create Targeted Composite / Covering Index"]
-    CheckIdx -->|Yes| CheckStats["Check Cardinality Stats: Stale Statistics?"]
+    CheckIdx -->|No| CreateIdx["Create Targeted Composite /<br/>Covering Index"]
+    CheckIdx -->|Yes| CheckStats["Check Cardinality Stats: Stale<br/>Statistics?"]
 
-    CheckScan -->|Index Scan / Seek| CheckCard{"Actual Rows >> Estimated Rows?"}
+    CheckScan -->|"Index Scan / Seek"| CheckCard{"Actual Rows >&gt; Estimated Rows?"}
     CheckCard -->|Yes - 10x+ Drift| UpdStats["Run ANALYZE / UPDATE STATISTICS"]
     CheckCard -->|No| CheckJoin{"Join Spill or Cartesian?"}
 
-    CheckJoin -->|Spill to Disk| BoostMem["Increase work_mem / Shuffle Partitions"]
+    CheckJoin -->|Spill to Disk| BoostMem["Increase work_mem / Shuffle<br/>Partitions"]
     CheckJoin -->|Nested Loop Explosion| FixJoin["Optimize Join Order / Hints"]
 ```
 

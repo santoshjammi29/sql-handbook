@@ -22,15 +22,15 @@ While SQL syntax requires writing `SELECT` first, the database engine conceptual
 
 ```mermaid
 flowchart TD
-    Step1["1. FROM & JOINs (Cartesian Product & ON filters)"] --> Step2["2. WHERE (Row-level predicate filtering)"]
-    Step2 --> Step3["3. GROUP BY (Aggregation grouping & bucket generation)"]
-    Step3 --> Step4["4. HAVING (Aggregate bucket filtering)"]
-    Step4 --> Step5["5. WINDOW FUNCTIONS (ROW_NUMBER, RANK, LAG, LEAD, etc.)"]
-    Step5 --> Step6["6. SELECT (Projection, Scalar expressions, Aliasing)"]
-    Step6 --> Step7["7. DISTINCT (Duplicate elimination across projections)"]
-    Step7 --> Step8["8. UNION / INTERSECT / EXCEPT (Set operations)"]
+    Step1["1. FROM & JOINs (Cartesian Product<br/>& ON filters)"] --> Step2["2. WHERE (Row-level predicate<br/>filtering)"]
+    Step2 --> Step3["3. GROUP BY (Aggregation grouping<br/>& bucket generation)"]
+    Step3 --> Step4["4. HAVING (Aggregate bucket<br/>filtering)"]
+    Step4 --> Step5["5. WINDOW FUNCTIONS (ROW_NUMBER,<br/>RANK, LAG, LEAD, etc.)"]
+    Step5 --> Step6["6. SELECT (Projection, Scalar<br/>expressions, Aliasing)"]
+    Step6 --> Step7["7. DISTINCT (Duplicate elimination<br/>across projections)"]
+    Step7 --> Step8["8. UNION / INTERSECT / EXCEPT (Set<br/>operations)"]
     Step8 --> Step9["9. ORDER BY (Sorting output rows)"]
-    Step9 --> Step10["10. LIMIT / OFFSET / TOP (Pagination & truncation)"]
+    Step9 --> Step10["10. LIMIT / OFFSET / TOP<br/>(Pagination & truncation)"]
 ```
 
 ### Critical Architectural Implications of Logical Order:
@@ -124,18 +124,18 @@ Modern SQL engines evaluate Generative AI directly within analytical queries via
 ```mermaid
 flowchart TD
     subgraph SQLQuery["SQL Query with AI Functions"]
-        SQL["SELECT ticket_id, ai_mask(...), ai_classify(...)"]
+        SQL["SELECT ticket_id, ai_mask(...),<br/>ai_classify(...)"]
     end
 
     subgraph Optimizer["Photon Query Engine (C++ SIMD)"]
         Parser["Query Parser & Type Checker"]
-        Batcher["Dynamic Micro-Batcher (Group 100 rows/batch)"]
-        Retry["Exponential Backoff & Rate-Limit Controller"]
+        Batcher["Dynamic Micro-Batcher (Group 100<br/>rows/batch)"]
+        Retry["Exponential Backoff & Rate-Limit<br/>Controller"]
     end
 
     subgraph LLMCluster["Mosaic AI Foundation Model Gateway"]
         Llama["Meta-Llama-3-70B / DBRX Endpoint"]
-        Cache["Semantic Response Cache (Eliminate Duplicate Inferences)"]
+        Cache["Semantic Response Cache (Eliminate<br/>Duplicate Inferences)"]
     end
 
     SQLQuery --> Parser --> Batcher --> Retry --> Cache --> Llama

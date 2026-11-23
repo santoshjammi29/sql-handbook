@@ -10,11 +10,11 @@
 
 ```mermaid
 flowchart TD
-    CDCAlert["🚨 SCD Type 2 Timeline Corruption / Duplicate is_current Detected"] --> CheckTimeline{"Run Timeline Validation Query"}
+    CDCAlert["🚨 SCD Type 2 Timeline Corruption /<br/>Duplicate is_current Detected"] --> CheckTimeline{"Run Timeline Validation Query"}
 
-    CheckTimeline -->|"Multiple is_current = TRUE for Same Business Key"| FixDuplicateCurrent["Duplicate Current State<br/>Remediation: Terminate earlier record, retain latest timestamp"]
-    CheckTimeline -->|"Overlapping [valid_from, valid_to] Intervals"| FixOverlaps["Interval Collision from Out-of-Order Ingestion<br/>Remediation: Re-sequence timelines with LEAD() windowing"]
-    CheckTimeline -->|"Gaps in Validity Dates"| FixGaps["Missing Change Events<br/>Remediation: Stitch validity window boundaries"]
+    CheckTimeline -->|"Multiple is_current = TRUE for<br/>Same Business Key"| FixDuplicateCurrent["Duplicate Current State<br/>Remediation: Terminate earlier<br/>record, retain latest timestamp"]
+    CheckTimeline -->|"Overlapping [valid_from,<br/>valid_to] Intervals"| FixOverlaps["Interval Collision from<br/>Out-of-Order Ingestion<br/>Remediation: Re-sequence timelines<br/>with LEAD() windowing"]
+    CheckTimeline -->|"Gaps in Validity Dates"| FixGaps["Missing Change Events<br/>Remediation: Stitch validity<br/>window boundaries"]
 ```
 
 ---
