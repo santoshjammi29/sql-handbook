@@ -2,7 +2,6 @@
 """
 Generator for Module 05 (046-055) & Module 06 (056-065)
 """
-import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -47,7 +46,7 @@ INSERT INTO dept_employees VALUES
 (4, 'David',   20, 70000.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     e.emp_id,
     e.emp_name,
     e.dept_id,
@@ -94,14 +93,14 @@ INSERT INTO customer_orders_hist VALUES
 -- --- [SOLUTION QUERY] ---
 -- Optimized decorrelated query using window functions
 WITH customer_averages AS (
-    SELECT 
+    SELECT
         order_id,
         customer_id,
         amount,
         AVG(amount) OVER (PARTITION BY customer_id) AS avg_cust_amount
     FROM customer_orders_hist
 )
-SELECT 
+SELECT
     order_id,
     customer_id,
     amount,
@@ -145,19 +144,19 @@ INSERT INTO raw_inbound_stream VALUES
 
 -- --- [SOLUTION QUERY] ---
 WITH cleaned_events AS (
-    SELECT event_id, event_type, amount 
-    FROM raw_inbound_stream 
+    SELECT event_id, event_type, amount
+    FROM raw_inbound_stream
     WHERE is_test = 0
 ),
 aggregated_metrics AS (
-    SELECT 
+    SELECT
         event_type,
         COUNT(*) AS event_count,
         SUM(amount) AS total_volume
     FROM cleaned_events
     GROUP BY event_type
 )
-SELECT 
+SELECT
     event_type,
     event_count,
     total_volume
@@ -200,7 +199,7 @@ INSERT INTO corporate_hierarchy VALUES
 -- --- [SOLUTION QUERY] ---
 WITH RECURSIVE org_tree AS (
     -- Anchor member: CEO (manager_id IS NULL)
-    SELECT 
+    SELECT
         emp_id,
         emp_name,
         manager_id,
@@ -212,7 +211,7 @@ WITH RECURSIVE org_tree AS (
     UNION ALL
 
     -- Recursive member: join child to parent
-    SELECT 
+    SELECT
         child.emp_id,
         child.emp_name,
         child.manager_id,
@@ -221,7 +220,7 @@ WITH RECURSIVE org_tree AS (
     FROM corporate_hierarchy child
     JOIN org_tree parent ON child.manager_id = parent.emp_id
 )
-SELECT 
+SELECT
     emp_id,
     emp_name,
     org_level,
@@ -266,7 +265,7 @@ INSERT INTO bill_of_materials VALUES
 -- --- [SOLUTION QUERY] ---
 WITH RECURSIVE bom_explosion AS (
     -- Anchor: Immediate components of Laptop
-    SELECT 
+    SELECT
         child_part,
         quantity_required,
         1 AS bom_depth
@@ -276,14 +275,14 @@ WITH RECURSIVE bom_explosion AS (
     UNION ALL
 
     -- Recursive: Expand sub-components multiplying quantities
-    SELECT 
+    SELECT
         sub.child_part,
         parent.quantity_required * sub.quantity_required,
         parent.bom_depth + 1
     FROM bill_of_materials sub
     JOIN bom_explosion parent ON sub.parent_part = parent.child_part
 )
-SELECT 
+SELECT
     child_part,
     SUM(quantity_required) AS total_units_needed
 FROM bom_explosion
@@ -325,7 +324,7 @@ INSERT INTO flight_routes VALUES
 
 -- --- [SOLUTION QUERY] ---
 WITH RECURSIVE flight_paths AS (
-    SELECT 
+    SELECT
         origin,
         destination,
         cost AS total_cost,
@@ -336,7 +335,7 @@ WITH RECURSIVE flight_paths AS (
 
     UNION ALL
 
-    SELECT 
+    SELECT
         r.origin,
         r.destination,
         p.total_cost + r.cost,
@@ -348,7 +347,7 @@ WITH RECURSIVE flight_paths AS (
     WHERE INSTR(p.path_str, r.destination) = 0
       AND p.stops < 3
 )
-SELECT 
+SELECT
     path_str,
     stops,
     total_cost
@@ -393,7 +392,7 @@ WITH RECURSIVE date_spine AS (
     FROM date_spine
     WHERE cal_date < '2024-05-04'
 )
-SELECT 
+SELECT
     s.cal_date,
     COALESCE(o.amount, 0.00) AS daily_revenue
 FROM date_spine s
@@ -433,9 +432,9 @@ INSERT INTO tree_nodes VALUES
 (5, 2);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     id,
-    CASE 
+    CASE
         WHEN p_id IS NULL THEN 'Root'
         WHEN id IN (SELECT p_id FROM tree_nodes WHERE p_id IS NOT NULL) THEN 'Inner'
         ELSE 'Leaf'
@@ -481,7 +480,7 @@ WITH error_logs AS (
     FROM raw_logs
     WHERE severity = 'ERROR'
 )
-SELECT 
+SELECT
     log_id,
     message
 FROM error_logs
@@ -525,10 +524,10 @@ INSERT INTO contacts VALUES
 DELETE FROM contacts
 WHERE contact_id IN (
     SELECT contact_id FROM (
-        SELECT 
+        SELECT
             contact_id,
             ROW_NUMBER() OVER (
-                PARTITION BY email 
+                PARTITION BY email
                 ORDER BY contact_id ASC
             ) AS rn
         FROM contacts
@@ -585,7 +584,7 @@ INSERT INTO dim_store VALUES (10, 'Central Store', 'New York');
 INSERT INTO fact_sales VALUES (1001, 20240501, 1, 10, 2, 700.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     d.calendar_year,
     s.city,
     p.category,
@@ -629,14 +628,14 @@ INSERT INTO dim_customer_scd1 VALUES
 (1, 'Alice Smith', '555-0000', '2024-01-01 10:00:00');
 
 -- SCD Type 1 Update
-UPDATE dim_customer_scd1 
-SET phone_number = '555-9999', 
+UPDATE dim_customer_scd1
+SET phone_number = '555-9999',
     last_updated_at = '2024-05-15 14:30:00'
 WHERE customer_id = 1;
 
 -- --- [SOLUTION QUERY] ---
-SELECT customer_id, customer_name, phone_number, last_updated_at 
-FROM dim_customer_scd1 
+SELECT customer_id, customer_name, phone_number, last_updated_at
+FROM dim_customer_scd1
 WHERE customer_id = 1;
 
 -- --- [VERIFICATION / ASSERTION] ---
@@ -682,7 +681,7 @@ INSERT INTO dim_customer_scd2 VALUES
 (2, 101, 'Alice Smith', 'CA', '2024-05-01', '9999-12-31', 1);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     surrogate_key,
     customer_id,
     state_code,
@@ -732,8 +731,8 @@ SET prev_territory = current_territory,
 WHERE rep_id = 1;
 
 -- --- [SOLUTION QUERY] ---
-SELECT rep_id, rep_name, current_territory, prev_territory, effective_date 
-FROM dim_sales_rep_scd3 
+SELECT rep_id, rep_name, current_territory, prev_territory, effective_date
+FROM dim_sales_rep_scd3
 WHERE rep_id = 1;
 
 -- --- [VERIFICATION / ASSERTION] ---
@@ -784,7 +783,7 @@ INSERT INTO dim_demographic_bands VALUES (101, '600-699 (Fair)', 'Mid Income'), 
 INSERT INTO customer_profile_history VALUES (1, 101, '2023-01-01'), (1, 102, '2024-01-01');
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     c.customer_name,
     h.assigned_date,
     b.credit_score_band,
@@ -834,7 +833,7 @@ SET current_state = 'CA'
 WHERE customer_id = 101;
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     surrogate_key,
     customer_id,
     historical_state,
@@ -902,7 +901,7 @@ INSERT INTO link_customer_account VALUES ('HASH_L1', 'HASH_C1', 'HASH_A1', '2024
 INSERT INTO sat_customer VALUES ('HASH_C1', '2024-01-01', 'Alice Smith', 'alice@example.com');
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     c.customer_id,
     s.customer_name,
     s.email,
@@ -950,7 +949,7 @@ INSERT INTO fact_account_balances VALUES (101, 100000.00);
 INSERT INTO bridge_account_customer VALUES (101, 1, 0.60), (101, 2, 0.40);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     c.customer_name,
     f.account_id,
     f.balance AS total_account_balance,
@@ -993,7 +992,7 @@ INSERT INTO fact_order_fulfillment VALUES
 (1, 1700000000, 1700000100, 1700086400, 1700259200); -- ~3 days total
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     order_id,
     ROUND((order_paid_epoch - order_placed_epoch) / 60.0, 1) AS minutes_to_pay,
     ROUND((order_shipped_epoch - order_paid_epoch) / 3600.0, 1) AS hours_to_ship,
@@ -1034,7 +1033,7 @@ INSERT INTO staging_merchants VALUES
 
 -- --- [SOLUTION QUERY] ---
 -- Portable surrogate key generation using compound natural key concatenation
-SELECT 
+SELECT
     -- In engines with native MD5: MD5(country_code || '_' || tax_identifier)
     country_code || '_' || tax_identifier AS surrogate_business_key,
     merchant_name

@@ -2,7 +2,6 @@
 Test Suite: SQL File Standards & Integrity Verification
 """
 
-import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,13 +44,13 @@ def test_exercise_header_metadata():
         "PROBLEM STATEMENT:",
         "-- --- [SOLUTION QUERY] ---"
     ]
-    
+
     for f in files:
         content = f.read_text(encoding="utf-8")
         for tag in required_tags:
             if tag not in content:
                 missing_metadata.append(f"{f.name} missing required tag: '{tag}'")
-                
+
     assert not missing_metadata, "\n".join(missing_metadata)
 
 if __name__ == "__main__":
