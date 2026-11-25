@@ -1,38 +1,15 @@
-name: CI SQL Validation & Integrity Suite
+name: Handbook CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main]
   pull_request:
-    branches: [ main, master ]
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  validate-and-test:
-    name: SQL Integrity & Execution Suite
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: "3.10"
-          cache: "pip"
-
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run SQL Integrity Verification
-        run: |
-          python tests/test_sql_integrity.py
-
-      - name: Run SQL Execution & Assertion Runner
-        run: |
-          python tests/test_sql_execution.py
-
-      - name: Run Full Exercise Suite
-        run: |
-          python scripts/run_all_exercises.py --quiet
+  ci:
+    uses: santoshjammi29/.github/.github/workflows/handbook-ci.yml@v1
