@@ -28,29 +28,29 @@ def clean_statements(sql_text: str):
                 assertions[f"col_{m.group(1)}"] = m.group(2).strip()
         elif not trimmed.startswith("--"):
             lines.append(line)
-            
+
     clean_sql = "\n".join(lines).strip()
     return clean_sql, assertions
 
 def run_exercise(file_path: Path):
     content = file_path.read_text(encoding="utf-8")
-    
+
     # Split content by SOLUTION QUERY marker
     parts = content.split("-- --- [SOLUTION QUERY] ---")
     setup_sql = parts[0]
     solution_and_after = parts[1] if len(parts) > 1 else ""
-    
+
     clean_setup, _ = clean_statements(setup_sql)
     clean_solution, assertions = clean_statements(solution_and_after)
-    
+
     conn = sqlite3.connect(":memory:")
     cur = conn.cursor()
-    
+
     try:
         # Run setup DDL & DML
         if clean_setup:
             cur.executescript(clean_setup)
-            
+
         # Run solution queries
         # Some solutions may contain multiple statements (e.g. DELETE followed by SELECT)
         stmts = [s.strip() for s in clean_solution.split(";") if s.strip()]
@@ -59,7 +59,7 @@ def run_exercise(file_path: Path):
             cur.execute(stmt)
             if stmt.upper().startswith("SELECT") or "SELECT" in stmt.upper():
                 last_results = cur.fetchall()
-                
+
         # Validate assertions
         if "row_count" in assertions:
             expected = assertions["row_count"]
@@ -67,7 +67,7 @@ def run_exercise(file_path: Path):
             assert actual == expected, (
                 f"{file_path.name}: Expected {expected} rows, got {actual}"
             )
-            
+
         conn.close()
         return True, None
     except Exception as e:
@@ -77,12 +77,12 @@ def run_exercise(file_path: Path):
 def test_all_sql_execution():
     files = sorted(list(EXERCISES_DIR.glob("*/*.sql")))
     failed = []
-    
+
     for f in files:
         success, err = run_exercise(f)
         if not success:
             failed.append(f"{f.parent.name}/{f.name}: {err}")
-            
+
     assert not failed, f"Execution failed for {len(failed)} files:\n" + "\n".join(failed)
 
 if __name__ == "__main__":
@@ -96,7 +96,7 @@ if __name__ == "__main__":
             passed += 1
         else:
             failed.append((f.name, err))
-            
+
     print(f"Results: {passed}/105 passed.")
     if failed:
         print(f"\nFailures ({len(failed)}):")

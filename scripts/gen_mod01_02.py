@@ -2,7 +2,6 @@
 """
 Generator for Module 01 (001-010) & Module 02 (011-020)
 """
-import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -58,7 +57,7 @@ INSERT INTO orders (order_id, customer_id, sale_amount, cost_amount, status) VAL
 -- --- [SOLUTION QUERY] ---
 -- Using CTE to materialize alias before downstream filtering and sorting
 WITH calculated_orders AS (
-    SELECT 
+    SELECT
         order_id,
         customer_id,
         sale_amount,
@@ -68,7 +67,7 @@ WITH calculated_orders AS (
     FROM orders
     WHERE status = 'COMPLETED'
 )
-SELECT 
+SELECT
     order_id,
     customer_id,
     gross_margin
@@ -116,7 +115,7 @@ INSERT INTO marketing_leads (lead_id, email, unsub_status) VALUES
 
 -- --- [SOLUTION QUERY] ---
 -- Correctly handles 3VL by checking IS NULL or using COALESCE
-SELECT 
+SELECT
     lead_id,
     email,
     COALESCE(unsub_status, 'UNSET') AS resolved_status
@@ -163,12 +162,12 @@ INSERT INTO invoices (invoice_id, invoice_date, total_amount) VALUES
 
 -- --- [SOLUTION QUERY] ---
 -- SARGable range predicate that enables B-Tree Index Seek
-SELECT 
+SELECT
     invoice_id,
     invoice_date,
     total_amount
 FROM invoices
-WHERE invoice_date >= '2024-01-01' 
+WHERE invoice_date >= '2024-01-01'
   AND invoice_date < '2025-01-01'
 ORDER BY invoice_id ASC;
 
@@ -225,7 +224,7 @@ DELETE FROM tenants WHERE tenant_id = 1;
 
 -- --- [SOLUTION QUERY] ---
 -- Verify users were cascaded (deleted) and invoice tenant_id was set to NULL
-SELECT 
+SELECT
     i.invoice_id,
     i.tenant_id AS orphaned_tenant_id,
     i.amount,
@@ -271,14 +270,14 @@ INSERT INTO raw_portfolio_feed VALUES
 
 -- --- [SOLUTION QUERY] ---
 -- Demonstrates floating cast to prevent int truncation and safe conversion logic
-SELECT 
+SELECT
     holding_id,
     shares_count,
     total_shares,
     -- Prevent integer division (25/100 = 0 in SQL without float conversion)
     ROUND(CAST(shares_count AS FLOAT) / NULLIF(total_shares, 0) * 100.0, 2) AS ownership_pct,
     -- Safe parse: if raw_valuation is numeric string, cast; otherwise default to 0.00
-    CASE 
+    CASE
         WHEN raw_valuation GLOB '[0-9]*.[0-9]*' OR raw_valuation GLOB '[0-9]*'
         THEN CAST(raw_valuation AS DECIMAL(10, 2))
         ELSE 0.00
@@ -319,11 +318,11 @@ INSERT INTO user_registrations VALUES
 (4, '  david@corp.acme.com');
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     user_id,
     LOWER(TRIM(raw_email)) AS clean_email,
     SUBSTR(
-        LOWER(TRIM(raw_email)), 
+        LOWER(TRIM(raw_email)),
         INSTR(LOWER(TRIM(raw_email)), '@') + 1
     ) AS email_domain
 FROM user_registrations
@@ -366,13 +365,13 @@ INSERT INTO billing_schedules VALUES
 (4, 104, '2024-04-01', '2024-04-15', NULL);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     subscription_id,
     customer_id,
     invoice_date,
     due_date,
     paid_date,
-    CASE 
+    CASE
         WHEN paid_date IS NOT NULL AND paid_date <= due_date THEN 'ON_TIME'
         WHEN paid_date IS NOT NULL AND paid_date > due_date THEN 'PAID_LATE'
         WHEN paid_date IS NULL AND due_date < '2024-05-20' THEN 'DEFAULTED_OVERDUE'
@@ -416,7 +415,7 @@ INSERT INTO product_sales_stats VALUES
 (4, 'Noise Cancelling Headphones', 100, 15);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     product_id,
     product_name,
     units_sold,
@@ -467,13 +466,13 @@ INSERT INTO facility_access_log VALUES (101, 1, '2024-05-01 08:30:00'), (102, 2,
 
 -- --- [SOLUTION QUERY] ---
 -- Using NOT EXISTS: resilient to NULL values in the target table
-SELECT 
+SELECT
     e.badge_id,
     e.employee_name
 FROM employees e
 WHERE NOT EXISTS (
-    SELECT 1 
-    FROM facility_access_log l 
+    SELECT 1
+    FROM facility_access_log l
     WHERE l.badge_id = e.badge_id
 )
 ORDER BY e.badge_id ASC;
@@ -511,7 +510,7 @@ ON CONFLICT(feature_key) DO UPDATE SET
     rollout_percentage = EXCLUDED.rollout_percentage;
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     feature_key,
     is_enabled,
     rollout_percentage
@@ -563,14 +562,14 @@ INSERT INTO sales_deals VALUES (101, 1, 50000.00, 'WON'), (102, 1, 20000.00, 'LO
 
 -- --- [SOLUTION QUERY] ---
 -- Keep condition in ON clause so reps with 0 WON deals are NOT eliminated!
-SELECT 
+SELECT
     r.rep_id,
     r.rep_name,
     COALESCE(SUM(d.amount), 0.00) AS total_won_amount,
     COUNT(d.deal_id) AS total_won_deals
 FROM sales_reps r
-LEFT JOIN sales_deals d 
-    ON r.rep_id = d.rep_id 
+LEFT JOIN sales_deals d
+    ON r.rep_id = d.rep_id
     AND d.deal_status = 'WON' -- Evaluated during join, preserving all left rows!
 GROUP BY r.rep_id, r.rep_name
 ORDER BY r.rep_id ASC;
@@ -615,15 +614,15 @@ INSERT INTO order_items VALUES (101, 1, 1500.00), (102, 1, 2000.00), (103, 1, 12
 
 -- --- [SOLUTION QUERY] ---
 -- Semi-Join via EXISTS: zero row multiplication
-SELECT 
+SELECT
     c.customer_id,
     c.customer_name,
     c.credit_limit
 FROM customers c
 WHERE EXISTS (
-    SELECT 1 
-    FROM order_items o 
-    WHERE o.customer_id = c.customer_id 
+    SELECT 1
+    FROM order_items o
+    WHERE o.customer_id = c.customer_id
       AND o.order_total > 1000.00
 )
 ORDER BY c.customer_id ASC;
@@ -665,7 +664,7 @@ INSERT INTO accounts VALUES (1, 'Alpha Corp', '2023-01-10'), (2, 'Beta Inc', '20
 INSERT INTO projects VALUES (101, 1, 'Website Redesign'), (102, 1, 'Mobile App');
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     a.account_id,
     a.account_name,
     a.created_at
@@ -713,25 +712,25 @@ INSERT INTO stripe_settlements VALUES ('TXN_001', 100.00), ('TXN_002', 240.00), 
 -- --- [SOLUTION QUERY] ---
 -- Universal Full Outer Reconciliation
 WITH full_reconciliation AS (
-    SELECT 
+    SELECT
         COALESCE(i.txn_id, s.txn_id) AS txn_id,
         i.internal_amount,
         s.stripe_amount
     FROM internal_ledger i
     LEFT JOIN stripe_settlements s ON i.txn_id = s.txn_id
     UNION
-    SELECT 
+    SELECT
         COALESCE(i.txn_id, s.txn_id) AS txn_id,
         i.internal_amount,
         s.stripe_amount
     FROM stripe_settlements s
     LEFT JOIN internal_ledger i ON s.txn_id = i.txn_id
 )
-SELECT 
+SELECT
     txn_id,
     internal_amount,
     stripe_amount,
-    CASE 
+    CASE
         WHEN internal_amount IS NULL THEN 'MISSING_IN_INTERNAL_LEDGER'
         WHEN stripe_amount IS NULL THEN 'MISSING_IN_STRIPE'
         WHEN internal_amount != stripe_amount THEN 'AMOUNT_MISMATCH'
@@ -784,15 +783,15 @@ INSERT INTO dim_dates VALUES ('2024-06-01'), ('2024-06-02');
 INSERT INTO store_sales VALUES (1, '2024-06-01', 1200.00), (2, '2024-06-02', 1800.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     s.store_id,
     s.store_name,
     d.calendar_date,
     COALESCE(sales.revenue, 0.00) AS daily_revenue
 FROM dim_stores s
 CROSS JOIN dim_dates d
-LEFT JOIN store_sales sales 
-    ON s.store_id = sales.store_id 
+LEFT JOIN store_sales sales
+    ON s.store_id = sales.store_id
     AND d.calendar_date = sales.calendar_date
 ORDER BY s.store_id ASC, d.calendar_date ASC;
 
@@ -843,7 +842,7 @@ INSERT INTO raw_orders VALUES
 (103, 2, 1, '2024-05-10');
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     o.order_id,
     o.product_id,
     o.order_date,
@@ -851,7 +850,7 @@ SELECT
     p.unit_price,
     ROUND(o.quantity * p.unit_price, 2) AS line_total
 FROM raw_orders o
-JOIN product_prices p 
+JOIN product_prices p
     ON o.product_id = p.product_id
     AND o.order_date >= p.valid_from
     AND o.order_date <= p.valid_to
@@ -896,25 +895,25 @@ INSERT INTO customer_orders VALUES
 
 -- --- [SOLUTION QUERY] ---
 WITH ranked_orders AS (
-    SELECT 
+    SELECT
         client_id,
         order_id,
         amount,
         ROW_NUMBER() OVER (
-            PARTITION BY client_id 
+            PARTITION BY client_id
             ORDER BY amount DESC
         ) AS order_rank
     FROM customer_orders
 )
-SELECT 
+SELECT
     c.client_id,
     c.client_name,
     r.order_id,
     r.amount,
     r.order_rank
 FROM clients c
-JOIN ranked_orders r 
-    ON c.client_id = r.client_id 
+JOIN ranked_orders r
+    ON c.client_id = r.client_id
     AND r.order_rank <= 2
 ORDER BY c.client_id ASC, r.order_rank ASC;
 
@@ -1024,15 +1023,15 @@ INSERT INTO funnel_steps VALUES
 (102, 2, 'Add to Cart', 1700000580);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     curr.session_id,
     curr.step_number AS from_step_num,
     curr.step_name   AS from_step,
     next.step_name   AS to_step,
     (next.step_timestamp - curr.step_timestamp) AS duration_seconds
 FROM funnel_steps curr
-JOIN funnel_steps next 
-    ON curr.session_id = next.session_id 
+JOIN funnel_steps next
+    ON curr.session_id = next.session_id
     AND curr.step_number + 1 = next.step_number
 ORDER BY curr.session_id ASC, curr.step_number ASC;
 

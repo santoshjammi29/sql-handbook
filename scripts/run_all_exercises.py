@@ -11,7 +11,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
-from tests.test_sql_execution import run_exercise
+from tests.test_sql_execution import run_exercise  # noqa: E402
 
 EXERCISES_DIR = BASE_DIR / "exercises"
 

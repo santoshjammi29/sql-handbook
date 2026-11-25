@@ -2,7 +2,6 @@
 """
 Generator for Module 09 (086-095) & Module 10 (096-105)
 """
-import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -49,7 +48,7 @@ INSERT INTO micropartition_metadata VALUES
 
 -- --- [SOLUTION QUERY] ---
 -- Query targeting '2024-01-20': Prunes partition 1 and 3 via metadata alone!
-SELECT 
+SELECT
     partition_id,
     min_event_date,
     max_event_date,
@@ -89,7 +88,7 @@ INSERT INTO distributed_fact VALUES
 
 -- --- [SOLUTION QUERY] ---
 -- Simulate hash distribution to 4 compute workers: (customer_id % 4)
-SELECT 
+SELECT
     transaction_id,
     customer_id,
     amount,
@@ -167,11 +166,11 @@ INSERT INTO shard_stats VALUES
 (4, 5500000); -- Severe Skew on Shard 4!
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     shard_id,
     row_count,
     ROUND(100.0 * row_count / (SELECT SUM(row_count) FROM shard_stats), 2) AS pct_of_total_rows,
-    CASE 
+    CASE
         WHEN row_count > 2.0 * (SELECT AVG(row_count) FROM shard_stats) THEN 'CRITICAL_SKEW_STRAGGLER'
         ELSE 'BALANCED'
     END AS skew_status
@@ -211,10 +210,10 @@ INSERT INTO dim_customers_skew VALUES (0, 'Guest User'), (10, 'Corporate Account
 
 -- --- [SOLUTION QUERY] ---
 WITH salted_fact AS (
-    SELECT 
+    SELECT
         order_id,
         customer_id,
-        CASE 
+        CASE
             WHEN customer_id = 0 THEN customer_id || '_' || (order_id % 3)
             ELSE customer_id || '_0'
         END AS salted_key,
@@ -222,17 +221,17 @@ WITH salted_fact AS (
     FROM skewed_orders
 ),
 replicated_dim AS (
-    SELECT 
+    SELECT
         c.customer_id,
         c.customer_name,
-        CASE 
+        CASE
             WHEN c.customer_id = 0 THEN c.customer_id || '_' || s.salt
             ELSE c.customer_id || '_0'
         END AS salted_key
     FROM dim_customers_skew c
     CROSS JOIN (SELECT 0 AS salt UNION ALL SELECT 1 UNION ALL SELECT 2) s
 )
-SELECT 
+SELECT
     f.order_id,
     d.customer_name,
     f.amount
@@ -269,7 +268,7 @@ INSERT INTO fact_clickstream VALUES (1, 1, 'home'), (2, 2, 'cart'), (3, 1, 'chec
 INSERT INTO dim_device_type VALUES (1, 'Desktop'), (2, 'Mobile');
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     f.click_id,
     d.device_name,
     f.page
@@ -306,7 +305,7 @@ INSERT INTO dim_calendar VALUES ('2024-01-10', 'Q1'), ('2024-01-20', 'Q1'), ('20
 INSERT INTO fact_shipments VALUES (1, '2024-01-10', 50.00), (2, '2024-04-15', 75.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     s.shipment_id,
     s.ship_date,
     s.cost
@@ -384,7 +383,7 @@ INSERT INTO raw_meter_reads VALUES (1, 10.5), (1, 12.0), (2, 8.0), (2, 9.5);
 -- --- [SOLUTION QUERY] ---
 WITH aggregated_reads AS (
     -- Pre-aggregate to collapse millions of raw sensor rows into unique meter totals
-    SELECT 
+    SELECT
         meter_id,
         SUM(kwh) AS total_kwh
     FROM raw_meter_reads
@@ -423,7 +422,7 @@ INSERT INTO external_landing_zone VALUES
 ('part-0001.csv', '102,Phone,800.00');
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     file_name,
     SUBSTR(raw_csv_line, 1, INSTR(raw_csv_line, ',') - 1) AS product_id,
     raw_csv_line
@@ -468,7 +467,7 @@ INSERT INTO incident_customers VALUES (10, 'Enterprise Customer A'), (20, 'Enter
 
 -- --- [SOLUTION QUERY] ---
 -- Production fix: Process known valid keys with hash join, union unassigned NULLs directly
-SELECT 
+SELECT
     t.txn_id,
     c.cust_name,
     t.amount
@@ -478,7 +477,7 @@ WHERE t.cust_id IS NOT NULL
 
 UNION ALL
 
-SELECT 
+SELECT
     t.txn_id,
     'UNASSIGNED_GUEST' AS cust_name,
     t.amount
@@ -554,7 +553,7 @@ INSERT INTO raw_corrupted_cdc VALUES
 -- --- [SOLUTION QUERY] ---
 -- Deterministic self-healing timeline rebuilder
 WITH sequenced AS (
-    SELECT 
+    SELECT
         customer_id,
         address,
         event_time AS valid_from,
@@ -562,7 +561,7 @@ WITH sequenced AS (
             LEAD(event_time) OVER (PARTITION BY customer_id ORDER BY event_time ASC),
             '9999-12-31 23:59:59'
         ) AS valid_to,
-        CASE 
+        CASE
             WHEN LEAD(event_time) OVER (PARTITION BY customer_id ORDER BY event_time ASC) IS NULL THEN 1
             ELSE 0
         END AS is_current
@@ -605,13 +604,13 @@ INSERT INTO non_unique_discounts VALUES ('SUMMER', 10.0, '2024-05-01'), ('SUMMER
 -- --- [SOLUTION QUERY] ---
 -- Pre-deduplicate discount table to ensure 1:1 join relationship
 WITH unique_discounts AS (
-    SELECT 
+    SELECT
         promo_code,
         discount_pct,
         ROW_NUMBER() OVER (PARTITION BY promo_code ORDER BY created_at DESC) AS rn
     FROM non_unique_discounts
 )
-SELECT 
+SELECT
     o.order_id,
     o.promo_code,
     o.amount,
@@ -662,12 +661,12 @@ INSERT INTO landing_table_columns VALUES ('client_id'), ('email_addr'); -- Drift
 
 -- --- [SOLUTION QUERY] ---
 -- Schema Drift Alert Query
-SELECT 
+SELECT
     c.table_name,
     c.column_name AS missing_contract_column
 FROM schema_columns_catalog c
 LEFT JOIN landing_table_columns l ON c.column_name = l.column_name
-WHERE c.is_required = 1 
+WHERE c.is_required = 1
   AND l.column_name IS NULL;
 
 -- --- [VERIFICATION / ASSERTION] ---
@@ -784,7 +783,7 @@ INSERT INTO parent_customer_registry VALUES (1, 'Alice');
 INSERT INTO child_order_history VALUES (101, 1, 50.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     p.customer_id,
     p.name,
     COUNT(c.history_id) AS total_orders
@@ -873,7 +872,7 @@ INSERT INTO dq_sales_fact VALUES
 -- --- [SOLUTION QUERY] ---
 -- Master 5-Pillar Data Quality Reconciliation Scorecard
 WITH check_duplicates AS (
-    SELECT '1. PK Uniqueness' AS test_name, 
+    SELECT '1. PK Uniqueness' AS test_name,
            CASE WHEN COUNT(sale_id) = COUNT(DISTINCT sale_id) THEN 'PASS' ELSE 'FAIL' END AS test_status
     FROM dq_sales_fact
 ),

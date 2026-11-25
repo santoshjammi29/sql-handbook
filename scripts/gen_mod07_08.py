@@ -2,7 +2,6 @@
 """
 Generator for Module 07 (066-075) & Module 08 (076-085)
 """
-import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -90,7 +89,7 @@ INSERT INTO tenant_audit_log VALUES
 -- --- [SOLUTION QUERY] ---
 SELECT log_id, tenant_id, created_at, event_action
 FROM tenant_audit_log
-WHERE tenant_id = 100 
+WHERE tenant_id = 100
   AND created_at >= '2024-05-01 10:00:00'
 ORDER BY created_at ASC;
 
@@ -210,7 +209,7 @@ INSERT INTO catalog_items VALUES
 (4, 'LAPTOP', 1200.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     item_type,
     COUNT(*) AS total_items,
     ROUND(AVG(price), 2) AS avg_price
@@ -287,7 +286,7 @@ INSERT INTO customers_dim VALUES (1, 'Alice'), (2, 'Bob');
 INSERT INTO orders_fact VALUES (101, 1, 500.00), (102, 1, 300.00), (103, 2, 800.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     c.cust_id,
     c.cust_name,
     COUNT(o.order_id) AS order_count,
@@ -327,7 +326,7 @@ INSERT INTO staff VALUES (101, 1, 'Alice'), (102, 2, 'Bob'), (103, 2, 'Charlie')
 
 -- --- [SOLUTION QUERY] ---
 -- Strict join prevents 2 x 3 = 6 cartesian explosion
-SELECT 
+SELECT
     d.dept_name,
     s.staff_name
 FROM departments d
@@ -583,11 +582,11 @@ INSERT INTO on_call_schedule VALUES (1, 'Dr. Alice', 1), (2, 'Dr. Bob', 1);
 -- Safe update guard: Only allow turning off if remaining count > 1
 UPDATE on_call_schedule
 SET is_on_call = 0
-WHERE doctor_id = 1 
+WHERE doctor_id = 1
   AND (SELECT COUNT(*) FROM on_call_schedule WHERE is_on_call = 1) > 1;
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     doctor_id,
     doctor_name,
     is_on_call,
@@ -777,13 +776,13 @@ CREATE TABLE journal_entries (
 
 BEGIN TRANSACTION;
 -- $250 transfer from Cash to Accounts Payable
-INSERT INTO journal_entries VALUES 
+INSERT INTO journal_entries VALUES
 (1, 'TXN_901', 'Cash', -250.00),
 (2, 'TXN_901', 'Accounts Payable', 250.00);
 COMMIT;
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     txn_id,
     SUM(amount) AS net_ledger_balance,
     COUNT(*)    AS total_journal_legs

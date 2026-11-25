@@ -2,7 +2,6 @@
 """
 Generator for Module 03 (021-030) & Module 04 (031-045)
 """
-import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,7 +47,7 @@ INSERT INTO audit_transactions VALUES
 (5, 105, 'WELCOME5');
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     COUNT(*) AS total_rows_star,
     COUNT(1) AS total_rows_one,
     COUNT(discount_code) AS populated_discounts,
@@ -94,7 +93,7 @@ INSERT INTO subscriptions VALUES
 (6, 'US',   'Standard', 1100.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     region,
     plan_tier,
     COUNT(sub_id) AS active_subscribers,
@@ -140,7 +139,7 @@ INSERT INTO expense_claims VALUES
 (6, 'Sales',       1500.00, 'APPROVED');
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     department,
     SUM(amount) AS total_approved_expenses
 FROM expense_claims
@@ -185,7 +184,7 @@ INSERT INTO gateway_txns VALUES
 (6, 20, 200.00, 'REFUNDED');
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     merchant_id,
     COUNT(*) AS total_attempts,
     SUM(CASE WHEN status = 'SUCCESS' THEN amount ELSE 0.00 END) AS success_revenue,
@@ -232,7 +231,7 @@ INSERT INTO fiscal_sales VALUES
 
 -- --- [SOLUTION QUERY] ---
 -- Emulating ROLLUP(fiscal_year, fiscal_quarter)
-SELECT 
+SELECT
     CAST(fiscal_year AS VARCHAR) AS yr,
     fiscal_quarter AS qtr,
     SUM(revenue)   AS total_rev
@@ -241,7 +240,7 @@ GROUP BY fiscal_year, fiscal_quarter
 
 UNION ALL
 
-SELECT 
+SELECT
     CAST(fiscal_year AS VARCHAR) AS yr,
     'SUBTOTAL'     AS qtr,
     SUM(revenue)   AS total_rev
@@ -250,7 +249,7 @@ GROUP BY fiscal_year
 
 UNION ALL
 
-SELECT 
+SELECT
     'GRAND TOTAL'  AS yr,
     'ALL'          AS qtr,
     SUM(revenue)   AS total_rev
@@ -378,7 +377,7 @@ INSERT INTO monthly_product_revenue VALUES
 ('Phone',  'Mar', 11000.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     product_name,
     SUM(CASE WHEN month_name = 'Jan' THEN revenue ELSE 0.00 END) AS jan_rev,
     SUM(CASE WHEN month_name = 'Feb' THEN revenue ELSE 0.00 END) AS feb_rev,
@@ -462,14 +461,14 @@ INSERT INTO compensation VALUES
 
 -- --- [SOLUTION QUERY] ---
 WITH ranked_salaries AS (
-    SELECT 
+    SELECT
         dept,
         salary,
         ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary ASC) AS rk,
         COUNT(*)     OVER (PARTITION BY dept) AS total_count
     FROM compensation
 )
-SELECT 
+SELECT
     dept,
     ROUND(AVG(salary), 2) AS median_salary
 FROM ranked_salaries
@@ -514,7 +513,7 @@ INSERT INTO sales_scores VALUES
 (5, 'Eve',     70);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     rep_id,
     rep_name,
     score,
@@ -553,7 +552,7 @@ INSERT INTO customer_spend VALUES
 (5, 3400.00),  (6, 2100.00), (7, 950.00),  (8, 200.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     customer_id,
     total_spend,
     NTILE(4) OVER (ORDER BY total_spend DESC) AS spend_quartile,
@@ -599,14 +598,14 @@ INSERT INTO monthly_mrr VALUES
 (4, '2024-04', 60000.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     month_id,
     month_str,
     mrr_amount,
     LAG(mrr_amount, 1) OVER (ORDER BY month_id ASC) AS prev_month_mrr,
     (mrr_amount - LAG(mrr_amount, 1) OVER (ORDER BY month_id ASC)) AS mom_absolute_growth,
     ROUND(
-        100.0 * (mrr_amount - LAG(mrr_amount, 1) OVER (ORDER BY month_id ASC)) / 
+        100.0 * (mrr_amount - LAG(mrr_amount, 1) OVER (ORDER BY month_id ASC)) /
         NULLIF(LAG(mrr_amount, 1) OVER (ORDER BY month_id ASC), 0),
         2
     ) AS mom_growth_pct
@@ -648,18 +647,18 @@ INSERT INTO customer_orders_stream VALUES
 (5, 102, '2024-04-01', 180.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     order_id,
     customer_id,
     order_date,
     order_amount,
     FIRST_VALUE(order_amount) OVER (
-        PARTITION BY customer_id 
+        PARTITION BY customer_id
         ORDER BY order_date ASC
         ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
     ) AS initial_order_amount,
     LAST_VALUE(order_amount) OVER (
-        PARTITION BY customer_id 
+        PARTITION BY customer_id
         ORDER BY order_date ASC
         ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
     ) AS terminal_order_amount
@@ -699,7 +698,7 @@ INSERT INTO account_transactions VALUES
 (5, '2024-05-05', -100.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     txn_id,
     txn_date,
     amount,
@@ -743,7 +742,7 @@ INSERT INTO server_telemetry VALUES
 (5, '2024-06-05', 50.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     day_id,
     day_date,
     avg_cpu_pct,
@@ -789,7 +788,7 @@ INSERT INTO peer_orders VALUES
 (3, '2024-05-02', 200.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     order_id,
     order_date,
     amount,
@@ -841,14 +840,14 @@ INSERT INTO player_logins VALUES
 
 -- --- [SOLUTION QUERY] ---
 WITH ranked_logins AS (
-    SELECT 
+    SELECT
         player_id,
         login_date,
         -- Subtracting row_number days from login_date yields a constant anchor date for consecutive days
         DATE(login_date, '-' || (ROW_NUMBER() OVER (PARTITION BY player_id ORDER BY login_date ASC)) || ' days') AS island_anchor
     FROM player_logins
 )
-SELECT 
+SELECT
     player_id,
     MIN(login_date) AS streak_start,
     MAX(login_date) AS streak_end,
@@ -893,24 +892,24 @@ INSERT INTO clickstream VALUES
 
 -- --- [SOLUTION QUERY] ---
 WITH flag_boundaries AS (
-    SELECT 
+    SELECT
         click_id,
         user_id,
         click_epoch,
-        CASE 
-            WHEN click_epoch - LAG(click_epoch) OVER (PARTITION BY user_id ORDER BY click_epoch ASC) > 1800 
-                 OR LAG(click_epoch) OVER (PARTITION BY user_id ORDER BY click_epoch ASC) IS NULL 
-            THEN 1 
-            ELSE 0 
+        CASE
+            WHEN click_epoch - LAG(click_epoch) OVER (PARTITION BY user_id ORDER BY click_epoch ASC) > 1800
+                 OR LAG(click_epoch) OVER (PARTITION BY user_id ORDER BY click_epoch ASC) IS NULL
+            THEN 1
+            ELSE 0
         END AS is_new_session
     FROM clickstream
 )
-SELECT 
+SELECT
     click_id,
     user_id,
     click_epoch,
     SUM(is_new_session) OVER (
-        PARTITION BY user_id 
+        PARTITION BY user_id
         ORDER BY click_epoch ASC
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     ) AS session_id
@@ -950,41 +949,41 @@ INSERT INTO booking_intervals VALUES
 
 -- --- [SOLUTION QUERY] ---
 WITH max_prev_end AS (
-    SELECT 
+    SELECT
         room_id,
         start_date,
         end_date,
         MAX(end_date) OVER (
-            PARTITION BY room_id 
-            ORDER BY start_date ASC 
+            PARTITION BY room_id
+            ORDER BY start_date ASC
             ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
         ) AS max_prev_end_date
     FROM booking_intervals
 ),
 island_starts AS (
-    SELECT 
+    SELECT
         room_id,
         start_date,
         end_date,
-        CASE 
-            WHEN max_prev_end_date IS NULL OR start_date > max_prev_end_date THEN 1 
-            ELSE 0 
+        CASE
+            WHEN max_prev_end_date IS NULL OR start_date > max_prev_end_date THEN 1
+            ELSE 0
         END AS is_island_start
     FROM max_prev_end
 ),
 island_groups AS (
-    SELECT 
+    SELECT
         room_id,
         start_date,
         end_date,
         SUM(is_island_start) OVER (
-            PARTITION BY room_id 
+            PARTITION BY room_id
             ORDER BY start_date ASC
             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
         ) AS group_id
     FROM island_starts
 )
-SELECT 
+SELECT
     room_id,
     MIN(start_date) AS merged_start_date,
     MAX(end_date)   AS merged_end_date
@@ -1025,7 +1024,7 @@ INSERT INTO portfolio_nav VALUES
 
 -- --- [SOLUTION QUERY] ---
 WITH peaks AS (
-    SELECT 
+    SELECT
         nav_date,
         portfolio_value,
         MAX(portfolio_value) OVER (
@@ -1034,7 +1033,7 @@ WITH peaks AS (
         ) AS running_peak
     FROM portfolio_nav
 )
-SELECT 
+SELECT
     nav_date,
     portfolio_value,
     running_peak,
@@ -1075,15 +1074,15 @@ INSERT INTO annual_monthly_sales VALUES
 (2024, 2, 130000.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     curr.yr,
     curr.mo,
     curr.sales AS current_year_sales,
     prev.sales AS prior_year_sales,
     ROUND(100.0 * (curr.sales - prev.sales) / prev.sales, 2) AS yoy_growth_pct
 FROM annual_monthly_sales curr
-LEFT JOIN annual_monthly_sales prev 
-    ON curr.yr = prev.yr + 1 
+LEFT JOIN annual_monthly_sales prev
+    ON curr.yr = prev.yr + 1
     AND curr.mo = prev.mo
 WHERE curr.yr = 2024
 ORDER BY curr.mo ASC;
@@ -1122,7 +1121,7 @@ INSERT INTO user_activities VALUES
 
 -- --- [SOLUTION QUERY] ---
 WITH cohort_assignment AS (
-    SELECT 
+    SELECT
         user_id,
         MIN(activity_month) AS cohort_month
     FROM user_activities
@@ -1134,7 +1133,7 @@ cohort_sizes AS (
     GROUP BY cohort_month
 ),
 cohort_activity AS (
-    SELECT 
+    SELECT
         c.cohort_month,
         a.activity_month - c.cohort_month AS month_number,
         COUNT(DISTINCT a.user_id) AS active_users
@@ -1142,7 +1141,7 @@ cohort_activity AS (
     JOIN cohort_assignment c ON a.user_id = c.user_id
     GROUP BY c.cohort_month, month_number
 )
-SELECT 
+SELECT
     ca.cohort_month,
     ca.month_number,
     ca.active_users,
@@ -1187,17 +1186,17 @@ INSERT INTO catalog_products VALUES
 
 -- --- [SOLUTION QUERY] ---
 WITH ranked_products AS (
-    SELECT 
+    SELECT
         category,
         product_id,
         units_sold,
         ROW_NUMBER() OVER (
-            PARTITION BY category 
+            PARTITION BY category
             ORDER BY units_sold DESC, product_id ASC -- Deterministic tie breaker
         ) AS rank_in_cat
     FROM catalog_products
 )
-SELECT 
+SELECT
     category,
     product_id,
     units_sold,
@@ -1240,7 +1239,7 @@ INSERT INTO staff_salaries VALUES
 (4, 'David',   'IT',      15000.00);
 
 -- --- [SOLUTION QUERY] ---
-SELECT 
+SELECT
     staff_id,
     staff_name,
     dept,

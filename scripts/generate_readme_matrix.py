@@ -166,13 +166,13 @@ def clean_title(filename: str) -> str:
 def extract_meta(file_path: Path):
     content = file_path.read_text(encoding="utf-8")
     num_str = file_path.name.split("_")[0]
-    
+
     level_raw = "Intermediate"
     for line in content.splitlines():
         if "LEVEL:" in line:
             level_raw = line.split("LEVEL:")[1].strip()
             break
-            
+
     badge = LEVEL_BADGES.get(level_raw, f"`{level_raw}`")
 
     scenario = ""
@@ -182,9 +182,9 @@ def extract_meta(file_path: Path):
 
     raw_text = ""
     if m_arch:
-        raw_text = " ".join([l.replace("--", "").strip() for l in m_arch.group(1).splitlines() if l.strip()])
+        raw_text = " ".join([line_text.replace("--", "").strip() for line_text in m_arch.group(1).splitlines() if line_text.strip()])
     elif m_ctx:
-        raw_text = " ".join([l.replace("--", "").strip() for l in m_ctx.group(1).splitlines() if l.strip()])
+        raw_text = " ".join([line_text.replace("--", "").strip() for line_text in m_ctx.group(1).splitlines() if line_text.strip()])
 
     if raw_text:
         # Strip leading numbering like '1. ' or '2. '
@@ -211,18 +211,18 @@ def extract_meta(file_path: Path):
 
 def generate_curriculum_markdown() -> str:
     files = sorted(list(EXERCISES_DIR.glob("*/*.sql")))
-    
+
     out = []
-    
+
     # 1. High-level track overview table
     out.append("### 🗺️ Curriculum Track Overview\n")
     out.append("| Track & Module | Range | Level | Core Architecture & Skills |")
     out.append("| :--- | :---: | :---: | :--- |")
-    
+
     for mod_dir in sorted(list(MODULE_CONFIG.keys())):
         cfg = MODULE_CONFIG[mod_dir]
         out.append(f"| {cfg['icon']} **[{cfg['title']}](#{cfg['anchor']})** | `{cfg['range']}` | {cfg['level']} | {cfg['desc']} |")
-        
+
     out.append("\n---\n")
 
     # 2. Detailed per-module tables (simple, clean 4-column layout)
@@ -232,7 +232,7 @@ def generate_curriculum_markdown() -> str:
         if meta["module"] != current_module:
             current_module = meta["module"]
             cfg = MODULE_CONFIG[current_module]
-            
+
             out.append(f"\n<a id=\"{cfg['anchor']}\"></a>")
             out.append(f"### {cfg['icon']} Module: {cfg['title']}\n")
             out.append("| # | Exercise Topic & Code | Level | Practical Scenario |")
@@ -242,7 +242,7 @@ def generate_curriculum_markdown() -> str:
         out.append(
             f"| `{meta['id']}` | {ex_link} | {meta['badge']} | {meta['scenario']} |"
         )
-        
+
     return "\n".join(out)
 
 if __name__ == "__main__":

@@ -4,7 +4,6 @@ Exercise Builder: Generates all 105 battle-tested production SQL exercises
 across the 10 core modules of The SQL Handbook.
 """
 
-import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent

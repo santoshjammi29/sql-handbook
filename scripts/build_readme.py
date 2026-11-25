@@ -25,7 +25,7 @@ def build_readme():
 [![BigQuery](https://img.shields.io/badge/Google_BigQuery-Serverless_MPP-4285F4?style=flat-square&logo=googlecloud&logoColor=white)](https://cloud.google.com/bigquery)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
-*The definitive enterprise reference repository of 105 battle-tested SQL coding exercises, performance tuning recipes, and disaster recovery incident runbooks.*  
+*The definitive enterprise reference repository of 105 battle-tested SQL coding exercises, performance tuning recipes, and disaster recovery incident runbooks.*
 *Structured for instant local practice via Python's built-in `sqlite3` and `duckdb`, with zero external infrastructure required.*
 
 [Curriculum Overview](#-curriculum-overview) • [Logical Query Architecture](#-logical-query-architecture) • [Quickstart & Sandbox](#-quickstart--interactive-sandbox) • [Interview Matrix](#-4-tier-interview-preparation-matrix) • [Production Runbooks](#-battle-tested-production-runbooks) • [Incident Postmortems](#-production-incident-postmortems)
@@ -34,7 +34,7 @@ def build_readme():
 
 ## 🎯 Overview & Mission
 
-Modern data engineering and analytics engineering demand far more than basic `SELECT * FROM table WHERE condition`. 
+Modern data engineering and analytics engineering demand far more than basic `SELECT * FROM table WHERE condition`.
 
 Enterprise workloads operate on high-concurrency transactional databases (PostgreSQL, Aurora, SQL Server) and distributed lakehouse MPP engines (Snowflake, Databricks Spark SQL, Google BigQuery) where a single non-SARGable predicate, missing index, or skewed join key can exhaust cluster memory, trigger multi-hour straggler tasks, or cause 10,000 USD cloud billing surprises.
 
@@ -265,7 +265,7 @@ Contributions, new production incident postmortems, and dialect optimizations ar
 3. Solution query with `-- ASSERT: ROW_COUNT = ...` verification comments.
 4. Pass all automated tests: `python scripts/run_all_exercises.py`.
 
-Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.  
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 Created and maintained with ❤️ by [Santosh Jammi](https://github.com/santoshjammi29).
 """
 

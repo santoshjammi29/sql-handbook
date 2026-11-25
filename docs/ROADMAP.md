@@ -180,7 +180,7 @@ Progress: [ ] 0 / 120 Completed (0.0%)
 <details>
 <summary>&nbsp;&nbsp;<b>🟡 Tier 2: Core Mechanics & Implementation (Level 200) (1 Drills)</b></summary>
 
-- [ ] `sql-handbook-curriculum-topics` — [Topics Directory: SQL Handbook](topics/README.md) `L200`
+- [ ] `sql-handbook-curriculum-topics` — [Topics Directory: SQL Handbook](../topics/README.md) `L200`
 
 </details>
 
